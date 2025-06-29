@@ -51,10 +51,23 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 - [x] **Başarımlar:** Kazanılan başarımlar için daha dikkat çekici bir bildirim (modal veya özel bir animasyon) göster. Başarımlar sayfasını daha detaylı hale getir.
 - [x] **Profil Sayfası:** Kullanıcıların kendi istatistiklerini ve başarımlarını daha detaylı görebileceği bir profil sayfası oluştur.
 
-### 5. Yeni Özellik Fikirleri
+### 5. Sosyal Özellikler ve Rekabet
 
-- [ ] **Düello Modu:** İki kullanıcının aynı anda aynı soruları çözdüğü bir rekabet modu.
+- **Arkadaşlık Sistemi:**
+  - [x] `friends` veritabanı tablosu oluşturuldu.
+  - [x] `FriendsController` ile arkadaşlık işlemleri (arama, istek, yanıtlama, silme) için backend mantığı eklendi.
+  - [x] Arayüze "Arkadaşlar" sekmesi eklendi.
+  - [x] Kullanıcı arama, arkadaş ekleme, istekleri yanıtlama ve arkadaş listeleme arayüzleri tamamlandı.
+- **Düello (Meydan Okuma) Modu:**
+  - [x] `duels` veritabanı tablosu oluşturuldu.
+  - [x] Arkadaş listesinden meydan okuma göndermek için arayüz (modal) eklendi.
+  - [x] `DuelController` oluşturuldu ve `createDuel` metodu ile meydan okuma oluşturma backend mantığı eklendi.
+  - [ ] Gelen meydan okumaları listeleme ve yanıtlama (kabul/red).
+  - [ ] Düello oyun ekranını oluşturma (5 soruluk özel yarışma).
+  - [ ] Düello sonuçlarını kaydetme ve gösterme.
+
+### 6. Gelecek Fikirleri
+
 - [ ] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
-- [ ] **Arkadaş Ekleme ve Meydan Okuma:** Kullanıcıların birbirini arkadaş olarak ekleyip meydan okuması.
 - [ ] **Farklı Soru Tipleri:** Resimli sorular, sıralama soruları gibi yeni soru formatları ekle.
 - [ ] **Avatar ve Özelleştirme:** Kullanıcıların profil fotoğrafı veya avatar seçebilmesi.

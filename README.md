@@ -5,6 +5,8 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 ## Özellikler
 
 - **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için kullanıcıları (rol değiştirme, silme) ve genel site istatistiklerini yönetebilecekleri özel bir arayüz.
+- **Arkadaşlık Sistemi:** Kullanıcılar birbirlerini arkadaş olarak ekleyebilir, istek gönderip alabilir ve arkadaşlarını listeleyebilir.
+- **Meydan Okuma (Düello) Modu (Geliştiriliyor):** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
 - **Kullanıcı Kayıt ve Giriş Sistemi:** Güvenli `password_hash` ile şifreleme ve PHP session yönetimi sayesinde kullanıcılar kendi hesaplarını oluşturabilir.
 - **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
 - **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
@@ -55,7 +57,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 3. **Veritabanını ve Tabloları Kurun:**
     - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `leaderboard`, `user_stats`, `user_achievements`, `user_difficulty_stats`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
+    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
 
 4. **Uygulamayı Başlatın:**
     - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.
@@ -65,15 +67,34 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 ```bash
 .
-├── api.php             # Backend: Kullanıcı, oyun, admin ve veri işlemlerini yöneten API.
+├── Api/
+│   └── Controllers/      # Backend Controller sınıfları
+│       ├── AdminController.php
+│       ├── DataController.php
+│       ├── DuelController.php
+│       ├── FriendsController.php
+│       ├── GameController.php
+│       └── UserController.php
 ├── assets/
-│   ├── css/style.css   # Özel CSS stilleri.
-│   └── js/app.js       # Frontend: Tüm uygulama mantığını yöneten ana JS dosyası.
-├── config.php          # Veritabanı ve API anahtarı yapılandırması.
-├── GeminiAPI.php       # Google Gemini API ile iletişimi yöneten sınıf.
-├── index.php           # Ana HTML iskeleti, oyun ve admin paneli görünümlerini içerir.
-├── install.php         # Veritabanını, tabloları ve admin kullanıcısını oluşturan kurulum betiği.
-└── README.md           # Bu dosya.
+│   ├── css/style.css
+│   └── js/               # Modüler JavaScript dosyaları
+│       ├── admin-handler.js
+│       ├── api-handler.js
+│       ├── app-data.js
+│       ├── app-state.js
+│       ├── app.js
+│       ├── auth-handler.js
+│       ├── friends-handler.js
+│       ├── game-handler.js
+│       ├── settings-handler.js
+│       ├── stats-handler.js
+│       └── ui-handler.js
+├── api.php             # Ana API yönlendiricisi (Router)
+├── config.php          # Veritabanı ve API anahtarı yapılandırması
+├── GeminiAPI.php       # Google Gemini API ile iletişim sınıfı
+├── index.php           # Ana HTML iskeleti ve UI konteynerları
+├── install.php         # Veritabanı kurulum betiği
+└── README.md           # Bu dosya
 ```
 
 ## Nasıl Çalışır?
@@ -87,12 +108,13 @@ Uygulama, modern bir SPA mimarisiyle çalışır:
         - **Kullanıcı 'user' ise:** Frontend, ana uygulama ekranını (`main-view`) gösterir, kullanıcıyı karşılar ve verileri (kişisel istatistikler, liderlik tablosu) yükler.
     - **Oturum Yoksa:** Frontend, giriş/kayıt formlarının olduğu `auth-view`'ı gösterir.
 3. **Admin İşlemleri:** Admin, panel üzerinden bir kullanıcının rolünü değiştirdiğinde veya bir kullanıcıyı sildiğinde, `app.js` ilgili `admin_*` endpoint'ini çağırır ve başarılı olursa arayüzü günceller.
-4. **Oyun Akışı:** (Normal kullanıcılar veya admin "Oyuncu Görünümü"ne geçtiğinde)
+4. **Sosyal Etkileşim:** Kullanıcılar "Arkadaşlar" sekmesinden diğer kullanıcıları arayabilir, istek gönderebilir, gelen istekleri yönetebilir. Arkadaşlarına meydan okuma isteği gönderebilirler. Backend'de bu işlemler `FriendsController` ve `DuelController` tarafından yönetilir.
+5. **Oyun Akışı:** (Normal kullanıcılar veya admin "Oyuncu Görünümü"ne geçtiğinde)
     - Kullanıcı bir kategori seçer ve `api.php`'nin `get_question` endpoint'inden bir soru istenir.
     - `api.php`, Gemini'den soruyu alır, doğru cevabı ve açıklamayı sunucu tarafında `$_SESSION`'a kaydeder ve sadece soruyu/seçenekleri ön uca gönderir.
     - Kullanıcı cevabını `submit_answer` endpoint'ine gönderir.
     - `api.php`, cevabı `$_SESSION`'daki doğru cevapla karşılaştırır, puanı hesaplar ve kullanıcının `user_stats` ve `leaderboard` tablolarındaki verilerini günceller.
-5. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve en güncel istatistik/liderlik tablosu verilerini ekrana yansıtır.
+6. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve en güncel istatistik/liderlik tablosu verilerini ekrana yansıtır.
 
 ## Lisans
 
