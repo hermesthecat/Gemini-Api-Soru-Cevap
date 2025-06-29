@@ -4,6 +4,23 @@ require_once 'GeminiAPI.php';
 
 session_start();
 
+// İstatistikleri sıfırlama
+if (isset($_POST['reset_stats'])) {
+    $_SESSION['stats'] = ['total_questions' => 0, 'correct_answers' => 0];
+    $_SESSION['history'] = [];
+    header("Location: " . $_SERVER['PHP_SELF']); // Sayfayı yenileyerek formun tekrar gönderilmesini engelle
+    exit();
+}
+
+
+// Oturumda istatistikleri başlat
+if (!isset($_SESSION['stats'])) {
+    $_SESSION['stats'] = ['total_questions' => 0, 'correct_answers' => 0];
+}
+if (!isset($_SESSION['history'])) {
+    $_SESSION['history'] = [];
+}
+
 $gemini = new GeminiAPI(GEMINI_API_KEY);
 $error_message = null; // Hata mesajları için değişken
 
@@ -86,6 +103,7 @@ if (isset($_POST['kullanici_cevap'])) {
     $kullanici_cevap = strtoupper(trim($_POST['kullanici_cevap']));
     $kullanici_cevap = preg_replace('/[^A-D]/', '', $kullanici_cevap);
     $gecen_sure = time() - $_SESSION['start_time'];
+    $is_correct = false; // Doğruluğu takip etmek için
 
     error_log("Kullanıcı cevabı: " . $kullanici_cevap);
     error_log("Doğru cevap: " . $_SESSION['dogru_cevap']);
@@ -97,9 +115,33 @@ if (isset($_POST['kullanici_cevap'])) {
         if ($kullanici_cevap === $_SESSION['dogru_cevap']) {
             $sonuc = "Tebrikler! Doğru cevap verdiniz. Süre: {$gecen_sure} saniye";
             $sonuc_class = "text-green-600";
+            $is_correct = true;
         } else {
             $sonuc = "Üzgünüm, yanlış cevap. Doğru cevap: " . $_SESSION['dogru_cevap'];
             $sonuc_class = "text-red-600";
+        }
+    }
+
+    // İstatistikleri güncelle
+    if (!isset($sonuc) || $kullanici_cevap) { // Sadece bir cevap verildiğinde sayacı artır
+        $_SESSION['stats']['total_questions']++;
+        if ($is_correct) {
+            $_SESSION['stats']['correct_answers']++;
+        }
+
+        // Geçmişe ekle
+        $history_item = [
+            'question' => $_SESSION['current_question'],
+            'user_answer' => $kullanici_cevap,
+            'correct_answer' => $_SESSION['dogru_cevap'],
+            'is_correct' => $is_correct,
+            'siklar' => $_SESSION['siklar']
+        ];
+        array_unshift($_SESSION['history'], $history_item);
+
+        // Geçmişi son 5 soruyla sınırla
+        if (count($_SESSION['history']) > 5) {
+            array_pop($_SESSION['history']);
         }
     }
 }
@@ -240,8 +282,62 @@ if (isset($_POST['kullanici_cevap'])) {
             </div>
         <?php endif; ?>
 
+        <!-- İstatistikler ve Geçmiş -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">İstatistikleriniz</h2>
+                <form method="POST">
+                    <button type="submit" name="reset_stats" value="1" class="text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg transition-colors">
+                        Sıfırla
+                    </button>
+                </form>
+            </div>
+
+            <?php
+            $stats = $_SESSION['stats'];
+            $total = $stats['total_questions'];
+            $correct = $stats['correct_answers'];
+            $success_rate = ($total > 0) ? round(($correct / $total) * 100) : 0;
+            ?>
+            <div class="grid grid-cols-3 gap-4 text-center mb-6">
+                <div>
+                    <p class="text-2xl font-bold"><?php echo $total; ?></p>
+                    <p class="text-gray-500">Toplam Soru</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-green-600"><?php echo $correct; ?></p>
+                    <p class="text-gray-500">Doğru Cevap</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold text-blue-600"><?php echo $success_rate; ?>%</p>
+                    <p class="text-gray-500">Başarı Oranı</p>
+                </div>
+            </div>
+
+            <h3 class="text-lg font-semibold mb-3 border-t pt-4">Son Cevaplananlar</h3>
+            <div class="space-y-4">
+                <?php if (empty($_SESSION['history'])): ?>
+                    <p class="text-gray-500 text-center">Henüz hiç soru cevaplamadınız.</p>
+                <?php else: ?>
+                    <?php foreach ($_SESSION['history'] as $item): ?>
+                        <div class="p-3 rounded-lg <?php echo $item['is_correct'] ? 'bg-green-50 border-l-4 border-green-500' : 'bg-red-50 border-l-4 border-red-500'; ?>">
+                            <p class="font-semibold mb-1"><?php echo htmlspecialchars($item['question']); ?></p>
+                            <p class="text-sm">
+                                Sizin Cevabınız: <span class="font-bold"><?php echo htmlspecialchars($item['user_answer']); ?>) <?php echo htmlspecialchars($item['siklar'][$item['user_answer']] ?? 'Cevap bulunamadı'); ?></span>
+                            </p>
+                            <?php if (!$item['is_correct']): ?>
+                                <p class="text-sm">
+                                    Doğru Cevap: <span class="font-bold"><?php echo htmlspecialchars($item['correct_answer']); ?>) <?php echo htmlspecialchars($item['siklar'][$item['correct_answer']]); ?></span>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- Footer -->
-        <footer class="text-center text-gray-500 text-sm">
+        <footer class="text-center text-gray-500 text-sm mt-8">
             <p>© 2024 AI Bilgi Yarışması. Tüm hakları saklıdır.</p>
         </footer>
     </div>
