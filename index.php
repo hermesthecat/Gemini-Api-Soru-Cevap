@@ -114,7 +114,8 @@
                 <h2 class="text-xl font-semibold dark:text-white">İstatistikleriniz</h2>
                 <button id="reset-stats-button" class="text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg transition-colors">Sıfırla</button>
             </div>
-            <div class="grid grid-cols-3 gap-4 text-center mb-6">
+            <!-- Genel İstatistikler -->
+            <div class="grid grid-cols-3 gap-4 text-center mb-6 border-b dark:border-gray-700 pb-6">
                 <div>
                     <p id="total-questions" class="text-2xl font-bold">0</p>
                     <p class="text-gray-500 dark:text-gray-400">Toplam Soru</p>
@@ -128,7 +129,27 @@
                     <p class="text-gray-500 dark:text-gray-400">Başarı Oranı</p>
                 </div>
             </div>
-            <h3 class="text-lg font-semibold mb-3 border-t pt-4 dark:text-white dark:border-gray-700">Son Cevaplananlar</h3>
+
+            <!-- Kategori Bazlı İstatistikler -->
+            <div id="category-stats-container">
+                <h3 class="text-lg font-semibold mb-3 dark:text-white">Kategori Detayları</h3>
+                <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>
+                <table id="stats-table" class="w-full text-left hidden">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="py-3 px-4">Kategori</th>
+                            <th scope="col" class="py-3 px-4 text-center">Toplam</th>
+                            <th scope="col" class="py-3 px-4 text-center">Doğru</th>
+                            <th scope="col" class="py-3 px-4 text-center">Başarı</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-stats-body">
+                        <!-- Kategori istatistikleri buraya dinamik olarak eklenecek -->
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="text-lg font-semibold mb-3 border-t pt-4 dark:text-white dark:border-gray-700 mt-6">Son Cevaplananlar</h3>
             <div id="history-container" class="space-y-4">
                 <p class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>
             </div>

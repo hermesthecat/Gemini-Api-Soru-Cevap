@@ -28,10 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Uygulama Durumu (State) ---
     let state = {
-        stats: {
-            total_questions: 0,
-            correct_answers: 0
-        },
+        stats: {}, // { tarih: { total_questions: 5, correct_answers: 3 }, spor: { ... } }
         history: [],
         currentQuestion: null, // Mevcut soru, şıkları ve tipi tutmak için
         difficulty: 'orta', // Varsayılan zorluk seviyesi
@@ -78,10 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedStateJSON = localStorage.getItem('quizAppState');
         if (savedStateJSON) {
             const savedState = JSON.parse(savedStateJSON);
-            state.stats = savedState.stats || {
-                total_questions: 0,
-                correct_answers: 0
-            };
+            state.stats = savedState.stats || {};
             state.history = savedState.history || [];
             // Temayı state'e yükle, ancak henüz uygulama (initialize halledecek)
             state.theme = savedState.theme;
@@ -143,12 +137,48 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateStatsUI = (stats) => {
-        const total = stats.total_questions;
-        const correct = stats.correct_answers;
-        const rate = total > 0 ? Math.round((correct / total) * 100) : 0;
-        document.getElementById('total-questions').textContent = total;
-        document.getElementById('correct-answers').textContent = correct;
-        document.getElementById('success-rate').textContent = `${rate}%`;
+        // Genel istatistikleri hesapla
+        let overallTotal = 0;
+        let overallCorrect = 0;
+        const categoryStatsBody = document.getElementById('category-stats-body');
+        const noStatsMessage = document.getElementById('no-stats-message');
+        const statsTable = document.getElementById('stats-table');
+
+        categoryStatsBody.innerHTML = ''; // Önceki verileri temizle
+
+        const categories = Object.keys(stats);
+
+        if (categories.length === 0) {
+            noStatsMessage.classList.remove('hidden');
+            statsTable.classList.add('hidden');
+        } else {
+            noStatsMessage.classList.add('hidden');
+            statsTable.classList.remove('hidden');
+
+            categories.sort().forEach(category => {
+                const categoryData = stats[category];
+                overallTotal += categoryData.total_questions;
+                overallCorrect += categoryData.correct_answers;
+                const rate = categoryData.total_questions > 0 ? Math.round((categoryData.correct_answers / categoryData.total_questions) * 100) : 0;
+                const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
+
+                const row = `
+                    <tr class="border-b dark:border-gray-700">
+                        <td class="py-2 px-4 font-semibold">${categoryName}</td>
+                        <td class="py-2 px-4 text-center">${categoryData.total_questions}</td>
+                        <td class="py-2 px-4 text-center">${categoryData.correct_answers}</td>
+                        <td class="py-2 px-4 text-center font-bold ${rate > 60 ? 'text-green-600' : 'text-yellow-600'}">${rate}%</td>
+                    </tr>
+                `;
+                categoryStatsBody.innerHTML += row;
+            });
+        }
+
+        // Genel istatistikleri arayüzde güncelle
+        const overallRate = overallTotal > 0 ? Math.round((overallCorrect / overallTotal) * 100) : 0;
+        document.getElementById('total-questions').textContent = overallTotal;
+        document.getElementById('correct-answers').textContent = overallCorrect;
+        document.getElementById('success-rate').textContent = `${overallRate}%`;
     };
 
     const updateHistoryUI = (history) => {
@@ -320,10 +350,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // --- BİTTİ: Gelişmiş Geri Bildirim ---
 
-            // İstatistikleri güncelle
-            state.stats.total_questions++;
+            // Kategoriye özel istatistikleri güncelle
+            const category = state.currentQuestion.kategori;
+            if (!state.stats[category]) {
+                state.stats[category] = {
+                    total_questions: 0,
+                    correct_answers: 0
+                };
+            }
+            state.stats[category].total_questions++;
             if (data.is_correct) {
-                state.stats.correct_answers++;
+                state.stats[category].correct_answers++;
             }
 
             // Geçmiş öğesini oluştur
@@ -367,10 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleResetStats = async () => {
         // State'i sıfırla
-        state.stats = {
-            total_questions: 0,
-            correct_answers: 0
-        };
+        state.stats = {};
         state.history = [];
         // LocalStorage'ı temizle ve UI'ı güncelle
         saveStateToLocalStorage();
