@@ -190,6 +190,7 @@ switch ($action) {
                             $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
                             $_SESSION['current_question_explanation'] = $veri['aciklama'];
                             $_SESSION['start_time'] = time();
+                            $_SESSION['current_question_difficulty'] = $difficulty;
 
                             // Kullanıcıya sadece güvenli verileri gönder
                             $response['data'] = ['tip' => $veri['tip'], 'question' => $veri['soru'], 'siklar' => $veri['siklar'] ?? null, 'kategori' => $kategori, 'difficulty' => $difficulty, 'correct_answer' => $veri['dogru_cevap']];
@@ -213,6 +214,7 @@ switch ($action) {
 
                 $user_answer = $request_data['answer'] ?? null;
                 $kategori = $request_data['kategori'] ?? 'bilinmiyor';
+                $difficulty = $_SESSION['current_question_difficulty'] ?? 'orta';
                 $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
                 $is_correct = ($user_answer === $_SESSION['current_question_answer']);
                 $puan = 0;
@@ -250,11 +252,12 @@ switch ($action) {
                         $stmt_ach->execute([$user_id]);
                         $mevcut_basarimlar = $stmt_ach->fetchAll(PDO::FETCH_COLUMN);
 
-                        $grant_achievement = function ($key) use ($pdo, $user_id, $mevcut_basarimlar, &$yeni_basarimlar) {
+                        $grant_achievement = function ($key) use ($pdo, $user_id, &$mevcut_basarimlar, &$yeni_basarimlar) {
                             if (!in_array($key, $mevcut_basarimlar)) {
                                 $stmt = $pdo->prepare("INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)");
                                 $stmt->execute([$user_id, $key]);
                                 $yeni_basarimlar[] = $key;
+                                $mevcut_basarimlar[] = $key; // Koleksiyoncu kontrolü için anlık ekleme
                             }
                         };
 
@@ -271,11 +274,19 @@ switch ($action) {
                         }
 
                         // Başarım 3: Kategori Uzmanı (Bir kategoride 20 doğru)
-                        $stmt_cat = $pdo->prepare("SELECT correct_answers FROM user_stats WHERE user_id = ? AND category = ?");
+                        $stmt_cat = $pdo->prepare("SELECT correct_answers, total_questions FROM user_stats WHERE user_id = ? AND category = ?");
                         $stmt_cat->execute([$user_id, $kategori]);
-                        $cat_corrects = $stmt_cat->fetchColumn();
-                        if ($cat_corrects && $cat_corrects >= 20) {
-                            $grant_achievement("uzman_{$kategori}");
+                        $cat_stats = $stmt_cat->fetch(PDO::FETCH_ASSOC);
+
+                        if ($cat_stats) {
+                            // Kategori Uzmanı
+                            if ($cat_stats['correct_answers'] >= 20) {
+                                $grant_achievement("uzman_{$kategori}");
+                            }
+                            // Kusursuz
+                            if ($cat_stats['total_questions'] >= 10 && $cat_stats['correct_answers'] == $cat_stats['total_questions']) {
+                                $grant_achievement("kusursuz_{$kategori}");
+                            }
                         }
 
                         // Başarım 4: İlk Adım (İlk doğru cevap)
@@ -300,6 +311,31 @@ switch ($action) {
                         if ($stmt_score->fetchColumn() >= 1000) {
                             $grant_achievement('puan_avcisi_1000');
                         }
+
+                        // Başarım 7: Gece Kuşu
+                        date_default_timezone_set('Europe/Istanbul');
+                        $hour = (int)date('G');
+                        if ($hour < 4) { // 00:00 - 03:59
+                            $grant_achievement('gece_kusu');
+                        }
+
+                        // Başarım 8: Zorlu Rakip
+                        if ($difficulty === 'zor') {
+                            $sql_diff = "INSERT INTO user_difficulty_stats (user_id, difficulty, correct_answers) VALUES (?, 'zor', 1) ON DUPLICATE KEY UPDATE correct_answers = correct_answers + 1";
+                            $stmt_diff = $pdo->prepare($sql_diff);
+                            $stmt_diff->execute([$user_id]);
+
+                            $stmt_diff_check = $pdo->prepare("SELECT correct_answers FROM user_difficulty_stats WHERE user_id = ? AND difficulty = 'zor'");
+                            $stmt_diff_check->execute([$user_id]);
+                            if ($stmt_diff_check->fetchColumn() >= 10) {
+                                $grant_achievement('zorlu_rakip');
+                            }
+                        }
+
+                        // Meta-Başarım: Koleksiyoncu
+                        if (count($mevcut_basarimlar) >= 10) {
+                            $grant_achievement('koleksiyoncu');
+                        }
                     }
                 } catch (PDOException $e) {
                     // Hata olsa bile devam et, oyun akışı bozulmasın
@@ -312,7 +348,7 @@ switch ($action) {
                     'explanation' => $_SESSION['current_question_explanation'],
                     'new_achievements' => $yeni_basarimlar
                 ];
-                unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
+                unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time'], $_SESSION['current_question_difficulty']);
                 break;
 
             case 'get_user_data':
