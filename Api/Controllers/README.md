@@ -6,14 +6,17 @@ Bu dizin, uygulamanın ana iş mantığını (business logic) yöneten PHP sın�
 
 - **`AdminController.php`**: Yönetici (admin) paneliyle ilgili işlemleri yönetir.
   - Genel uygulama istatistiklerini (toplam kullanıcı, toplam cevaplanan soru vb.) sağlar.
+  - Gelişmiş istatistik verilerini (`Chart.js` grafikleri için) sağlar.
   - Tüm kullanıcıları listeler.
   - Kullanıcıların rolünü (admin/user) değiştirir.
   - Kullanıcıları veritabanından siler.
+  - Duyuruları yönetir (oluşturma, listeleme, silme).
 
 - **`DataController.php`**: Kullanıcıya özel verileri ve genel listeleri çekmekle sorumludur.
   - Bir kullanıcının kişisel istatistiklerini (puan, kategori başarı oranları) döndürür.
   - Genel liderlik tablosunu (kullanıcı avatarlarıyla birlikte) oluşturur.
   - Bir kullanıcının kazandığı ve kazanmadığı başarımları listeler.
+  - Kullanıcılar için aktif ve okunmamış duyuruları getirir ve okundu olarak işaretlenmesini sağlar.
 
 - **`DuelController.php`**: Arkadaşlar arası düello (meydan okuma) modunun tüm mantığını yönetir.
   - Yeni bir düello oluşturur ve soruları Gemini API'den alır.

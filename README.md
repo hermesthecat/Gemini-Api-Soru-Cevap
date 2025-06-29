@@ -4,7 +4,11 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 
 ## Özellikler
 
-- **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için kullanıcıları (rol değiştirme, silme) ve genel site istatistiklerini yönetebilecekleri özel bir arayüz.
+- **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için özel bir arayüz.
+  - **Kullanıcı Yönetimi:** Kullanıcıları listeleme, rol değiştirme ve silme.
+  - **Genel İstatistikler:** Toplam kullanıcı sayısı ve cevaplanan soru sayısı gibi temel metrikler.
+  - **Gelişmiş İstatistik Grafikleri:** En çok oynanan kategoriler, yeni kullanıcı kayıtları ve cevap başarı oranları gibi verilerin `Chart.js` ile görselleştirilmesi.
+  - **Duyuru Sistemi:** Tüm kullanıcılara veya belirli gruplara (admin/user) yönelik uygulama içi duyurular oluşturma, listeleme ve yönetme.
 - **Arkadaşlık Sistemi:** Kullanıcılar birbirlerini arkadaş olarak ekleyebilir, istek gönderip alabilir ve arkadaşlarını listeleyebilir.
 - **Meydan Okuma (Düello) Modu:** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
 - **Günlük Görevler:** Kullanıcıların her gün tamamlayarak ekstra puan kazanabileceği "5 tarih sorusu çöz" gibi dinamik olarak atanan görevler.
@@ -83,6 +87,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 │   │   └── avatars/      # Kullanıcı avatar dosyaları
 │   └── js/               # Modüler JavaScript dosyaları
 │       ├── admin-handler.js
+│       ├── announcement-handler.js
 │       ├── api-handler.js
 │       ├── app-data.js
 │       ├── app-state.js
