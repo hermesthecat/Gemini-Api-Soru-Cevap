@@ -78,6 +78,30 @@ try {
     $pdo->exec($sql_user_stats);
     echo "Tablo 'user_stats' başarıyla oluşturuldu ve 'users' tablosuna bağlandı.\n";
 
+    // --- Varsayılan Admin Kullanıcısını Oluştur ---
+    echo "\nVarsayılan admin kullanıcısı oluşturuluyor...\n";
+    try {
+        $admin_user = 'admin';
+        $admin_pass = 'password'; // Geliştirme için basit bir şifre. Canlı ortamda değiştirin!
+        $hashed_password = password_hash($admin_pass, PASSWORD_DEFAULT);
+
+        // Admin kullanıcısını ekle
+        $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'admin')");
+        $stmt->execute([$admin_user, $hashed_password]);
+        $admin_id = $pdo->lastInsertId();
+
+        // Admin için leaderboard kaydı oluştur
+        $stmt = $pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)");
+        $stmt->execute([$admin_id]);
+
+        echo "Kullanıcı: '$admin_user' (Şifre: '$admin_pass') başarıyla oluşturuldu.\n";
+    } catch (PDOException $e) {
+        if ($e->errorInfo[1] == 1062) { // 1062 = Duplicate entry
+            echo "Admin kullanıcısı zaten mevcut.\n";
+        } else {
+            throw $e;
+        }
+    }
 
     echo "\nKurulum başarıyla tamamlandı!";
 } catch (PDOException $e) {

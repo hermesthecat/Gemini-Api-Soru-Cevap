@@ -93,7 +93,7 @@ switch ($action) {
                 $_SESSION['user_role'] = $user['role'];
                 $response['success'] = true;
                 $response['message'] = 'Giriş başarılı!';
-                $response['data'] = ['username' => $user['username'], 'role' => $user['role']];
+                $response['data'] = ['id' => $user['id'], 'username' => $user['username'], 'role' => $user['role']];
             } else {
                 $response['message'] = 'Kullanıcı adı veya şifre hatalı.';
             }
@@ -112,7 +112,7 @@ switch ($action) {
         if (isset($_SESSION['user_id'])) {
             $response['success'] = true;
             $response['message'] = 'Oturum aktif.';
-            $response['data'] = ['username' => $_SESSION['username'], 'role' => $_SESSION['user_role']];
+            $response['data'] = ['id' => $_SESSION['user_id'], 'username' => $_SESSION['username'], 'role' => $_SESSION['user_role']];
         } else {
             $response['message'] = 'Oturum bulunamadı.';
         }
@@ -123,6 +123,11 @@ switch ($action) {
     case 'submit_answer':
     case 'get_user_data':
     case 'get_leaderboard':
+        // --- YENİ: ADMIN İŞLEMLERİ ---
+    case 'admin_get_dashboard_data':
+    case 'admin_get_all_users':
+    case 'admin_delete_user':
+    case 'admin_update_user_role':
         if (!isset($_SESSION['user_id'])) {
             $response['message'] = 'Bu işlem için giriş yapmalısınız.';
             $response['data'] = ['auth_required' => true];
@@ -271,6 +276,77 @@ switch ($action) {
                 $stmt->execute();
                 $response['success'] = true;
                 $response['data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                break;
+
+            // --- YENİ: ADMIN İŞLEMLERİ ALT YÖNLENDİRİCİSİ ---
+            case 'admin_get_dashboard_data':
+            case 'admin_get_all_users':
+            case 'admin_delete_user':
+            case 'admin_update_user_role':
+                if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+                    $response['message'] = 'Bu alana erişim yetkiniz yok.';
+                    http_response_code(403); // Forbidden
+                    break;
+                }
+
+                // Admin işlemleri
+                switch ($action) {
+                    case 'admin_get_dashboard_data':
+                        $stmt_users = $pdo->query("SELECT COUNT(*) FROM users");
+                        $total_users = $stmt_users->fetchColumn();
+
+                        $stmt_questions = $pdo->query("SELECT SUM(total_questions) FROM user_stats");
+                        $total_questions = $stmt_questions->fetchColumn() ?: 0;
+
+                        $response['success'] = true;
+                        $response['data'] = [
+                            'total_users' => $total_users,
+                            'total_questions_answered' => $total_questions,
+                        ];
+                        break;
+
+                    case 'admin_get_all_users':
+                        $stmt = $pdo->query("
+                            SELECT u.id, u.username, u.role, u.created_at, l.score 
+                            FROM users u 
+                            LEFT JOIN leaderboard l ON u.id = l.user_id 
+                            ORDER BY u.created_at DESC
+                        ");
+                        $response['success'] = true;
+                        $response['data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        break;
+
+                    case 'admin_delete_user':
+                        $user_id_to_delete = $request_data['user_id'] ?? 0;
+                        if ($user_id_to_delete === $_SESSION['user_id']) {
+                            $response['message'] = 'Kendinizi silemezsiniz.';
+                            break;
+                        }
+                        if ($user_id_to_delete > 0) {
+                            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+                            $stmt->execute([$user_id_to_delete]);
+                            $response['success'] = $stmt->rowCount() > 0;
+                            $response['message'] = $response['success'] ? 'Kullanıcı silindi.' : 'Kullanıcı bulunamadı.';
+                        }
+                        break;
+
+                    case 'admin_update_user_role':
+                        $user_id_to_update = $request_data['user_id'] ?? 0;
+                        $new_role = $request_data['new_role'] ?? '';
+                        if ($user_id_to_update === $_SESSION['user_id']) {
+                            $response['message'] = 'Kendi rolünüzü değiştiremezsiniz.';
+                            break;
+                        }
+                        if ($user_id_to_update > 0 && ($new_role === 'admin' || $new_role === 'user')) {
+                            $stmt = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
+                            $stmt->execute([$new_role, $user_id_to_update]);
+                            $response['success'] = $stmt->rowCount() > 0;
+                            $response['message'] = $response['success'] ? 'Kullanıcı rolü güncellendi.' : 'İşlem başarısız.';
+                        } else {
+                            $response['message'] = 'Geçersiz kullanıcı ID veya rol.';
+                        }
+                        break;
+                }
                 break;
         }
         break;

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- UYGULAMA DURUMU (STATE) ---
     const state = {
-        currentUser: null, // { username: '...', role: '...' }
+        currentUser: null, // { id: 1, username: '...', role: '...' }
         difficulty: 'orta',
         currentCategory: null,
         soundEnabled: true,
@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer: document.getElementById('app-container'),
         authView: document.getElementById('auth-view'),
         mainView: document.getElementById('main-view'),
+        adminView: document.getElementById('admin-view'),
         // Auth
         loginForm: document.getElementById('login-form'),
         registerForm: document.getElementById('register-form'),
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Main View Header
         welcomeMessage: document.getElementById('welcome-message'),
         logoutBtn: document.getElementById('logout-btn'),
+        adminViewBtn: document.getElementById('admin-view-btn'),
         // Game
         gameContainer: document.getElementById('game-container'),
         categorySelectionContainer: document.getElementById('category-selection-container'),
@@ -53,6 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
         noStatsMessage: document.getElementById('no-stats-message'),
         leaderboardList: document.getElementById('leaderboard-list'),
         leaderboardLoading: document.getElementById('leaderboard-loading'),
+        // Admin View
+        userViewBtn: document.getElementById('user-view-btn'),
+        adminTotalUsers: document.getElementById('admin-total-users'),
+        adminTotalQuestions: document.getElementById('admin-total-questions'),
+        adminUserListBody: document.getElementById('admin-user-list-body'),
         // Ayarlar
         themeToggle: document.getElementById('theme-toggle'),
         themeToggleDarkIcon: document.getElementById('theme-toggle-dark-icon'),
@@ -82,11 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const url = `api.php${method === 'GET' ? '?action=' + action : ''}`;
             const response = await fetch(url, options);
+            const result = await response.json();
             if (!response.ok) {
-                showToast(`Sunucu hatası: ${response.status}`, 'error');
+                showToast(result.message || `Sunucu hatası: ${response.status}`, 'error');
                 return null;
             }
-            return await response.json();
+            return result;
         } catch (error) {
             showToast('Ağ hatası, sunucuya ulaşılamıyor.', 'error');
             console.error('API Call Error:', error);
@@ -98,8 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const showView = (viewName) => {
         dom.authView.classList.add('hidden');
         dom.mainView.classList.add('hidden');
+        dom.adminView.classList.add('hidden');
         if (viewName === 'auth') dom.authView.classList.remove('hidden');
         else if (viewName === 'main') dom.mainView.classList.remove('hidden');
+        else if (viewName === 'admin') dom.adminView.classList.remove('hidden');
     };
 
     const showLoading = (isLoading, text = 'Yükleniyor...') => {
@@ -159,6 +169,45 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 dom.noStatsMessage.classList.remove('hidden');
             }
+        }
+    };
+
+    // --- YENİ: ADMIN PANELİ FONKSİYONLARI ---
+    const updateAdminDashboard = async () => {
+        const result = await apiCall('admin_get_dashboard_data');
+        if (result && result.success) {
+            dom.adminTotalUsers.textContent = result.data.total_users;
+            dom.adminTotalQuestions.textContent = result.data.total_questions_answered;
+        }
+    };
+
+    const updateUserList = async () => {
+        const result = await apiCall('admin_get_all_users');
+        if (result && result.success) {
+            dom.adminUserListBody.innerHTML = '';
+            result.data.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
+                tr.dataset.userId = user.id;
+
+                const isCurrentUser = user.id === state.currentUser.id;
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${user.username} ${isCurrentUser ? '<span class="text-xs text-blue-500">(Siz)</span>' : ''}</td>
+                    <td class="px-6 py-4">${user.score || 0}</td>
+                    <td class="px-6 py-4">
+                        <select class="role-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 p-2" ${isCurrentUser ? 'disabled' : ''}>
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4">${new Date(user.created_at).toLocaleDateString()}</td>
+                    <td class="px-6 py-4">
+                        <button class="delete-user-btn ml-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed" ${isCurrentUser ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                dom.adminUserListBody.appendChild(tr);
+            });
         }
     };
 
@@ -242,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const { is_correct, correct_answer, explanation } = result.data;
             playSound(is_correct ? dom.correctSound : dom.incorrectSound);
 
-            // Butonları renklendir
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.disabled = true;
                 if (btn.dataset.answer === correct_answer) {
@@ -255,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.explanationText.textContent = explanation;
             dom.explanationContainer.classList.remove('hidden');
 
-            // Verileri yenile ve 3 saniye sonra yeni soruya geç
             await updateUserData();
             await updateLeaderboard();
             setTimeout(() => {
@@ -309,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showLoading(false);
             if (result && result.success) {
                 showToast(result.message, 'success');
-                dom.showLoginBtn.click(); // Kayıt sonrası giriş sekmesine yönlendir
+                dom.showLoginBtn.click();
             } else {
                 showToast(result.message || 'Kayıt başarısız.', 'error');
             }
@@ -322,6 +369,42 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast('Başarıyla çıkış yapıldı.', 'success');
         });
 
+        // Admin Panel
+        dom.adminViewBtn.addEventListener('click', () => showView('admin'));
+        dom.userViewBtn.addEventListener('click', () => showView('main'));
+        dom.adminUserListBody.addEventListener('click', async (e) => {
+            const deleteBtn = e.target.closest('.delete-user-btn');
+            if (deleteBtn && confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+                const userId = deleteBtn.closest('tr').dataset.userId;
+                showLoading(true, 'Kullanıcı siliniyor...');
+                const result = await apiCall('admin_delete_user', { user_id: userId });
+                showLoading(false);
+                if (result && result.success) {
+                    showToast(result.message, 'success');
+                    await updateUserList();
+                    await updateAdminDashboard();
+                } else {
+                    showToast(result.message || 'İşlem başarısız.', 'error');
+                }
+            }
+        });
+        dom.adminUserListBody.addEventListener('change', async (e) => {
+            const roleSelect = e.target.closest('.role-select');
+            if (roleSelect) {
+                const userId = roleSelect.closest('tr').dataset.userId;
+                const newRole = roleSelect.value;
+                showLoading(true, 'Rol güncelleniyor...');
+                const result = await apiCall('admin_update_user_role', { user_id: userId, new_role: newRole });
+                showLoading(false);
+                if (result && result.success) {
+                    showToast(result.message, 'success');
+                } else {
+                    showToast(result.message || 'İşlem başarısız.', 'error');
+                    await updateUserList(); // Hata durumunda listeyi eski haline getir
+                }
+            }
+        });
+
         // Ayarlar
         dom.themeToggle.addEventListener('click', () => applyTheme(state.theme === 'light' ? 'dark' : 'light'));
         dom.soundToggle.addEventListener('click', () => applySoundSetting(!state.soundEnabled));
@@ -331,8 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = e.target.closest('.difficulty-button');
             if (btn) {
                 state.difficulty = btn.dataset.zorluk;
-                document.querySelectorAll('.difficulty-button').forEach(b => b.classList.remove('bg-blue-500', 'text-white'));
-                btn.classList.add('bg-blue-500', 'text-white');
+                document.querySelectorAll('.difficulty-button').forEach(b => {
+                    b.classList.remove('bg-blue-500', 'text-white', 'font-semibold');
+                    b.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                });
+                btn.classList.add('bg-blue-500', 'text-white', 'font-semibold');
+                btn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
             }
         });
         dom.categoryButtons.addEventListener('click', async (e) => {
@@ -358,17 +445,23 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- BAŞLANGIÇ FONKSİYONLARI ---
-    const initializeUserSession = (userData) => {
+    const initializeUserSession = async (userData) => {
         state.currentUser = userData;
         dom.welcomeMessage.textContent = `Hoş geldin, ${userData.username}!`;
-        showView('main');
 
-        // Verileri ve liderlik tablosunu ilk kez yükle
-        updateUserData();
-        updateLeaderboard();
+        if (userData.role === 'admin') {
+            dom.adminViewBtn.classList.remove('hidden');
+            showView('admin');
+            await updateAdminDashboard();
+            await updateUserList();
+        } else {
+            dom.adminViewBtn.classList.add('hidden');
+            showView('main');
+        }
 
-        // Liderlik tablosunu periyodik olarak güncelle
-        state.leaderboardInterval = setInterval(updateLeaderboard, 30000); // 30 saniyede bir
+        await updateUserData();
+        await updateLeaderboard();
+        state.leaderboardInterval = setInterval(updateLeaderboard, 30000);
     };
 
     const populateCategories = () => {
@@ -383,25 +476,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const initializeApp = async () => {
-        // Ayarları yükle
         applyTheme(localStorage.getItem('theme') || 'light', true);
         applySoundSetting(JSON.parse(localStorage.getItem('soundEnabled') ?? 'true'), true);
 
         addEventListeners();
         populateCategories();
 
-        // Oturum kontrolü yap
         showLoading(true, 'Oturum kontrol ediliyor...');
         const sessionResult = await apiCall('check_session', {}, 'GET');
         showLoading(false);
 
         if (sessionResult && sessionResult.success) {
-            initializeUserSession(sessionResult.data);
+            await initializeUserSession(sessionResult.data);
         } else {
             showView('auth');
         }
     };
 
-    // Uygulamayı Başlat
     initializeApp();
 }); 

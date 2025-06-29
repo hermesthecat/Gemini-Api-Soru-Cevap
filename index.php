@@ -72,6 +72,7 @@
                     <span id="welcome-message"></span>
                 </div>
                 <div class="flex items-center space-x-2">
+                    <button id="admin-view-btn" class="hidden text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>
                     <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
                         <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
                         <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
@@ -158,6 +159,62 @@
                 </aside>
             </div>
         </div>
+
+        <!-- ===== ADMİN PANELİ EKRANI (Admin giriş yaptığında görünür) ===== -->
+        <div id="admin-view" class="hidden">
+            <!-- Üst Bar -->
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold">Yönetim Paneli</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Uygulama genel verileri ve kullanıcı yönetimi</p>
+                </div>
+                <button id="user-view-btn" class="text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg transition-colors">Oyuncu Görünümüne Geç</button>
+            </header>
+
+            <!-- Dashboard İstatistik Kartları -->
+            <div id="admin-dashboard-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
+                    <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                        <i class="fas fa-users fa-2x text-blue-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400">Toplam Kullanıcı</p>
+                        <p id="admin-total-users" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
+                    <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                        <i class="fas fa-question-circle fa-2x text-green-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400">Cevaplanan Soru Sayısı</p>
+                        <p id="admin-total-questions" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kullanıcı Yönetim Tablosu -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 dark:text-white">Kullanıcı Yönetimi</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Kullanıcı</th>
+                                <th scope="col" class="px-6 py-3">Puan</th>
+                                <th scope="col" class="px-6 py-3">Rol</th>
+                                <th scope="col" class="px-6 py-3">Kayıt Tarihi</th>
+                                <th scope="col" class="px-6 py-3">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-user-list-body">
+                            <!-- JS ile doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Genel Yükleme ve Bildirim Alanları -->
