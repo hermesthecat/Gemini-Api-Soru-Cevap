@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetStatsButton = document.getElementById('reset-stats-button');
     const answerFeedbackOverlay = document.getElementById('answer-feedback-overlay');
     const answerFeedbackBox = document.getElementById('answer-feedback-box');
+    const explanationContainer = document.getElementById('explanation-container');
+    const explanationText = document.getElementById('explanation-text');
 
 
     // --- Uygulama Durumu (State) ---
@@ -139,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const displayQuestion = (data) => {
         state.currentQuestion = data; // Mevcut soruyu state'e kaydet
+        explanationContainer.classList.add('hidden'); // Yeni soruda açıklamayı gizle
         const kategoriText = data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1);
         const zorlukText = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
         questionCategory.innerHTML = `${kategoriText} <span class="font-normal text-gray-500">- ${zorlukText}</span>`;
@@ -246,6 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.classList.add('bg-red-200', 'border-red-500', 'font-semibold');
                 }
             });
+
+            // Açıklamayı göster
+            if (data.explanation) {
+                explanationText.textContent = data.explanation;
+                explanationContainer.classList.remove('hidden');
+            }
             // --- BİTTİ: Gelişmiş Geri Bildirim ---
 
             // İstatistikleri güncelle

@@ -83,6 +83,11 @@
                     <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Şıklar buraya dinamik olarak eklenecek -->
                     </div>
+                    <!-- Cevap Açıklaması Alanı -->
+                    <div id="explanation-container" class="hidden mt-6 p-4 bg-blue-50 border-l-4 border-blue-400">
+                        <h4 class="font-bold text-blue-800 mb-1">Açıklama</h4>
+                        <p id="explanation-text" class="text-blue-700"></p>
+                    </div>
                 </div>
             </div>
         </main>

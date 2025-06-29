@@ -55,7 +55,8 @@ switch ($action) {
                     \"C\": \"(C şıkkı buraya)\",
                     \"D\": \"(D şıkkı buraya)\"
                 },
-                \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\"
+                \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\",
+                \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"
             }";
 
             $yanit = $gemini->soruSor($prompt);
@@ -64,9 +65,10 @@ switch ($action) {
                 $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
                 $veri = json_decode($temiz_yanit, true);
 
-                if (json_last_error() === JSON_ERROR_NONE && isset($veri['soru'], $veri['siklar'], $veri['dogru_cevap'])) {
-                    // Doğru cevabı bir sonraki istek için session'da sakla
+                if (json_last_error() === JSON_ERROR_NONE && isset($veri['soru'], $veri['siklar'], $veri['dogru_cevap'], $veri['aciklama'])) {
+                    // Doğru cevabı ve açıklamayı bir sonraki istek için session'da sakla
                     $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
+                    $_SESSION['current_question_explanation'] = $veri['aciklama'];
                     $_SESSION['start_time'] = time();
 
                     $response['success'] = true;
@@ -100,6 +102,7 @@ switch ($action) {
         $gecen_sure = time() - ($_SESSION['start_time'] ?? 0);
         $is_correct = false;
         $correct_answer = $_SESSION['current_question_answer'];
+        $explanation = $_SESSION['current_question_explanation'];
 
         if ($gecen_sure > 30) {
             $result_message = "Süre doldu!";
@@ -113,14 +116,15 @@ switch ($action) {
         }
 
         // Cevap kontrol edildikten sonra session'daki veriyi temizle
-        unset($_SESSION['current_question_answer'], $_SESSION['start_time']);
+        unset($_SESSION['current_question_answer'], $_SESSION['start_time'], $_SESSION['current_question_explanation']);
 
         $response['success'] = true;
         $response['message'] = $result_message;
-        // Sadece cevabın sonucunu ve doğru şıkkı döndür
+        // Sonucu, doğru şıkkı ve açıklamayı döndür
         $response['data'] = [
             'is_correct' => $is_correct,
-            'correct_answer' => $correct_answer
+            'correct_answer' => $correct_answer,
+            'explanation' => $explanation
         ];
         break;
 }
