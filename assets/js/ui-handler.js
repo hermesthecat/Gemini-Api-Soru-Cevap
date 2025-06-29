@@ -46,24 +46,21 @@ const ui = (() => {
         }, 3000);
     };
 
-    const renderAchievements = (achievements, achievementData) => {
+    const renderAchievements = (achievements) => {
         if (!dom.achievementsList || !dom.noAchievementsMessage) return;
-
+        
         dom.achievementsList.innerHTML = '';
         if (achievements && achievements.length > 0) {
             dom.noAchievementsMessage.classList.add('hidden');
             achievements.forEach(ach => {
-                const achInfo = achievementData[ach.achievement_key];
-                if (achInfo) {
-                    const achElement = document.createElement('div');
-                    achElement.className = `text-center p-2 bg-${achInfo.color}-100 dark:bg-${achInfo.color}-900/50 rounded-lg w-20 h-20 flex flex-col justify-center items-center`;
-                    achElement.title = `${achInfo.name}: ${achInfo.description}`;
-                    achElement.innerHTML = `
-                        <i class="fas ${achInfo.icon} fa-2x text-${achInfo.color}-500"></i>
-                        <span class="text-xs mt-1 font-semibold">${achInfo.name}</span>
-                    `;
-                    dom.achievementsList.appendChild(achElement);
-                }
+                const achElement = document.createElement('div');
+                achElement.className = `text-center p-2 bg-${ach.color}-100 dark:bg-${ach.color}-900/50 rounded-lg w-20 h-20 flex flex-col justify-center items-center`;
+                achElement.title = `${ach.name}: ${ach.description}`;
+                achElement.innerHTML = `
+                    <i class="fas ${ach.icon} fa-2x text-${ach.color}-500"></i>
+                    <span class="text-xs mt-1 font-semibold">${ach.name}</span>
+                `;
+                dom.achievementsList.appendChild(achElement);
             });
         } else {
             dom.noAchievementsMessage.classList.remove('hidden');

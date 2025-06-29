@@ -9,9 +9,9 @@ const statsHandler = (() => {
         try {
             const result = await api.call('get_user_achievements');
             if (result && result.success) {
-                ui.renderAchievements(result.data, appData.achievements);
+                ui.renderAchievements(result.data);
             } else {
-                ui.renderAchievements([], appData.achievements); // Hata durumunda boş liste gönder
+                ui.renderAchievements([]); // Hata durumunda boş liste gönder
             }
         } catch (error) {
             ui.showToast(`Başarımlar yüklenemedi: ${error.message}`, 'error');

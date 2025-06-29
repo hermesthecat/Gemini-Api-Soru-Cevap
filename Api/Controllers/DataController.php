@@ -50,7 +50,19 @@ class DataController
 
     public function getUserAchievements()
     {
-        $stmt = $this->pdo->prepare("SELECT achievement_key, achieved_at FROM user_achievements WHERE user_id = ? ORDER BY achieved_at DESC");
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                a.achievement_key,
+                a.name,
+                a.description,
+                a.icon,
+                a.color,
+                ua.achieved_at
+            FROM user_achievements ua
+            JOIN achievements a ON ua.achievement_key = a.achievement_key
+            WHERE ua.user_id = ? 
+            ORDER BY ua.achieved_at DESC
+        ");
         $stmt->execute([$_SESSION['user_id']]);
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
