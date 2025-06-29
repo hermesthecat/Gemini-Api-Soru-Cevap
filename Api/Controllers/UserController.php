@@ -49,7 +49,7 @@ class UserController
         $stmt_avatar->execute([$default_avatar, $user_id]);
 
         // Yeni kullanıcı için leaderboard'a 0 skorla ekle
-        $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)");
+        $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score, coins) VALUES (?, 0, 100)"); // 100 başlangıç jetonu
         $stmt->execute([$user_id]);
 
         return ['success' => true, 'message' => 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.'];
@@ -65,7 +65,7 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.avatar, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass 
+        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.avatar, u.last_login_date, u.login_streak, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass 
             FROM users u
             JOIN leaderboard l ON u.id = l.user_id
             WHERE u.username = ?");
@@ -85,49 +85,89 @@ class UserController
                     return ['success' => false, 'message' => "Çok fazla başarısız deneme. Lütfen {$remaining_time} dakika sonra tekrar deneyin."];
                 }
             }
-        }
 
-        if ($user && password_verify($password, $user['password'])) {
-            // Başarılı giriş: deneme sayacını sıfırla
-            if ($user['failed_login_attempts'] > 0) {
-                $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = 0, last_login_attempt = NULL WHERE id = ?");
-                $stmt->execute([$user['id']]);
+            // --- Günlük Giriş Ödülü Mantığı ---
+            $today = date('Y-m-d');
+            $last_login_date = $user['last_login_date'];
+            $login_streak = $user['login_streak'];
+            $daily_reward = null;
+
+            if ($last_login_date != $today) {
+                $yesterday = date('Y-m-d', strtotime('-1 day'));
+                if ($last_login_date == $yesterday) {
+                    // Streak devam ediyor
+                    $login_streak++;
+                } else {
+                    // Streak kırıldı veya ilk giriş
+                    $login_streak = 1;
+                }
+
+                // Ödülü hesapla (10 jeton + seri başına 5, en fazla 50)
+                $reward_coins = min(50, 10 + ($login_streak * 5));
+
+                // Veritabanını güncelle
+                $this->pdo->prepare("UPDATE users SET last_login_date = ?, login_streak = ? WHERE id = ?")
+                     ->execute([$today, $login_streak, $user['id']]);
+
+                $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?")
+                     ->execute([$reward_coins, $user['id']]);
+
+                // Kullanıcıya bilgi vermek için veriyi ayarla
+                $daily_reward = [
+                    'coins_earned' => $reward_coins,
+                    'streak' => $login_streak
+                ];
+                
+                // Yanıtta ve session'da kullanılacak jeton miktarını güncelle
+                $user['coins'] += $reward_coins;
             }
 
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['user_role'] = $user['role'];
-            $_SESSION['user_avatar'] = $user['avatar'];
-            $_SESSION['user_coins'] = $user['coins'];
-            $_SESSION['lifelines'] = [
-                'fiftyFifty' => $user['lifeline_fifty_fifty'],
-                'extraTime' => $user['lifeline_extra_time'],
-                'pass' => $user['lifeline_pass']
-            ];
-            $csrf_token = $this->generateCsrfToken();
-            return [
-                'success' => true,
-                'message' => 'Giriş başarılı!',
-                'data' => [
-                    'id' => $user['id'],
-                    'username' => $user['username'],
-                    'role' => $user['role'],
-                    'avatar' => $user['avatar'],
-                    'coins' => $user['coins'],
-                    'lifelines' => $_SESSION['lifelines'],
-                    'csrf_token' => $csrf_token
-                ]
-            ];
+            if ($user && password_verify($password, $user['password'])) {
+                // Başarılı giriş: deneme sayacını sıfırla
+                if ($user['failed_login_attempts'] > 0) {
+                    $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = 0, last_login_attempt = NULL WHERE id = ?");
+                    $stmt->execute([$user['id']]);
+                }
+
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['user_role'] = $user['role'];
+                $_SESSION['user_avatar'] = $user['avatar'];
+                $_SESSION['user_coins'] = $user['coins'];
+                $_SESSION['lifelines'] = [
+                    'fiftyFifty' => $user['lifeline_fifty_fifty'],
+                    'extraTime' => $user['lifeline_extra_time'],
+                    'pass' => $user['lifeline_pass']
+                ];
+                $csrf_token = $this->generateCsrfToken();
+                return [
+                    'success' => true,
+                    'message' => 'Giriş başarılı!',
+                    'data' => [
+                        'id' => $user['id'],
+                        'username' => $user['username'],
+                        'role' => $user['role'],
+                        'avatar' => $user['avatar'],
+                        'coins' => $user['coins'],
+                        'lifelines' => $_SESSION['lifelines'],
+                        'csrf_token' => $csrf_token
+                    ],
+                    'daily_reward' => $daily_reward
+                ];
+            } else {
+                // Başarısız giriş: deneme sayacını artır
+                if ($user) {
+                    $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = failed_login_attempts + 1, last_login_attempt = CURRENT_TIMESTAMP WHERE id = ?");
+                    $stmt->execute([$user['id']]);
+                }
+
+                http_response_code(401); // Unauthorized
+                return ['success' => false, 'message' => 'Kullanıcı adı veya şifre hatalı.'];
+            }
         } else {
-            // Başarısız giriş: deneme sayacını artır
-            if ($user) {
-                $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = failed_login_attempts + 1, last_login_attempt = CURRENT_TIMESTAMP WHERE id = ?");
-                $stmt->execute([$user['id']]);
-            }
-
-            http_response_code(401); // Unauthorized
-            return ['success' => false, 'message' => 'Kullanıcı adı veya şifre hatalı.'];
+            http_response_code(404); // Not Found
+            return ['success' => false, 'message' => 'Kullanıcı bulunamadı.'];
         }
     }
 

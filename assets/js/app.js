@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         onLoginSuccess(e) {
-            const userData = e.detail;
+            const { data: userData, daily_reward } = e.detail;
             appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role, avatar: userData.avatar });
             appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', userData.lifelines);
@@ -190,6 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.toggleAdminButton(userData.role === 'admin');
             ui.showView('main-view');
             ui.showTab('yarışma');
+
+            // Günlük giriş ödülü bildirimini işle
+            if (daily_reward) {
+                // Kullanıcının ana arayüzü görmesi için kısa bir gecikme ekle
+                setTimeout(() => {
+                    const message = `🎉 Günlük giriş ödülünü topladın: +${daily_reward.coins_earned} Jeton! Serin ${daily_reward.streak} güne ulaştı!`;
+                    ui.showToast(message, 'success');
+                    // Ödül sesi çal
+                    this.onPlaySound({ detail: { sound: 'achievement' } });
+                }, 1000); // 1 saniye gecikme
+            }
 
             statsHandler.updateAll();
             statsHandler.startLeaderboardUpdates();

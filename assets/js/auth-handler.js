@@ -16,7 +16,7 @@ const auth = {
             if (result && result.success) {
                 this.ui.showToast('Giriş başarılı, hoş geldiniz!', 'success');
                 // Başarılı girişi ana uygulamaya bildir
-                document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result.data }));
+                document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result }));
             } else if (result && result.message) {
                 // Sunucudan gelen özel hata mesajlarını göster (örn. "Şifre hatalı")
                 this.ui.showToast(result.message, 'error');

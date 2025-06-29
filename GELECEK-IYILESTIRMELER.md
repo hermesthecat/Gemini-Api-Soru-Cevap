@@ -23,8 +23,8 @@ Bu bölüm, gelecek geliştirme döngüleri için planlanan özellikleri ve iyil
 
 ### 3. Yönetici Paneli Geliştirmeleri
 
-- [ ] **Detaylı İstatistikler:** Admin paneline grafikler ve daha ayrıntılı analizler (örn. en çok oynanan kategoriler, günlük aktif kullanıcı sayısı) ekle.
-- [ ] **Duyuru Sistemi:** Admin'in tüm kullanıcılara veya belirli gruplara uygulama içi duyurular gönderebilmesi.
+- [x] **Detaylı İstatistikler:** Admin paneline grafikler ve daha ayrıntılı analizler (örn. en çok oynanan kategoriler, günlük aktif kullanıcı sayısı) ekle.
+- [x] **Duyuru Sistemi:** Admin'in tüm kullanıcılara veya belirli gruplara uygulama içi duyurular gönderebilmesi.
 - [ ] **Soru Yönetimi:** Raporlanan soruları incelemek ve yönetmek için bir arayüz.
 
 ---
@@ -37,7 +37,7 @@ Bu bölüm, projenin uzun vadeli sağlığı ve ölçeklenebilirliği için daha
 
 - [x] **Oyun İçi Para Birimi:** Doğru cevaplar, tamamlanan görevler ve kazanılan düellolar için "jeton" kazanma sistemi.
 - [x] **Mağaza:** Kazanılan jetonlarla yeni avatarlar, profil çerçeveleri, tema renkleri veya ek jokerler gibi kozmetik veya işlevsel öğelerin satın alınabileceği bir mağaza.
-- [ ] **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden ödül sistemi.
+- [x] **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden ödül sistemi.
 
 ### 2. Teknik İyileştirmeler
 

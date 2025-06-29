@@ -30,7 +30,7 @@ try {
 
   // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
   echo "Mevcut tablolar temizleniyor...\n";
-  $pdo->exec("DROP TABLE IF EXISTS `user_quests`, `quests`, `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
+  $pdo->exec("DROP TABLE IF EXISTS `user_announcements`, `user_quests`, `quests`, `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`, `announcements`;");
   echo "Eski tablolar başarıyla silindi.\n\n";
 
   echo "Yeni tablolar oluşturuluyor...\n";
@@ -43,13 +43,15 @@ try {
       `password` VARCHAR(255) NOT NULL,
       `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
       `avatar` VARCHAR(255) NOT NULL DEFAULT 'avatar1.svg',
+      `last_login_date` DATE NULL DEFAULT NULL COMMENT 'Kullanıcının son giriş yaptığı tarih',
+      `login_streak` INT(11) NOT NULL DEFAULT 0 COMMENT 'Kullanıcının ardışık giriş yapma serisi',
       `failed_login_attempts` INT NOT NULL DEFAULT 0,
       `last_login_attempt` TIMESTAMP NULL DEFAULT NULL,
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_users);
-  echo "Tablo 'users' (rate limiting sütunları ile) başarıyla oluşturuldu.\n";
+  echo "Tablo 'users' (rate limiting ve günlük giriş sütunları ile) başarıyla oluşturuldu.\n";
 
   // `friends` tablosu
   $sql_friends = "
@@ -229,14 +231,14 @@ try {
   // --- Görev Verilerini Veritabanına Ekle ---
   echo "\nGörev verileri veritabanına ekleniyor...\n";
   $quests_data = [
-    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25],
-    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25],
-    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25],
-    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50],
-    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30]
+    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25, 25],
+    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25, 25],
+    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50, 50],
+    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30, 40]
   ];
 
-  $stmt_quest_insert = $pdo->prepare("INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  $stmt_quest_insert = $pdo->prepare("INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
   foreach ($quests_data as $quest) {
     $stmt_quest_insert->execute($quest);
   }
