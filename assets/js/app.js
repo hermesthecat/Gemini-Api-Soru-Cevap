@@ -46,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardLoading: document.getElementById('leaderboard-loading'),
         achievementsList: document.getElementById('achievements-list'),
         noAchievementsMessage: document.getElementById('no-achievements-message'),
+        avatarGrid: document.getElementById('avatar-grid'),
+        userAvatarDisplay: document.getElementById('user-avatar-display'),
         // Admin View
         adminTotalUsers: document.getElementById('admin-total-users'),
         adminTotalQuestions: document.getElementById('admin-total-questions'),
@@ -156,12 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         onLoginSuccess(e) {
             const userData = e.detail;
-            appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
+            appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role, avatar: userData.avatar });
             appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', { fiftyFifty: 1, extraTime: 1, pass: 1 });
 
             game.updateLifelineUI();
-            ui.renderWelcomeMessage(userData.username);
+            ui.renderWelcomeMessage(userData.username, userData.avatar);
             ui.toggleAdminButton(userData.role === 'admin');
             ui.showView('main-view');
             ui.showTab('yarışma');

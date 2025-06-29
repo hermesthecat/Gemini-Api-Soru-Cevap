@@ -108,9 +108,12 @@ const ui = (() => {
         document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tabId } }));
     };
 
-    const renderWelcomeMessage = (username) => {
+    const renderWelcomeMessage = (username, avatar) => {
         if (!dom.welcomeMessage) return;
         dom.welcomeMessage.textContent = `Hoş Geldin, ${username}!`;
+        if (dom.userAvatarDisplay) {
+            dom.userAvatarDisplay.src = `assets/images/avatars/${avatar}`;
+        }
     };
 
     const toggleAdminButton = (isAdmin) => {
@@ -180,16 +183,22 @@ const ui = (() => {
             li.className = 'flex justify-between items-center text-sm p-2 rounded-md';
 
             const playerDiv = document.createElement('div');
-            playerDiv.className = 'flex items-center';
+            playerDiv.className = 'flex items-center space-x-2';
 
             const rankSpan = document.createElement('span');
-            rankSpan.className = 'font-bold w-6';
+            rankSpan.className = 'font-bold w-6 text-center';
             rankSpan.textContent = `${index + 1}.`;
+
+            const avatarImg = document.createElement('img');
+            avatarImg.src = `assets/images/avatars/${player.avatar}`;
+            avatarImg.alt = player.username;
+            avatarImg.className = 'w-8 h-8 rounded-full';
 
             const nameSpan = document.createElement('span');
             nameSpan.textContent = player.username;
 
             playerDiv.appendChild(rankSpan);
+            playerDiv.appendChild(avatarImg);
             playerDiv.appendChild(nameSpan);
 
             const scoreSpan = document.createElement('span');
@@ -249,14 +258,26 @@ const ui = (() => {
             const isCurrentUser = user.id === currentUserId;
 
             const userCell = document.createElement('td');
-            userCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white';
-            userCell.textContent = user.username;
+            userCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center space-x-3';
+
+            const avatarImg = document.createElement('img');
+            avatarImg.src = `assets/images/avatars/${user.avatar}`;
+            avatarImg.alt = user.username;
+            avatarImg.className = 'w-10 h-10 rounded-full';
+            userCell.appendChild(avatarImg);
+
+            const nameDiv = document.createElement('div');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = user.username;
+            nameDiv.appendChild(nameSpan);
+
             if (isCurrentUser) {
                 const selfSpan = document.createElement('span');
-                selfSpan.className = 'text-xs text-blue-500 ml-2';
+                selfSpan.className = 'block text-xs text-blue-500';
                 selfSpan.textContent = '(Siz)';
-                userCell.appendChild(selfSpan);
+                nameDiv.appendChild(selfSpan);
             }
+            userCell.appendChild(nameDiv);
 
             const scoreCell = document.createElement('td');
             scoreCell.className = 'px-6 py-4';
@@ -304,7 +325,10 @@ const ui = (() => {
             const userEl = document.createElement('div');
             userEl.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
             userEl.innerHTML = `
-                <span class="font-semibold text-gray-700 dark:text-gray-300">${user.username}</span>
+                <div class="flex items-center space-x-3">
+                    <img src="assets/images/avatars/${user.avatar}" alt="${user.username}" class="w-8 h-8 rounded-full">
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">${user.username}</span>
+                </div>
                 <button data-user-id="${user.id}" class="add-friend-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-lg transition-colors">
                     <i class="fas fa-plus mr-1"></i> Ekle
                 </button>
@@ -347,9 +371,12 @@ const ui = (() => {
             const friendEl = document.createElement('div');
             friendEl.className = 'flex items-center justify-between p-2 even:bg-gray-50 dark:even:bg-gray-700/50 rounded-lg';
             friendEl.innerHTML = `
-                <div class="flex flex-col">
-                    <span class="font-semibold text-gray-800 dark:text-gray-200">${friend.username}</span>
-                    <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
+                <div class="flex items-center space-x-3">
+                     <img src="assets/images/avatars/${friend.avatar}" alt="${friend.username}" class="w-10 h-10 rounded-full">
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-gray-800 dark:text-gray-200">${friend.username}</span>
+                        <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
+                    </div>
                 </div>
                 <div class="space-x-2">
                      <button data-opponent-id="${friend.id}" data-opponent-name="${friend.username}" class="challenge-friend-btn text-sm bg-purple-500 hover:bg-purple-600 text-white py-1 px-3 rounded-lg transition-colors" title="Meydan Oku">
@@ -408,6 +435,7 @@ const ui = (() => {
         duels.forEach(duel => {
             const isChallenger = duel.challenger_id === currentUserId;
             const opponentName = isChallenger ? duel.opponent_name : duel.challenger_name;
+            const opponentAvatar = isChallenger ? duel.opponent_avatar : duel.challenger_avatar;
             let statusText = '';
             let buttons = '';
 
@@ -461,14 +489,17 @@ const ui = (() => {
             const duelEl = document.createElement('div');
             duelEl.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
             duelEl.innerHTML = `
-                <div class="mb-2 sm:mb-0">
-                    <p class="font-semibold text-gray-800 dark:text-gray-200">
-                        Rakip: ${opponentName} 
-                        <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(${duel.category} - ${duel.difficulty})</span>
-                    </p>
-                    <p class="text-sm">${statusText}</p>
+                <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                    <img src="assets/images/avatars/${opponentAvatar}" alt="${opponentName}" class="w-10 h-10 rounded-full">
+                    <div>
+                        <p class="font-semibold text-gray-800 dark:text-gray-200">
+                            Rakip: ${opponentName} 
+                            <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(${duel.category} - ${duel.difficulty})</span>
+                        </p>
+                        <p class="text-sm">${statusText}</p>
+                    </div>
                 </div>
-                <div class="space-x-2 flex-shrink-0">
+                <div class="space-x-2 flex-shrink-0 self-end sm:self-center">
                     ${buttons}
                 </div>
             `;
@@ -629,6 +660,51 @@ const ui = (() => {
         });
     };
 
+    const populateAvatarGrid = (currentAvatar) => {
+        if (!dom.avatarGrid) return;
+        dom.avatarGrid.innerHTML = '';
+        for (let i = 1; i <= 10; i++) {
+            const avatarFile = `avatar${i}.svg`;
+            const avatarWrapper = document.createElement('div');
+            avatarWrapper.className = 'relative cursor-pointer avatar-wrapper';
+
+            const avatarImg = document.createElement('img');
+            avatarImg.src = `assets/images/avatars/${avatarFile}`;
+            avatarImg.dataset.avatar = avatarFile;
+            avatarImg.className = `w-full h-auto rounded-full transition-all duration-200`;
+
+            const checkmark = document.createElement('div');
+            checkmark.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 transition-opacity';
+            checkmark.innerHTML = '<i class="fas fa-check text-white text-2xl"></i>';
+
+            if (avatarFile === currentAvatar) {
+                avatarImg.classList.add('ring-4', 'ring-blue-500', 'p-1');
+                avatarWrapper.classList.add('selected');
+            }
+
+            avatarWrapper.appendChild(avatarImg);
+            avatarWrapper.appendChild(checkmark);
+            dom.avatarGrid.appendChild(avatarWrapper);
+        }
+    };
+
+    const updateAvatarDisplay = (newAvatar) => {
+        if (dom.userAvatarDisplay) {
+            dom.userAvatarDisplay.src = `assets/images/avatars/${newAvatar}`;
+        }
+        if (dom.avatarGrid) {
+            dom.avatarGrid.querySelectorAll('.avatar-wrapper').forEach(wrapper => {
+                wrapper.classList.remove('selected');
+                wrapper.querySelector('img').classList.remove('ring-4', 'ring-blue-500', 'p-1');
+            });
+            const newSelection = dom.avatarGrid.querySelector(`img[data-avatar="${newAvatar}"]`);
+            if (newSelection) {
+                newSelection.classList.add('ring-4', 'ring-blue-500', 'p-1');
+                newSelection.parentElement.classList.add('selected');
+            }
+        }
+    };
+
     return {
         init,
         showView,
@@ -647,6 +723,8 @@ const ui = (() => {
         renderFriendsList,
         showDuelModal,
         renderDuelsList,
+        populateAvatarGrid,
+        updateAvatarDisplay,
         // Duel Game UI
         renderDuelGame,
         renderDuelQuestion,

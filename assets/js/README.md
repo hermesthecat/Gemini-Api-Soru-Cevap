@@ -25,7 +25,7 @@ Ana orkestrasyon `app.js` tarafından yönetilir ve her modül belirli bir göre
   - Tüm görsel güncellemeler bu modül üzerinden yapılır.
 
 - **`app-state.js`**: Uygulamanın anlık durumunu (state) tutan merkezi bir yapıdır.
-  - Giriş yapmış kullanıcı bilgileri (`currentUser`), zorluk seviyesi, ses ayarları gibi değişkenleri saklar.
+  - Giriş yapmış kullanıcı bilgileri (`currentUser` - avatar dahil), zorluk seviyesi, ses ayarları gibi değişkenleri saklar.
   - Diğer modüllerin uygulama durumu hakkında bilgi almasını (`get`) ve durumu değiştirmesini (`set`) sağlar.
 
 - **`app-data.js`**: Uygulamanın statik verilerini barındırır.
@@ -45,6 +45,7 @@ Ana orkestrasyon `app.js` tarafından yönetilir ve her modül belirli bir göre
 
 - **`stats-handler.js`**: Profil sayfasındaki verilerin güncellenmesinden sorumludur.
   - Kullanıcı istatistiklerini, başarımlarını ve liderlik tablosunu periyodik olarak veya gerektiğinde `api-handler` aracılığıyla günceller.
+  - Kullanıcının profil sayfasından yeni bir avatar seçme ve güncelleme işlemini yönetir.
 
 - **`admin-handler.js`**: Yönetici paneliyle ilgili istemci tarafı mantığını içerir.
   - Paneldeki verileri (`api-handler` ile) günceller.

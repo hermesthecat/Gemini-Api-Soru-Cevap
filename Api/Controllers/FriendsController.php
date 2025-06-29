@@ -23,7 +23,7 @@ class FriendsController
         }
 
         $stmt = $this->pdo->prepare("
-            SELECT u.id, u.username 
+            SELECT u.id, u.username, u.avatar
             FROM users u
             WHERE u.username LIKE ? 
               AND u.id != ?
@@ -132,6 +132,7 @@ class FriendsController
             SELECT 
                 u.id, 
                 u.username, 
+                u.avatar,
                 l.score,
                 (SELECT f.id FROM friends f WHERE (f.user_one_id = u.id AND f.user_two_id = ?) OR (f.user_one_id = ? AND f.user_two_id = u.id)) as friendship_id
             FROM users u

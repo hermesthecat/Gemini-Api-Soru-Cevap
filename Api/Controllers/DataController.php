@@ -38,7 +38,7 @@ class DataController
     public function getLeaderboard()
     {
         $stmt = $this->pdo->prepare("
-            SELECT u.username, l.score 
+            SELECT u.username, u.avatar, l.score 
             FROM leaderboard l
             JOIN users u ON l.user_id = u.id
             ORDER BY l.score DESC, l.last_updated ASC 

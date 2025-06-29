@@ -8,6 +8,7 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 - **Arkadaşlık Sistemi:** Kullanıcılar birbirlerini arkadaş olarak ekleyebilir, istek gönderip alabilir ve arkadaşlarını listeleyebilir.
 - **Meydan Okuma (Düello) Modu:** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
 - **Günlük Görevler:** Kullanıcıların her gün tamamlayarak ekstra puan kazanabileceği "5 tarih sorusu çöz" gibi dinamik olarak atanan görevler.
+- **Avatar ve Özelleştirme:** Kullanıcılar, profillerini kişiselleştirmek için kendilerine sunulan çeşitli avatarlardan birini seçebilirler. Seçilen avatar, uygulama genelinde (arkadaş listesi, liderlik tablosu vb.) gösterilir.
 - **Kullanıcı Kayıt ve Giriş Sistemi:** Güvenli `password_hash` ile şifreleme ve PHP session yönetimi sayesinde kullanıcılar kendi hesaplarını oluşturabilir.
 - **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
 - **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
@@ -78,6 +79,8 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 │       └── UserController.php
 ├── assets/
 │   ├── css/style.css
+│   ├── images/
+│   │   └── avatars/      # Kullanıcı avatar dosyaları
 │   └── js/               # Modüler JavaScript dosyaları
 │       ├── admin-handler.js
 │       ├── api-handler.js

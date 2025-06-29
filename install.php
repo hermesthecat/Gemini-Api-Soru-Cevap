@@ -42,6 +42,7 @@ try {
       `username` VARCHAR(50) NOT NULL UNIQUE,
       `password` VARCHAR(255) NOT NULL,
       `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+      `avatar` VARCHAR(255) NOT NULL DEFAULT 'avatar1.svg',
       `failed_login_attempts` INT NOT NULL DEFAULT 0,
       `last_login_attempt` TIMESTAMP NULL DEFAULT NULL,
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP

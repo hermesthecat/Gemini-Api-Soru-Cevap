@@ -43,6 +43,11 @@ class UserController
         $stmt->execute([$username, $hashed_password]);
         $user_id = $this->pdo->lastInsertId();
 
+        // Yeni kullanıcı için varsayılan bir avatar ata
+        $default_avatar = 'avatar' . rand(1, 10) . '.svg';
+        $stmt_avatar = $this->pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+        $stmt_avatar->execute([$default_avatar, $user_id]);
+
         // Yeni kullanıcı için leaderboard'a 0 skorla ekle
         $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)");
         $stmt->execute([$user_id]);
@@ -60,7 +65,7 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt FROM users WHERE username = ?");
+        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt, avatar FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -90,6 +95,7 @@ class UserController
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['user_role'] = $user['role'];
+            $_SESSION['user_avatar'] = $user['avatar'];
             $csrf_token = $this->generateCsrfToken();
             return [
                 'success' => true,
@@ -98,6 +104,7 @@ class UserController
                     'id' => $user['id'],
                     'username' => $user['username'],
                     'role' => $user['role'],
+                    'avatar' => $user['avatar'],
                     'csrf_token' => $csrf_token
                 ]
             ];
@@ -130,11 +137,32 @@ class UserController
                     'id' => $_SESSION['user_id'],
                     'username' => $_SESSION['username'],
                     'role' => $_SESSION['user_role'],
+                    'avatar' => $_SESSION['user_avatar'] ?? 'default.svg',
                     'csrf_token' => $csrf_token
                 ]
             ];
         } else {
             return ['success' => false, 'message' => 'Oturum bulunamadı.'];
         }
+    }
+
+    public function updateAvatar($data)
+    {
+        $user_id = $_SESSION['user_id'];
+        $new_avatar = $data['avatar'] ?? '';
+
+        if (empty($new_avatar) || !preg_match('/^avatar\d{1,2}\.svg$/', $new_avatar)) {
+            return ['success' => false, 'message' => 'Geçersiz avatar seçimi.'];
+        }
+
+        $stmt = $this->pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+        $stmt->execute([$new_avatar, $user_id]);
+
+        if ($stmt->rowCount() > 0) {
+            $_SESSION['user_avatar'] = $new_avatar;
+            return ['success' => true, 'message' => 'Avatar güncellendi.', 'data' => ['avatar' => $new_avatar]];
+        }
+
+        return ['success' => false, 'message' => 'Avatar güncellenemedi veya zaten bu avatarı kullanıyorsunuz.'];
     }
 }

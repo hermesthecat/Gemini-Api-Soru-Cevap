@@ -67,6 +67,7 @@ try {
         'login' => [$userController, 'login', true, false],
         'logout' => [$userController, 'logout', false, true],
         'check_session' => [$userController, 'checkSession', false, false],
+        'update_avatar' => [$userController, 'updateAvatar', true, true],
 
         // Game Routes
         'get_question' => [$gameController, 'getQuestion', true, true],

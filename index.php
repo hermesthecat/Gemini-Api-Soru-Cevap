@@ -68,8 +68,9 @@
         <div id="main-view" class="hidden">
             <!-- Üst Bar -->
             <header class="flex justify-between items-center mb-6">
-                <div id="user-info" class="font-semibold">
-                    <span id="welcome-message"></span>
+                <div id="user-info" class="flex items-center space-x-3">
+                    <img id="user-avatar-display" src="" alt="Avatar" class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
+                    <span id="welcome-message" class="font-semibold"></span>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button id="admin-view-btn" class="hidden text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>
@@ -173,6 +174,15 @@
                     <aside class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <!-- Sol Taraf (İstatistikler ve Liderlik) -->
                         <div class="space-y-8">
+                            <!-- Avatar Seçimi -->
+                            <div id="avatar-selection-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                                <h2 class="text-xl font-semibold mb-4 dark:text-white">Avatarını Değiştir</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Yeni bir avatar seçmek için üzerine tıkla.</p>
+                                <div id="avatar-grid" class="grid grid-cols-5 gap-4">
+                                    <!-- Avatarlar JS ile buraya yüklenecek -->
+                                </div>
+                            </div>
+
                             <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                                 <h2 class="text-xl font-semibold mb-4 dark:text-white">Kişisel İstatistikler</h2>
                                 <div class="text-center mb-4 border-b dark:border-gray-700 pb-4">

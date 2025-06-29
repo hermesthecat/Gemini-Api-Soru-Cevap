@@ -69,8 +69,8 @@ class DuelController
         $stmt = $this->pdo->prepare("
             SELECT 
                 d.id, d.category, d.difficulty, d.status,
-                d.challenger_id, c.username as challenger_name,
-                d.opponent_id, o.username as opponent_name,
+                d.challenger_id, c.username as challenger_name, c.avatar as challenger_avatar,
+                d.opponent_id, o.username as opponent_name, o.avatar as opponent_avatar,
                 d.winner_id, w.username as winner_name,
                 d.challenger_score, d.opponent_score,
                 d.updated_at

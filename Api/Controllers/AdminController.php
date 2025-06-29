@@ -42,7 +42,7 @@ class AdminController
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         $stmt = $this->pdo->query("
-            SELECT u.id, u.username, u.role, u.created_at, l.score 
+            SELECT u.id, u.username, u.role, u.created_at, u.avatar, l.score 
             FROM users u 
             LEFT JOIN leaderboard l ON u.id = l.user_id 
             ORDER BY u.created_at DESC

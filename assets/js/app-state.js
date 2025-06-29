@@ -1,6 +1,6 @@
 const appState = (() => {
     const state = {
-        currentUser: null, // { id: 1, username: '...', role: '...' }
+        currentUser: null, // { id: 1, username: '...', role: '...', avatar: 'avatar1.svg' }
         csrfToken: null,   // CSRF koruması için
         difficulty: 'orta',
         currentCategory: null,
