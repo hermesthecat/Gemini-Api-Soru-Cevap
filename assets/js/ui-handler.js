@@ -75,12 +75,27 @@ const ui = (() => {
         leaderboardData.forEach((player, index) => {
             const li = document.createElement('li');
             li.className = 'flex justify-between items-center text-sm p-2 rounded-md';
-            li.innerHTML = `
-                <div class="flex items-center">
-                    <span class="font-bold w-6">${index + 1}.</span>
-                    <span>${player.username}</span>
-                </div>
-                <span class="font-semibold text-blue-500">${player.score}</span>`;
+            
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'flex items-center';
+            
+            const rankSpan = document.createElement('span');
+            rankSpan.className = 'font-bold w-6';
+            rankSpan.textContent = `${index + 1}.`;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = player.username;
+            
+            playerDiv.appendChild(rankSpan);
+            playerDiv.appendChild(nameSpan);
+            
+            const scoreSpan = document.createElement('span');
+            scoreSpan.className = 'font-semibold text-blue-500';
+            scoreSpan.textContent = player.score;
+            
+            li.appendChild(playerDiv);
+            li.appendChild(scoreSpan);
+
             if (index === 0) li.classList.add('bg-yellow-100', 'dark:bg-yellow-800/50');
             if (index === 1) li.classList.add('bg-gray-200', 'dark:bg-gray-700/50');
             if (index === 2) li.classList.add('bg-yellow-50', 'dark:bg-yellow-900/50');
@@ -130,20 +145,47 @@ const ui = (() => {
 
             const isCurrentUser = user.id === currentUserId;
 
-            tr.innerHTML = `
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${user.username} ${isCurrentUser ? '<span class="text-xs text-blue-500">(Siz)</span>' : ''}</td>
-                <td class="px-6 py-4">${user.score || 0}</td>
-                <td class="px-6 py-4">
-                    <select class="role-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 p-2" ${isCurrentUser ? 'disabled' : ''}>
-                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
-                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                    </select>
-                </td>
-                <td class="px-6 py-4">${new Date(user.created_at).toLocaleDateString()}</td>
-                <td class="px-6 py-4">
-                    <button class="delete-user-btn ml-2 text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed" ${isCurrentUser ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
-                </td>
+            const userCell = document.createElement('td');
+            userCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white';
+            userCell.textContent = user.username;
+            if (isCurrentUser) {
+                const selfSpan = document.createElement('span');
+                selfSpan.className = 'text-xs text-blue-500 ml-2';
+                selfSpan.textContent = '(Siz)';
+                userCell.appendChild(selfSpan);
+            }
+
+            const scoreCell = document.createElement('td');
+            scoreCell.className = 'px-6 py-4';
+            scoreCell.textContent = user.score || 0;
+
+            const roleCell = document.createElement('td');
+            roleCell.className = 'px-6 py-4';
+            roleCell.innerHTML = `
+                <select class="role-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 p-2" ${isCurrentUser ? 'disabled' : ''}>
+                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
             `;
+
+            const dateCell = document.createElement('td');
+            dateCell.className = 'px-6 py-4';
+            dateCell.textContent = new Date(user.created_at).toLocaleDateString();
+
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'px-6 py-4';
+            actionsCell.innerHTML = `
+                <button class="delete-user-btn text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed" ${isCurrentUser ? 'disabled' : ''} title="Kullanıcıyı Sil">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+
+            tr.appendChild(userCell);
+            tr.appendChild(scoreCell);
+            tr.appendChild(roleCell);
+            tr.appendChild(dateCell);
+            tr.appendChild(actionsCell);
+            
             dom.adminUserListBody.appendChild(tr);
         });
     };

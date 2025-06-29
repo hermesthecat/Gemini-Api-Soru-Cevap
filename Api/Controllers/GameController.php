@@ -18,47 +18,44 @@ class GameController
         $kategori = $data['kategori'] ?? 'genel kültür';
         $difficulty = $data['difficulty'] ?? 'orta';
 
-        try {
-            $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
-            $prompt = $this->generatePrompt($tip, $kategori, $difficulty);
-            $yanit = $this->gemini->soruSor($prompt);
+        $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
+        $prompt = $this->generatePrompt($tip, $kategori, $difficulty);
+        $yanit = $this->gemini->soruSor($prompt);
 
-            if (!$yanit) {
-                return ['success' => false, 'message' => "Gemini API'sinden yanıt alınamadı."];
-            }
-
-            $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
-            $veri = json_decode($temiz_yanit, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE || !$this->isQuestionValid($veri)) {
-                return ['success' => false, 'message' => 'API\'den gelen soru formatı geçersiz veya eksik alanlar var.'];
-            }
-
-            $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
-            $_SESSION['current_question_explanation'] = $veri['aciklama'];
-            $_SESSION['start_time'] = time();
-            $_SESSION['current_question_difficulty'] = $difficulty;
-
-            return [
-                'success' => true,
-                'data' => [
-                    'tip' => $veri['tip'],
-                    'question' => $veri['soru'],
-                    'siklar' => $veri['siklar'] ?? null,
-                    'kategori' => $kategori,
-                    'difficulty' => $difficulty,
-                    'correct_answer' => $veri['dogru_cevap']
-                ]
-            ];
-        } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Soru alınırken sunucu hatası: ' . $e->getMessage()];
+        if (!$yanit) {
+            throw new Exception("Gemini API'sinden yanıt alınamadı.");
         }
+
+        $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
+        $veri = json_decode($temiz_yanit, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !$this->isQuestionValid($veri)) {
+            error_log("Invalid JSON from Gemini: " . $temiz_yanit);
+            throw new Exception('API\'den gelen soru formatı geçersiz veya eksik alanlar var.');
+        }
+
+        $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
+        $_SESSION['current_question_explanation'] = $veri['aciklama'];
+        $_SESSION['start_time'] = time();
+        $_SESSION['current_question_difficulty'] = $difficulty;
+
+        return [
+            'success' => true,
+            'data' => [
+                'tip' => $veri['tip'],
+                'question' => $veri['soru'],
+                'siklar' => $veri['siklar'] ?? null,
+                'kategori' => $kategori,
+                'difficulty' => $difficulty,
+            ]
+        ];
     }
 
     public function submitAnswer($data)
     {
         if (!isset($_SESSION['current_question_answer'])) {
-            return ['success' => false, 'message' => 'Aktif soru bulunamadı.'];
+            http_response_code(400);
+            return ['success' => false, 'message' => 'Aktif soru bulunamadı. Lütfen yeni bir soru alın.'];
         }
 
         $user_answer = $data['answer'] ?? null;
@@ -67,13 +64,11 @@ class GameController
         $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
         $is_correct = ($user_answer === $_SESSION['current_question_answer']);
 
-        if ($is_correct) {
-            $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
-        } else {
-            // Yanlış cevapta da istatistiği güncelle
-            $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
+        if (!$is_correct) {
             $_SESSION['consecutive_correct'] = 0;
         }
+        
+        $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
 
         $yeni_basarimlar = $is_correct ? $this->checkAchievements($kategori, $difficulty) : [];
 
@@ -108,8 +103,8 @@ class GameController
 
             // İstatistiği güncelle (yeni sütunlarla)
             $sql_stat = "
-                INSERT INTO user_stats (user_id, category, difficulty, correct_answers, total_time_spent) 
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO user_stats (user_id, category, difficulty, total_questions, correct_answers, total_time_spent) 
+                VALUES (?, ?, ?, 1, ?, ?)
                 ON DUPLICATE KEY UPDATE 
                     total_questions = total_questions + 1, 
                     correct_answers = correct_answers + VALUES(correct_answers),
@@ -127,8 +122,8 @@ class GameController
             $this->pdo->commit();
         } catch (PDOException $e) {
             $this->pdo->rollBack();
-            // Hata olsa da oyun akışı bozulmasın, sadece logla.
-            error_log("Puan/İstatistik Güncelleme Hatası: " . $e->getMessage());
+            // Hatayı tekrar fırlatarak merkezi hata yöneticisinin yakalamasını sağla
+            throw $e;
         }
     }
 
@@ -138,50 +133,47 @@ class GameController
         $yeni_basarimlar = [];
         $mevcut_basarimlar = [];
 
-        try {
-            // Mevcut başarımları al
-            $stmt_ach = $this->pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ?");
-            $stmt_ach->execute([$user_id]);
-            $mevcut_basarimlar = $stmt_ach->fetchAll(PDO::FETCH_COLUMN);
+        // Mevcut başarımları al
+        $stmt_ach = $this->pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ?");
+        $stmt_ach->execute([$user_id]);
+        $mevcut_basarimlar = $stmt_ach->fetchAll(PDO::FETCH_COLUMN);
 
-            $grant_achievement = function ($key) use (&$yeni_basarimlar, &$mevcut_basarimlar, $user_id) {
-                if (!in_array($key, $mevcut_basarimlar)) {
-                    $stmt = $this->pdo->prepare("INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)");
-                    $stmt->execute([$user_id, $key]);
-                    $yeni_basarimlar[] = $key;
-                    $mevcut_basarimlar[] = $key;
-                }
-            };
-
-            // Başarım kontrolleri...
-            // Seri Galibi
-            if ($_SESSION['consecutive_correct'] >= 25) $grant_achievement('seri_galibi_25');
-            elseif ($_SESSION['consecutive_correct'] >= 10) $grant_achievement('seri_galibi_10');
-
-            // Hız Tutkunu
-            if ((time() - $_SESSION['start_time']) <= 5) $grant_achievement('hiz_tutkunu');
-
-            // Zorlu Rakip (yeni user_stats'a göre güncellendi)
-            if ($difficulty === 'zor') {
-                $stmt_diff_check = $this->pdo->prepare("SELECT SUM(correct_answers) FROM user_stats WHERE user_id = ? AND difficulty = 'zor'");
-                $stmt_diff_check->execute([$user_id]);
-                if ($stmt_diff_check->fetchColumn() >= 10) {
-                    $grant_achievement('zorlu_rakip');
-                }
+        $grant_achievement = function ($key) use (&$yeni_basarimlar, &$mevcut_basarimlar, $user_id) {
+            if (!in_array($key, $mevcut_basarimlar)) {
+                $stmt = $this->pdo->prepare("INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)");
+                $stmt->execute([$user_id, $key]);
+                $yeni_basarimlar[] = $key;
+                $mevcut_basarimlar[] = $key;
             }
+        };
 
-            // Kategori Uzmanı ve Kusursuz
-            $stmt_cat = $this->pdo->prepare("SELECT correct_answers, total_questions FROM user_stats WHERE user_id = ? AND category = ?");
-            $stmt_cat->execute([$user_id, $kategori]);
-            if ($cat_stats = $stmt_cat->fetch(PDO::FETCH_ASSOC)) {
-                if ($cat_stats['correct_answers'] >= 20) $grant_achievement("uzman_{$kategori}");
-                if ($cat_stats['total_questions'] >= 10 && $cat_stats['correct_answers'] == $cat_stats['total_questions']) $grant_achievement("kusursuz_{$kategori}");
+        // Seri Galibi
+        if (isset($_SESSION['consecutive_correct']) && $_SESSION['consecutive_correct'] >= 25) {
+            $grant_achievement('seri_galibi_25');
+        } elseif (isset($_SESSION['consecutive_correct']) && $_SESSION['consecutive_correct'] >= 10) {
+            $grant_achievement('seri_galibi_10');
+        }
+
+        // Hız Tutkunu
+        if (isset($_SESSION['start_time']) && (time() - $_SESSION['start_time']) <= 5) {
+            $grant_achievement('hiz_tutkunu');
+        }
+
+        // Zorlu Rakip
+        if ($difficulty === 'zor') {
+            $stmt_diff_check = $this->pdo->prepare("SELECT SUM(correct_answers) FROM user_stats WHERE user_id = ? AND difficulty = 'zor'");
+            $stmt_diff_check->execute([$user_id]);
+            if ($stmt_diff_check->fetchColumn() >= 10) {
+                $grant_achievement('zorlu_rakip');
             }
+        }
 
-            // ... Diğer tüm başarım kontrolleri buraya eklenebilir. (İlk adım, meraklı, vs.)
-
-        } catch (PDOException $e) {
-            error_log("Başarım kontrol hatası: " . $e->getMessage());
+        // Kategori Uzmanı ve Kusursuz
+        $stmt_cat = $this->pdo->prepare("SELECT correct_answers, total_questions FROM user_stats WHERE user_id = ? AND category = ?");
+        $stmt_cat->execute([$user_id, $kategori]);
+        if ($cat_stats = $stmt_cat->fetch(PDO::FETCH_ASSOC)) {
+            if ($cat_stats['correct_answers'] >= 20) $grant_achievement("uzman_{$kategori}");
+            if ($cat_stats['total_questions'] >= 10 && $cat_stats['correct_answers'] == $cat_stats['total_questions']) $grant_achievement("kusursuz_{$kategori}");
         }
 
         return $yeni_basarimlar;

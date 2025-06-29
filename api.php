@@ -36,52 +36,74 @@ try {
 $request_data = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $request_data['action'] ?? $_GET['action'] ?? null;
 
+// --- Temel İstek Doğrulama ---
+if (!$action) {
+    http_response_code(400); // Bad Request
+    echo json_encode(['success' => false, 'message' => 'Aksiyon (action) belirtilmedi.']);
+    exit();
+}
+
 // --- Controller'ları Başlat ---
 $userController = new UserController($pdo);
 $gameController = new GameController($pdo, GEMINI_API_KEY);
 $adminController = new AdminController($pdo);
 $dataController = new DataController($pdo);
 
-// --- Rota Tanımları ---
-// Rota yapısı: 'action' => [Controller, 'method', $data_gerekiyor_mu, $auth_gerekiyor_mu]
-$routes = [
-    // User Routes
-    'register' => [$userController, 'register', true, false],
-    'login' => [$userController, 'login', true, false],
-    'logout' => [$userController, 'logout', false, true],
-    'check_session' => [$userController, 'checkSession', false, false],
+// Genel Hata Yakalama
+try {
+    // --- Rota Tanımları ---
+    // Rota yapısı: 'action' => [Controller, 'method', $data_gerekiyor_mu, $auth_gerekiyor_mu]
+    $routes = [
+        // User Routes
+        'register' => [$userController, 'register', true, false],
+        'login' => [$userController, 'login', true, false],
+        'logout' => [$userController, 'logout', false, true],
+        'check_session' => [$userController, 'checkSession', false, false],
 
-    // Game Routes
-    'get_question' => [$gameController, 'getQuestion', true, true],
-    'submit_answer' => [$gameController, 'submitAnswer', true, true],
+        // Game Routes
+        'get_question' => [$gameController, 'getQuestion', true, true],
+        'submit_answer' => [$gameController, 'submitAnswer', true, true],
 
-    // Data Routes
-    'get_user_data' => [$dataController, 'getUserData', false, true],
-    'get_leaderboard' => [$dataController, 'getLeaderboard', false, true],
-    'get_user_achievements' => [$dataController, 'getUserAchievements', false, true],
+        // Data Routes
+        'get_user_data' => [$dataController, 'getUserData', false, true],
+        'get_leaderboard' => [$dataController, 'getLeaderboard', false, true],
+        'get_user_achievements' => [$dataController, 'getUserAchievements', false, true],
 
-    // Admin Routes
-    'admin_get_dashboard_data' => [$adminController, 'getDashboardData', false, true],
-    'admin_get_all_users' => [$adminController, 'getAllUsers', false, true],
-    'admin_delete_user' => [$adminController, 'deleteUser', true, true],
-    'admin_update_user_role' => [$adminController, 'updateUserRole', true, true],
-];
+        // Admin Routes
+        'admin_get_dashboard_data' => [$adminController, 'getDashboardData', false, true],
+        'admin_get_all_users' => [$adminController, 'getAllUsers', false, true],
+        'admin_delete_user' => [$adminController, 'deleteUser', true, true],
+        'admin_update_user_role' => [$adminController, 'updateUserRole', true, true],
+    ];
 
-// --- Yönlendirici (Router) Mantığı ---
-if (isset($routes[$action])) {
-    list($controller, $method, $needsData, $needsAuth) = $routes[$action];
+    // --- Yönlendirici (Router) Mantığı ---
+    if (isset($routes[$action])) {
+        list($controller, $method, $needsData, $needsAuth) = $routes[$action];
 
-    // Yetkilendirme kontrolü
-    if ($needsAuth && !isset($_SESSION['user_id'])) {
-        http_response_code(401); // Unauthorized
-        $response = ['success' => false, 'message' => 'Bu işlem için giriş yapmalısınız.'];
+        // Yetkilendirme kontrolü
+        if ($needsAuth && !isset($_SESSION['user_id'])) {
+            http_response_code(401); // Unauthorized
+            $response = ['success' => false, 'message' => 'Bu işlem için giriş yapmalısınız.'];
+        } else {
+            // Metodu çağır
+            $data = $needsData ? $request_data : [];
+            $response = $data ? $controller->$method($data) : $controller->$method();
+        }
     } else {
-        // Metodu çağır
-        $data = $needsData ? $request_data : null;
-        $response = $data ? $controller->$method($data) : $controller->$method();
+        http_response_code(404); // Not Found
+        $response = ['success' => false, 'message' => "Belirtilen aksiyon ('$action') geçersiz."];
     }
-} else {
-    $response = ['success' => false, 'message' => "Belirtilen aksiyon ('$action') geçersiz."];
+
+} catch (PDOException $e) {
+    // Veritabanı ile ilgili kritik hatalar
+    error_log("Veritabanı Hatası: " . $e->getMessage()); // Hataları log dosyasına yaz
+    http_response_code(500); // Internal Server Error
+    $response = ['success' => false, 'message' => 'Sunucuda bir veritabanı hatası oluştu. Lütfen daha sonra tekrar deneyin.'];
+} catch (Exception $e) {
+    // Diğer beklenmedik tüm hatalar
+    error_log("Genel Hata: " . $e->getMessage()); // Hataları log dosyasına yaz
+    http_response_code(500); // Internal Server Error
+    $response = ['success' => false, 'message' => 'Sunucuda beklenmedik bir hata oluştu. Lütfen daha sonra tekrar deneyin.'];
 }
 
 // --- Yanıtı Gönder ---
