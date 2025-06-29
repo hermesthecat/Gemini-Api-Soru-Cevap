@@ -1,19 +1,30 @@
 <?php
+/**
+ * AI Bilgi Yarışması - Ana Uygulama Dosyası
+ *
+ * Bu dosya, kullanıcı arayüzünü oluşturur, oyun mantığını yönetir (kategori seçimi,
+ * soru sorma, cevap kontrolü), istatistikleri tutar ve Gemini API ile etkileşimi başlatır.
+ */
+
 require_once 'config.php';
 require_once 'GeminiAPI.php';
 
+// Oturumu başlatır, böylece kullanıcıya özel verileri (soru, istatistikler) saklayabiliriz.
 session_start();
 
-// İstatistikleri sıfırlama
+// İstatistikleri sıfırlama isteği kontrol edilir.
 if (isset($_POST['reset_stats'])) {
+    // Oturumdaki istatistik ve geçmiş verilerini temizler.
     $_SESSION['stats'] = ['total_questions' => 0, 'correct_answers' => 0];
     $_SESSION['history'] = [];
-    header("Location: " . $_SERVER['PHP_SELF']); // Sayfayı yenileyerek formun tekrar gönderilmesini engelle
+    // Sayfayı yeniden yönlendirerek formun tekrar gönderilmesini ve çift sıfırlamayı engeller.
+    header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
 
 
-// Oturumda istatistikleri başlat
+// Oturumda istatistikler ve geçmiş dizileri yoksa, boş olarak oluşturulur.
+// Bu, sayfa ilk yüklendiğinde veya oturum sıfırlandığında hataları önler.
 if (!isset($_SESSION['stats'])) {
     $_SESSION['stats'] = ['total_questions' => 0, 'correct_answers' => 0];
 }
@@ -21,30 +32,33 @@ if (!isset($_SESSION['history'])) {
     $_SESSION['history'] = [];
 }
 
+// GeminiAPI sınıfından bir nesne oluşturulur ve API anahtarı ile yapılandırılır.
 $gemini = new GeminiAPI(GEMINI_API_KEY);
-$error_message = null; // Hata mesajları için değişken
+$error_message = null; // Hata mesajlarını saklamak için bir değişken.
 
-// Debug için
+// Debug için sunucu loglarına POST ve SESSION verilerini yazar. Geliştirme aşamasında kullanışlıdır.
 error_log("POST data: " . print_r($_POST, true));
 error_log("SESSION data: " . print_r($_SESSION, true));
 
-// Kategori değiştirildiğinde veya süre dolduğunda
+// Kullanıcı bir kategori seçtiğinde veya değiştirdiğinde bu blok çalışır.
 if (isset($_POST['kategori'])) {
     $yeni_kategori = $_POST['kategori'];
 
-    // Boş kategori seçimi kontrolü
+    // Boş bir kategori seçimi yapılmadığından emin olunur.
     if (!empty($yeni_kategori)) {
-        // Session'ı temizle
+        // Yeni bir soruya başlamadan önce mevcut soruyla ilgili oturum verileri temizlenir.
         unset($_SESSION['current_question']);
         unset($_SESSION['siklar']);
         unset($_SESSION['dogru_cevap']);
         unset($_SESSION['start_time']);
 
-        // Yeni kategoriyi kaydet
+        // Seçilen yeni kategori oturumda saklanır.
         $_SESSION['kategori'] = $yeni_kategori;
 
-        // Yeni soru al
+        // API'den yeni soru almak için bir `try-catch` bloğu kullanılır. Bu, API hatalarını yakalamayı sağlar.
         try {
+            // Gemini API'ye gönderilecek olan komut (prompt).
+            // Yanıtın belirli bir JSON formatında olması istenir, bu da veriyi işlemeyi kolaylaştırır.
             $prompt = "Lütfen {$yeni_kategori} kategorisinde orta zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
             {
                 \"soru\": \"(soru metni buraya)\",
@@ -57,79 +71,91 @@ if (isset($_POST['kategori'])) {
                 \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\"
             }";
 
+            // Gemini API'sine soru sormak için oluşturulan nesnenin metodu çağrılır.
             $yanit = $gemini->soruSor($prompt);
             error_log("API Response: " . $yanit);
 
+            // API'den bir yanıt gelip gelmediği kontrol edilir.
             if ($yanit) {
-                // API'den gelen yanıtı temizleyelim (bazen başlangıç ve bitişte ```json ... ``` gibi ifadeler olabiliyor)
+                // API yanıtının başında veya sonunda olabilecek fazladan karakterleri (örneğin ```json) temizler.
                 $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
+                // JSON formatındaki yanıt, bir PHP dizisine çevrilir.
                 $veri = json_decode($temiz_yanit, true);
 
+                // JSON'un doğru bir şekilde çözülüp çözülmediği ve beklenen alanları içerip içermediği kontrol edilir.
                 if (json_last_error() === JSON_ERROR_NONE && isset($veri['soru'], $veri['siklar'], $veri['dogru_cevap'])) {
                     $soru = $veri['soru'];
                     $siklar = $veri['siklar'];
                     $dogru_cevap = $veri['dogru_cevap'];
 
+                    // Gelen veriler oturumda saklanır.
                     $_SESSION['current_question'] = $soru;
                     $_SESSION['siklar'] = $siklar;
                     $_SESSION['dogru_cevap'] = $dogru_cevap;
+                    // Soru için geri sayım sayacını başlatmak üzere başlangıç zamanı kaydedilir.
                     $_SESSION['start_time'] = time();
 
+                    // Debug için yüklenen soruyu loglar.
                     error_log("Soru yüklendi: " . $soru);
                     error_log("Şıklar: " . print_r($siklar, true));
                     error_log("Doğru cevap: " . $dogru_cevap);
                 } else {
+                    // JSON verisi bozuksa veya eksikse, kullanıcıya gösterilecek bir hata mesajı ayarlanır.
                     $error_message = "Soru işlenirken bir hata oluştu (geçersiz format). Lütfen tekrar deneyin.";
                     error_log("JSON Decode/Structure Error. Response: " . $temiz_yanit);
                 }
             } else {
+                // API'den hiç yanıt alınamazsa, bir hata mesajı ayarlanır.
                 $error_message = "API'den yanıt alınamadı. Lütfen API anahtarınızı kontrol edin veya daha sonra tekrar deneyin.";
             }
         } catch (Exception $e) {
+            // API isteği sırasında bir sunucu hatası olursa, bu hata yakalanır ve bir mesaj ayarlanır.
             error_log("Hata: " . $e->getMessage());
             $error_message = "Soru alınırken bir sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.";
         }
     }
 }
 
-// Süre dolduğunda
+// Süre dolduğunda (JavaScript tarafından tetiklenir), mevcut kategoride yeni bir soru istemek için bu blok çalışır.
 if (isset($_POST['sure_doldu'])) {
     $kategori = $_SESSION['kategori'];
     $_POST['kategori'] = $kategori;
 }
 
-// Kullanıcı cevap verdiğinde
+// Kullanıcı bir cevaba tıkladığında bu blok çalışır.
 if (isset($_POST['kullanici_cevap'])) {
     $kullanici_cevap = strtoupper(trim($_POST['kullanici_cevap']));
     $kullanici_cevap = preg_replace('/[^A-D]/', '', $kullanici_cevap);
     $gecen_sure = time() - $_SESSION['start_time'];
-    $is_correct = false; // Doğruluğu takip etmek için
+    $is_correct = false; // Cevabın doğruluğunu takip etmek için bir bayrak.
 
     error_log("Kullanıcı cevabı: " . $kullanici_cevap);
     error_log("Doğru cevap: " . $_SESSION['dogru_cevap']);
 
+    // Sürenin dolup dolmadığı kontrol edilir.
     if ($gecen_sure > 30) {
         $sonuc = "Süre doldu! Yeni bir soru alabilirsiniz.";
         $sonuc_class = "text-red-600";
     } else {
+        // Kullanıcının cevabı ile doğru cevap karşılaştırılır.
         if ($kullanici_cevap === $_SESSION['dogru_cevap']) {
             $sonuc = "Tebrikler! Doğru cevap verdiniz. Süre: {$gecen_sure} saniye";
             $sonuc_class = "text-green-600";
-            $is_correct = true;
+            $is_correct = true; // Cevap doğruysa bayrak true olarak ayarlanır.
         } else {
             $sonuc = "Üzgünüm, yanlış cevap. Doğru cevap: " . $_SESSION['dogru_cevap'];
             $sonuc_class = "text-red-600";
         }
     }
 
-    // İstatistikleri güncelle
+    // İstatistikler ve soru geçmişi güncellenir.
     if (!isset($sonuc) || $kullanici_cevap) { // Sadece bir cevap verildiğinde sayacı artır
         $_SESSION['stats']['total_questions']++;
         if ($is_correct) {
             $_SESSION['stats']['correct_answers']++;
         }
 
-        // Geçmişe ekle
+        // Mevcut soru ve cevap bilgileriyle bir geçmiş öğesi oluşturulur.
         $history_item = [
             'question' => $_SESSION['current_question'],
             'user_answer' => $kullanici_cevap,
@@ -137,9 +163,10 @@ if (isset($_POST['kullanici_cevap'])) {
             'is_correct' => $is_correct,
             'siklar' => $_SESSION['siklar']
         ];
+        // Yeni öğe, geçmiş dizisinin başına eklenir.
         array_unshift($_SESSION['history'], $history_item);
 
-        // Geçmişi son 5 soruyla sınırla
+        // Geçmiş listesinin çok uzamaması için son 5 soruyla sınırlandırılır.
         if (count($_SESSION['history']) > 5) {
             array_pop($_SESSION['history']);
         }
@@ -343,9 +370,10 @@ if (isset($_POST['kullanici_cevap'])) {
     </div>
 
     <script>
+        // --- YÜKLEME ANİMASYONU KONTROLÜ ---
         const loadingOverlay = document.getElementById('loading-overlay');
-
-        // Kategori seçim formları için event listener ekle
+        
+        // Kategori seçimi yapıldığında formu submit etmeden önce yükleme animasyonunu gösterir.
         const categoryForm = document.getElementById('category-form');
         const categoryChangeForm = document.getElementById('category-change-form');
 
@@ -360,25 +388,29 @@ if (isset($_POST['kullanici_cevap'])) {
         }
 
         if (categoryChangeForm) {
-            // Dropdown'un formu onchange ile submit edildiği için forma listener ekliyoruz.
+            // Dropdown menüsü değiştiğinde (onchange) formu submit ettiği için, forma bir event listener ekliyoruz.
             categoryChangeForm.addEventListener('submit', showLoading);
         }
     </script>
 
     <?php if (isset($_SESSION['current_question']) && !isset($sonuc)): ?>
         <script>
+            // --- 30 SANİYE GERİ SAYIM SAYACI ---
             let timeLeft = 30;
             const countdownElement = document.getElementById('countdown');
             const answerForm = document.getElementById('answerForm');
 
+            // Her saniye timeLeft değişkenini bir azaltır ve ekranda günceller.
             const timer = setInterval(() => {
                 timeLeft--;
                 countdownElement.textContent = timeLeft;
 
+                // Süre 10 saniyenin altına düştüğünde rengi kırmızı yapar.
                 if (timeLeft <= 10) {
                     countdownElement.classList.add('text-red-600');
                 }
 
+                // Süre dolduğunda sayacı durdurur ve sunucuya "süre doldu" bilgisi gönderir.
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     const form = document.createElement('form');
@@ -390,6 +422,7 @@ if (isset($_POST['kullanici_cevap'])) {
                 }
             }, 1000);
 
+            // Kullanıcı bir cevap verdiğinde sayacın gereksiz yere çalışmasını engellemek için durdurulur.
             answerForm.addEventListener('submit', () => {
                 clearInterval(timer);
             });
