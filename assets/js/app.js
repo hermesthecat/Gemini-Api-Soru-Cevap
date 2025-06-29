@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const soundToggle = document.getElementById('sound-toggle');
+    const soundOnIcon = document.getElementById('sound-on-icon');
+    const soundOffIcon = document.getElementById('sound-off-icon');
+    const correctSound = document.getElementById('correct-sound');
+    const incorrectSound = document.getElementById('incorrect-sound');
+    const timeoutSound = document.getElementById('timeout-sound');
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const errorContainer = document.getElementById('error-container');
@@ -33,8 +39,36 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestion: null, // Mevcut soru, şıkları ve tipi tutmak için
         difficulty: 'orta', // Varsayılan zorluk seviyesi
         theme: 'light', // Varsayılan tema
+        soundEnabled: true // Sesler varsayılan olarak açık
     };
     let timer;
+
+    // --- Ses Fonksiyonları ---
+    const playSound = (soundElement) => {
+        if (state.soundEnabled && soundElement) {
+            soundElement.currentTime = 0;
+            soundElement.play().catch(error => console.error("Ses çalınamadı:", error));
+        }
+    };
+
+    const applySoundSetting = (enabled, isInitial = false) => {
+        state.soundEnabled = enabled;
+        if (enabled) {
+            soundOnIcon.classList.remove('hidden');
+            soundOffIcon.classList.add('hidden');
+        } else {
+            soundOffIcon.classList.remove('hidden');
+            soundOnIcon.classList.add('hidden');
+        }
+        if (!isInitial) {
+            saveStateToLocalStorage();
+        }
+    };
+
+    const handleSoundToggle = () => {
+        applySoundSetting(!state.soundEnabled);
+    };
+
 
     // --- Tema Fonksiyonları ---
     const applyTheme = (theme, isInitial = false) => {
@@ -66,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const persistentState = {
             stats: state.stats,
             history: state.history,
-            theme: state.theme
+            theme: state.theme,
+            soundEnabled: state.soundEnabled
         };
         localStorage.setItem('quizAppState', JSON.stringify(persistentState));
     };
@@ -77,8 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedState = JSON.parse(savedStateJSON);
             state.stats = savedState.stats || {};
             state.history = savedState.history || [];
-            // Temayı state'e yükle, ancak henüz uygulama (initialize halledecek)
+            // Tema ve ses ayarlarını state'e yükle
             state.theme = savedState.theme;
+            if (typeof savedState.soundEnabled === 'boolean') {
+                state.soundEnabled = savedState.soundEnabled;
+            }
         }
     };
 
@@ -278,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(timer);
                 timerContainer.classList.add('hidden');
                 showLoading(true, 'Süre Doldu!');
+                playSound(timeoutSound); // Süre bitme sesi
                 await handleAnswerSubmission('TIMEOUT'); // Süre dolduğunu belirtmek için özel bir değer
                 showLoading(false);
                 showView('categories');
@@ -361,6 +400,9 @@ document.addEventListener('DOMContentLoaded', () => {
             state.stats[category].total_questions++;
             if (data.is_correct) {
                 state.stats[category].correct_answers++;
+                playSound(correctSound); // Doğru cevap sesi
+            } else {
+                playSound(incorrectSound); // Yanlış cevap sesi
             }
 
             // Geçmiş öğesini oluştur
@@ -422,6 +464,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
         applyTheme(initialTheme, true); // `true` ile başlangıç ayarı olduğunu belirt
 
+        // Kayıtlı ses ayarını uygula
+        applySoundSetting(state.soundEnabled, true);
+
         updateStatsUI(state.stats);
         updateHistoryUI(state.history);
         showView('categories');
@@ -429,6 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Olay Dinleyicileri (Event Listeners) ---
     themeToggle.addEventListener('click', handleThemeToggle);
+    soundToggle.addEventListener('click', handleSoundToggle);
     difficultyButtons.addEventListener('click', handleDifficultySelection);
     categoryButtons.addEventListener('click', handleCategorySelection);
     optionsContainer.addEventListener('click', handleOptionClick);

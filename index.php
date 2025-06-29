@@ -35,11 +35,17 @@
 
 
     <div class="container mx-auto px-4 py-8 max-w-4xl relative">
-        <!-- Theme Switcher -->
-        <div class="absolute top-4 right-4 z-10">
+        <!-- Ayarlar Bölümü -->
+        <div class="absolute top-4 right-4 z-10 flex space-x-2">
+            <!-- Theme Switcher -->
             <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
                 <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
                 <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
+            </button>
+            <!-- Sound Switcher -->
+            <button id="sound-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
+                <i id="sound-on-icon" class="fas fa-volume-up hidden"></i>
+                <i id="sound-off-icon" class="fas fa-volume-mute hidden"></i>
             </button>
         </div>
 
@@ -160,6 +166,11 @@
             <p>© 2024 AI Bilgi Yarışması (AJAX). Tüm hakları saklıdır.</p>
         </footer>
     </div>
+
+    <!-- Ses Efektleri -->
+    <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/success.ogg" preload="auto"></audio>
+    <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>
+    <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
     <script src="assets/js/app.js"></script>
 </body>
