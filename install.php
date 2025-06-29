@@ -30,6 +30,7 @@ try {
 
     // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
     echo "Mevcut tablolar temizleniyor...\n";
+    $pdo->exec("DROP TABLE IF EXISTS `user_achievements`;");
     $pdo->exec("DROP TABLE IF EXISTS `user_stats`;");
     $pdo->exec("DROP TABLE IF EXISTS `leaderboard`;");
     $pdo->exec("DROP TABLE IF EXISTS `users`;");
@@ -77,6 +78,20 @@ try {
     ";
     $pdo->exec($sql_user_stats);
     echo "Tablo 'user_stats' başarıyla oluşturuldu ve 'users' tablosuna bağlandı.\n";
+
+    // `user_achievements` tablosu (users tablosuna bağlı)
+    $sql_user_achievements = "
+    CREATE TABLE `user_achievements` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `user_id` INT NOT NULL,
+      `achievement_key` VARCHAR(50) NOT NULL,
+      `achieved_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE KEY `user_achievement` (`user_id`, `achievement_key`),
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ";
+    $pdo->exec($sql_user_achievements);
+    echo "Tablo 'user_achievements' başarıyla oluşturuldu ve 'users' tablosuna bağlandı.\n";
 
     // --- Varsayılan Admin Kullanıcısını Oluştur ---
     echo "\nVarsayılan admin kullanıcısı oluşturuluyor...\n";

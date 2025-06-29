@@ -123,6 +123,7 @@ switch ($action) {
     case 'submit_answer':
     case 'get_user_data':
     case 'get_leaderboard':
+    case 'get_user_achievements':
         // --- YENİ: ADMIN İŞLEMLERİ ---
     case 'admin_get_dashboard_data':
     case 'admin_get_all_users':
@@ -215,9 +216,13 @@ switch ($action) {
                 $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
                 $is_correct = ($user_answer === $_SESSION['current_question_answer']);
                 $puan = 0;
+                $yeni_basarimlar = [];
 
                 if ($is_correct) {
                     $puan = 10 + max(0, 30 - $gecen_sure); // Doğru cevap için 10 puan + kalan süre kadar bonus
+                    $_SESSION['consecutive_correct'] = ($_SESSION['consecutive_correct'] ?? 0) + 1;
+                } else {
+                    $_SESSION['consecutive_correct'] = 0;
                 }
 
                 try {
@@ -235,6 +240,42 @@ switch ($action) {
                         $stmt_score = $pdo->prepare($sql_score);
                         $stmt_score->execute([$puan, $_SESSION['user_id']]);
                     }
+
+                    // 3. Başarımları kontrol et (sadece doğru cevapta)
+                    if ($is_correct) {
+                        $user_id = $_SESSION['user_id'];
+
+                        // Mevcut başarımları al
+                        $stmt_ach = $pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ?");
+                        $stmt_ach->execute([$user_id]);
+                        $mevcut_basarimlar = $stmt_ach->fetchAll(PDO::FETCH_COLUMN);
+
+                        $grant_achievement = function ($key) use ($pdo, $user_id, $mevcut_basarimlar, &$yeni_basarimlar) {
+                            if (!in_array($key, $mevcut_basarimlar)) {
+                                $stmt = $pdo->prepare("INSERT INTO user_achievements (user_id, achievement_key) VALUES (?, ?)");
+                                $stmt->execute([$user_id, $key]);
+                                $yeni_basarimlar[] = $key;
+                            }
+                        };
+
+                        // Başarım 1: Seri Galibi (10 ardışık doğru)
+                        if ($_SESSION['consecutive_correct'] >= 10) {
+                            $grant_achievement('seri_galibi_10');
+                        }
+
+                        // Başarım 2: Hız Tutkunu (5 saniye altı)
+                        if ($gecen_sure <= 5) {
+                            $grant_achievement('hiz_tutkunu');
+                        }
+
+                        // Başarım 3: Kategori Uzmanı (Bir kategoride 20 doğru)
+                        $stmt_cat = $pdo->prepare("SELECT correct_answers FROM user_stats WHERE user_id = ? AND category = ?");
+                        $stmt_cat->execute([$user_id, $kategori]);
+                        $cat_corrects = $stmt_cat->fetchColumn();
+                        if ($cat_corrects && $cat_corrects >= 20) {
+                            $grant_achievement("uzman_{$kategori}");
+                        }
+                    }
                 } catch (PDOException $e) {
                     // Hata olsa bile devam et, oyun akışı bozulmasın
                 }
@@ -243,7 +284,8 @@ switch ($action) {
                 $response['data'] = [
                     'is_correct' => $is_correct,
                     'correct_answer' => $_SESSION['current_question_answer'],
-                    'explanation' => $_SESSION['current_question_explanation']
+                    'explanation' => $_SESSION['current_question_explanation'],
+                    'new_achievements' => $yeni_basarimlar
                 ];
                 unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
                 break;
@@ -274,6 +316,13 @@ switch ($action) {
                     LIMIT 10
                 ");
                 $stmt->execute();
+                $response['success'] = true;
+                $response['data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                break;
+
+            case 'get_user_achievements':
+                $stmt = $pdo->prepare("SELECT achievement_key, achieved_at FROM user_achievements WHERE user_id = ? ORDER BY achieved_at DESC");
+                $stmt->execute([$_SESSION['user_id']]);
                 $response['success'] = true;
                 $response['data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 break;

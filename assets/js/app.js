@@ -64,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
         noStatsMessage: document.getElementById('no-stats-message'),
         leaderboardList: document.getElementById('leaderboard-list'),
         leaderboardLoading: document.getElementById('leaderboard-loading'),
+        achievementsList: document.getElementById('achievements-list'),
+        noAchievementsMessage: document.getElementById('no-achievements-message'),
         // Admin View
         userViewBtn: document.getElementById('user-view-btn'),
         adminTotalUsers: document.getElementById('admin-total-users'),
@@ -128,9 +130,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showToast = (message, type = 'success', duration = 3000) => {
         dom.notificationText.textContent = message;
-        dom.notificationToast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg text-sm ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        dom.notificationToast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg text-sm ${type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-yellow-500'}`;
         dom.notificationToast.classList.remove('hidden');
         setTimeout(() => dom.notificationToast.classList.add('hidden'), duration);
+    };
+
+    const achievementData = {
+        'seri_galibi_10': { name: 'Seri Galibi', icon: 'fa-trophy', color: 'yellow', description: 'Üst üste 10 soruyu doğru cevapladın!' },
+        'hiz_tutkunu': { name: 'Hız Tutkunu', icon: 'fa-bolt', color: 'blue', description: 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!' },
+        'uzman_tarih': { name: 'Tarih Kurdu', icon: 'fa-history', color: 'blue', description: 'Tarih kategorisinde 20 soruya doğru cevap verdin!' },
+        'uzman_spor': { name: 'Spor Gurusu', icon: 'fa-futbol', color: 'green', description: 'Spor kategorisinde 20 soruya doğru cevap verdin!' },
+        'uzman_bilim': { name: 'Bilim Kaşifi', icon: 'fa-atom', color: 'purple', description: 'Bilim kategorisinde 20 soruya doğru cevap verdin!' },
+        'uzman_sanat': { name: 'Sanat Faresi', icon: 'fa-palette', color: 'yellow', description: 'Sanat kategorisinde 20 soruya doğru cevap verdin!' },
+        'uzman_coğrafya': { name: 'Dünya Gezgini', icon: 'fa-globe-americas', color: 'red', description: 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!' },
+        'uzman_genel kültür': { name: 'Her Şeyi Bilen', icon: 'fa-brain', color: 'indigo', description: 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!' }
+    };
+
+    const updateAchievements = async () => {
+        const result = await apiCall('get_user_achievements', {}, 'GET');
+        if (result && result.success && result.data.length > 0) {
+            dom.achievementsList.innerHTML = '';
+            dom.noAchievementsMessage.classList.add('hidden');
+            result.data.forEach(ach => {
+                const achInfo = achievementData[ach.achievement_key];
+                if (achInfo) {
+                    const achElement = document.createElement('div');
+                    achElement.className = `text-center p-2 bg-${achInfo.color}-100 dark:bg-${achInfo.color}-900/50 rounded-lg w-20 h-20 flex flex-col justify-center items-center`;
+                    achElement.title = `${achInfo.name}: ${achInfo.description}`;
+                    achElement.innerHTML = `
+                        <i class="fas ${achInfo.icon} fa-2x text-${achInfo.color}-500"></i>
+                        <span class="text-xs mt-1 font-semibold">${achInfo.name}</span>
+                    `;
+                    dom.achievementsList.appendChild(achElement);
+                }
+            });
+        } else {
+            dom.achievementsList.innerHTML = '';
+            dom.noAchievementsMessage.classList.remove('hidden');
+        }
     };
 
     const updateLeaderboard = async () => {
@@ -311,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading(false);
 
         if (result && result.success) {
-            const { is_correct, correct_answer, explanation } = result.data;
+            const { is_correct, correct_answer, explanation, new_achievements } = result.data;
             playSound(is_correct ? dom.correctSound : dom.incorrectSound);
 
             document.querySelectorAll('.option-button').forEach(btn => {
@@ -328,6 +365,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await updateUserData();
             await updateLeaderboard();
+
+            if (new_achievements && new_achievements.length > 0) {
+                setTimeout(() => {
+                    new_achievements.forEach(key => {
+                        const achInfo = achievementData[key];
+                        if (achInfo) showToast(`Yeni Başarım: ${achInfo.name}!`, 'achievement', 4000);
+                    });
+                    updateAchievements();
+                }, 1000);
+            }
+
             setTimeout(() => {
                 dom.questionContainer.classList.add('hidden');
                 dom.categorySelectionContainer.classList.remove('hidden');
@@ -516,6 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await updateUserData();
         await updateLeaderboard();
+        await updateAchievements();
         state.leaderboardInterval = setInterval(updateLeaderboard, 30000);
     };
 

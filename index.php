@@ -167,6 +167,14 @@
                         </ol>
                         <p id="leaderboard-loading" class="text-gray-500 dark:text-gray-400 text-center py-4">Yükleniyor...</p>
                     </div>
+                    <!-- Başarım Rozetleri -->
+                    <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
+                        <div id="achievements-list" class="flex flex-wrap gap-4 justify-center">
+                            <!-- JS ile doldurulacak -->
+                        </div>
+                        <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz kazanılmış rozet yok.</p>
+                    </div>
                 </aside>
             </div>
         </div>
