@@ -27,32 +27,34 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde dinamik olar
 
 Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağıdaki adımları izleyin:
 
-1.  **Projeyi Klonlayın:**
+1. **Projeyi Klonlayın:**
+
     ```bash
     git clone https://github.com/kullanici-adiniz/ai-soru-cevap.git
     cd ai-soru-cevap
     ```
 
-2.  **Google Gemini API Anahtarı Alın:**
+2. **Google Gemini API Anahtarı Alın:**
     - [Google AI Studio](https://aistudio.google.com/app/apikey) adresine gidin ve bir API anahtarı oluşturun.
     - Bu anahtar, uygulamanın soru üretebilmesi için gereklidir.
 
-3.  **API Anahtarını Yapılandırın:**
+3. **API Anahtarını Yapılandırın:**
     - Proje kök dizinindeki `config.php` dosyasını açın.
     - `'API-KEY-BURAYA'` yazan kısmı kendi Gemini API anahtarınızla değiştirin.
+
     ```php
     <?php
     define('GEMINI_API_KEY', 'SIZIN_API_ANAHTARINIZ'); // API anahtarınızın doğru olduğundan emin olun
     ```
 
-4.  **Sunucuyu Başlatın:**
+4. **Sunucuyu Başlatın:**
     - Projeyi XAMPP, WAMP gibi bir yerel sunucu ortamının `htdocs` veya `www` klasörüne taşıyın.
     - Apache ve MySQL sunucularını başlatın.
     - Tarayıcınızdan `http://localhost/ai-soru-cevap` adresine gidin.
 
 ## Dosya Yapısı
 
-```
+```bash
 .
 ├── config.php          # API anahtarı gibi yapılandırma ayarlarını içerir.
 ├── GeminiAPI.php       # Google Gemini API ile iletişimi yöneten sınıf.
@@ -63,13 +65,13 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 ## Nasıl Çalışır?
 
-1.  Kullanıcı, ana sayfada sunulan kategorilerden birini seçer.
-2.  `index.php`, seçilen kategoriye uygun bir soru oluşturması için `GeminiAPI.php` sınıfı aracılığıyla Google Gemini API'sine bir istek gönderir.
-3.  API'den gelen yanıt (soru, şıklar ve doğru cevap) ayrıştırılır ve PHP `$_SESSION` içinde saklanır.
-4.  Soru ve şıklar kullanıcıya gösterilir ve 30 saniyelik zamanlayıcı başlar.
-5.  Kullanıcı bir şıkkı seçtiğinde, cevabı `$_SESSION` içinde saklanan doğru cevapla karşılaştırılır.
-6.  Sonuç (doğru, yanlış veya süre doldu) ekranda görüntülenir.
-7.  Kullanıcı yeni bir soru isteyebilir veya farklı bir kategori seçebilir.
+1. Kullanıcı, ana sayfada sunulan kategorilerden birini seçer.
+2. `index.php`, seçilen kategoriye uygun bir soru oluşturması için `GeminiAPI.php` sınıfı aracılığıyla Google Gemini API'sine bir istek gönderir.
+3. API'den gelen yanıt (soru, şıklar ve doğru cevap) ayrıştırılır ve PHP `$_SESSION` içinde saklanır.
+4. Soru ve şıklar kullanıcıya gösterilir ve 30 saniyelik zamanlayıcı başlar.
+5. Kullanıcı bir şıkkı seçtiğinde, cevabı `$_SESSION` içinde saklanan doğru cevapla karşılaştırılır.
+6. Sonuç (doğru, yanlış veya süre doldu) ekranda görüntülenir.
+7. Kullanıcı yeni bir soru isteyebilir veya farklı bir kategori seçebilir.
 
 ## Lisans
 
