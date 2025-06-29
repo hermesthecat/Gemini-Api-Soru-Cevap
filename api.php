@@ -18,6 +18,7 @@ require_once 'Api/Controllers/GameController.php';
 require_once 'Api/Controllers/AdminController.php';
 require_once 'Api/Controllers/DataController.php';
 require_once 'Api/Controllers/FriendsController.php';
+require_once 'Api/Controllers/DuelController.php';
 
 session_start();
 header('Content-Type: application/json');
@@ -50,6 +51,7 @@ $gameController = new GameController($pdo, GEMINI_API_KEY);
 $adminController = new AdminController($pdo);
 $dataController = new DataController($pdo);
 $friendsController = new FriendsController($pdo);
+$duelController = new DuelController($pdo, GEMINI_API_KEY);
 
 // Genel Hata Yakalama
 try {
@@ -84,6 +86,9 @@ try {
         'friends_respond_to_request' => [$friendsController, 'respondToRequest', true, true],
         'friends_get_list' => [$friendsController, 'getFriendsList', false, true],
         'friends_remove' => [$friendsController, 'removeFriend', true, true],
+
+        // Duel Routes
+        'duel_create' => [$duelController, 'createDuel', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---

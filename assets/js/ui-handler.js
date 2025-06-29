@@ -351,7 +351,7 @@ const ui = (() => {
                     <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
                 </div>
                 <div class="space-x-2">
-                     <button disabled class="text-sm bg-gray-400 text-white py-1 px-3 rounded-lg cursor-not-allowed" title="Meydan Oku (Yakında)">
+                     <button data-opponent-id="${friend.id}" data-opponent-name="${friend.username}" class="challenge-friend-btn text-sm bg-purple-500 hover:bg-purple-600 text-white py-1 px-3 rounded-lg transition-colors" title="Meydan Oku">
                         <i class="fas fa-fist-raised"></i>
                     </button>
                     <button data-friendship-id="${friend.friendship_id}" data-username="${friend.username}" class="remove-friend-btn text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg transition-colors" title="Arkadaşlıktan Çıkar">
@@ -361,6 +361,41 @@ const ui = (() => {
             `;
             dom.friendsList.appendChild(friendEl);
         });
+    };
+
+    const populateDuelCategories = () => {
+        if (!dom.duelCategorySelect) return;
+        dom.duelCategorySelect.innerHTML = '';
+        for (const key of Object.keys(appData.categories)) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+            dom.duelCategorySelect.appendChild(option);
+        }
+    };
+
+    const showDuelModal = (show, opponent = {}) => {
+        if (!dom.duelModal) return;
+
+        if (show) {
+            dom.duelOpponentName.textContent = opponent.name || '';
+            // Butona ileride data-* attribute eklemek için saklayalım
+            dom.duelSendChallengeBtn.dataset.opponentId = opponent.id || '';
+            
+            populateDuelCategories();
+
+            dom.duelModal.classList.remove('hidden');
+            setTimeout(() => {
+                dom.duelModal.classList.remove('opacity-0');
+                dom.duelModal.querySelector('#duel-modal-content').classList.remove('scale-95');
+            }, 10);
+        } else {
+            dom.duelModal.classList.add('opacity-0');
+            dom.duelModal.querySelector('#duel-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                dom.duelModal.classList.add('hidden');
+            }, 300);
+        }
     };
 
     return {
@@ -378,6 +413,7 @@ const ui = (() => {
         renderAdminUserList,
         renderFriendSearchResults,
         renderPendingRequests,
-        renderFriendsList
+        renderFriendsList,
+        showDuelModal
     };
 })(); 

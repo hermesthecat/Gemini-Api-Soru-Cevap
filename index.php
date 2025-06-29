@@ -326,6 +326,44 @@
         </div>
     </div>
 
+    <!-- Düello Başlatma Modalı -->
+    <div id="duel-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0">
+        <div id="duel-modal-content" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md mx-auto transform scale-95 transition-all duration-300 w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Meydan Oku</h2>
+                <button id="duel-modal-close-btn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            <p class="mb-6 text-gray-600 dark:text-gray-400">
+                <strong id="duel-opponent-name" class="text-blue-500"></strong> adlı arkadaşına meydan okumak için bir kategori ve zorluk seç.
+            </p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="duel-category-select" class="block mb-2 text-sm font-medium dark:text-gray-300">Kategori</label>
+                    <select id="duel-category-select" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Kategoriler JS ile doldurulacak -->
+                    </select>
+                </div>
+                <div>
+                    <label for="duel-difficulty-select" class="block mb-2 text-sm font-medium dark:text-gray-300">Zorluk</label>
+                    <select id="duel-difficulty-select" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="kolay">Kolay</option>
+                        <option value="orta" selected>Orta</option>
+                        <option value="zor">Zor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="duel-send-challenge-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    <i class="fas fa-paper-plane mr-2"></i>Meydan Okuma Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Ses Efektleri -->
     <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/success.ogg" preload="auto"></audio>
     <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>

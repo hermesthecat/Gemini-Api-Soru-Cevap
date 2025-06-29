@@ -187,12 +187,19 @@ class GameController
         return [];
     }
 
-    private function generatePrompt($tip, $kategori, $difficulty)
+    private function generatePrompt($tip, $kategori, $difficulty, $adet = 1)
     {
+        $format_aciklama_coktan_secmeli = '{\"tip\": \"coktan_secmeli\", \"soru\": \"(soru metni buraya)\", \"siklar\": {\"A\": \"(A şıkkı buraya)\", \"B\": \"(B şıkkı buraya)\", \"C\": \"(C şıkkı buraya)\", \"D\": \"(D şıkkı buraya)\"}, \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\", \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"}';
+        $format_aciklama_dogru_yanlis = '{\"tip\": \"dogru_yanlis\", \"soru\": \"(Önerme cümlesi buraya)\", \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\", \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"}';
+
+        if ($adet > 1) {
+             return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, birbirinden farklı {$adet} adet soru hazırla. Soruların yarısı çoktan seçmeli, diğer yarısı doğru/yanlış formatında olabilir. Yanıtı yalnızca geçerli bir JSON dizisi formatında, başka hiçbir metin olmadan ver. Örnek format: [{$format_aciklama_coktan_secmeli}, {$format_aciklama_dogru_yanlis}]";
+        }
+
         if ($tip === 'coktan_secmeli') {
-            return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver: {\"tip\": \"coktan_secmeli\", \"soru\": \"(soru metni buraya)\", \"siklar\": {\"A\": \"(A şıkkı buraya)\", \"B\": \"(B şıkkı buraya)\", \"C\": \"(C şıkkı buraya)\", \"D\": \"(D şıkkı buraya)\"}, \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\", \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"}";
+            return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver: {$format_aciklama_coktan_secmeli}";
         } else { // dogru_yanlis
-            return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, doğru ya da yanlış olarak cevaplanabilecek bir önerme hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver: {\"tip\": \"dogru_yanlis\", \"soru\": \"(Önerme cümlesi buraya)\", \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\", \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"}";
+            return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, doğru ya da yanlış olarak cevaplanabilecek bir önerme hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver: {$format_aciklama_dogru_yanlis}";
         }
     }
 

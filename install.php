@@ -30,7 +30,7 @@ try {
 
   // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
   echo "Mevcut tablolar temizleniyor...\n";
-  $pdo->exec("DROP TABLE IF EXISTS `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
+  $pdo->exec("DROP TABLE IF EXISTS `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
   echo "Eski tablolar başarıyla silindi.\n\n";
 
   echo "Yeni tablolar oluşturuluyor...\n";
@@ -67,6 +67,31 @@ try {
   ";
   $pdo->exec($sql_friends);
   echo "Tablo 'friends' başarıyla oluşturuldu.\n";
+
+  // `duels` tablosu
+  $sql_duels = "
+    CREATE TABLE `duels` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `challenger_id` INT NOT NULL,
+      `opponent_id` INT NOT NULL,
+      `category` VARCHAR(50) NOT NULL,
+      `difficulty` ENUM('kolay', 'orta', 'zor') NOT NULL,
+      `status` ENUM('pending', 'declined', 'active', 'challenger_completed', 'opponent_completed', 'completed', 'expired') NOT NULL DEFAULT 'pending',
+      `questions` JSON NOT NULL,
+      `challenger_answers` JSON DEFAULT NULL,
+      `opponent_answers` JSON DEFAULT NULL,
+      `challenger_score` INT DEFAULT 0,
+      `opponent_score` INT DEFAULT 0,
+      `winner_id` INT DEFAULT NULL,
+      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (`challenger_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`opponent_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`winner_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  ";
+  $pdo->exec($sql_duels);
+  echo "Tablo 'duels' başarıyla oluşturuldu.\n";
 
   // `leaderboard` tablosu (users tablosuna bağlı)
   $sql_leaderboard = "

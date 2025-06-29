@@ -67,6 +67,32 @@ const friendsHandler = (() => {
         }
     };
 
+    const handleChallengeClick = (button) => {
+        const opponentId = button.dataset.opponentId;
+        const opponentName = button.dataset.opponentName;
+        ui.showDuelModal(true, { id: opponentId, name: opponentName });
+    };
+
+    const sendChallenge = async () => {
+        const opponentId = dom.duelSendChallengeBtn.dataset.opponentId;
+        const category = dom.duelCategorySelect.value;
+        const difficulty = dom.duelDifficultySelect.value;
+
+        ui.showLoading(true);
+        const result = await api.call('duel_create', {
+            opponent_id: opponentId,
+            category: category,
+            difficulty: difficulty
+        }, 'POST', false); // showLoading'i manuel yöneteceğiz
+        ui.showLoading(false);
+
+        ui.showToast(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            ui.showDuelModal(false);
+            // İleride düello listesini güncelleme fonksiyonu buraya gelebilir.
+        }
+    };
+
     const addEventListeners = () => {
         // Kullanıcı Arama
         dom.friendSearchInput?.addEventListener('keyup', (e) => {
@@ -100,15 +126,29 @@ const friendsHandler = (() => {
             }
         });
 
-        // Arkadaş silme
+        // Arkadaş silme veya Meydan Okuma
         dom.friendsList?.addEventListener('click', (e) => {
-            const button = e.target.closest('.remove-friend-btn');
-             if (button) {
-                const friendshipId = button.dataset.friendshipId;
-                const username = button.dataset.username;
+            const removeButton = e.target.closest('.remove-friend-btn');
+            if (removeButton) {
+                const friendshipId = removeButton.dataset.friendshipId;
+                const username = removeButton.dataset.username;
                 removeFriend(friendshipId, username);
+                return; // Başka bir butona basılmadığından emin ol
+            }
+
+            const challengeButton = e.target.closest('.challenge-friend-btn');
+            if (challengeButton) {
+                handleChallengeClick(challengeButton);
             }
         });
+
+        // Düello Modalı Kapatma
+        dom.duelModalCloseBtn?.addEventListener('click', () => {
+            ui.showDuelModal(false);
+        });
+
+        // Düello Gönderme
+        dom.duelSendChallengeBtn?.addEventListener('click', sendChallenge);
     };
 
     return {

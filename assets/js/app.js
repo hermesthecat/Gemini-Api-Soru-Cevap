@@ -70,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
         noPendingRequests: document.getElementById('no-pending-requests'),
         friendsList: document.getElementById('friends-list'),
         noFriends: document.getElementById('no-friends'),
+        // Düello Modalı
+        duelModal: document.getElementById('duel-modal'),
+        duelModalCloseBtn: document.getElementById('duel-modal-close-btn'),
+        duelOpponentName: document.getElementById('duel-opponent-name'),
+        duelCategorySelect: document.getElementById('duel-category-select'),
+        duelDifficultySelect: document.getElementById('duel-difficulty-select'),
+        duelSendChallengeBtn: document.getElementById('duel-send-challenge-btn'),
         // Sesler
         correctSound: document.getElementById('correct-sound'),
         incorrectSound: document.getElementById('incorrect-sound'),
