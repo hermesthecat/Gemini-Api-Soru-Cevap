@@ -107,7 +107,18 @@
                     <div id="question-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                         <div class="flex justify-between items-center mb-4">
                             <span id="question-category" class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm"></span>
-                            <div id="timer-container" class="text-lg font-bold">Kalan Süre: <span id="countdown" class="text-blue-600">30</span></div>
+                            <div class="flex items-center space-x-4">
+                                <!-- Joker Butonları -->
+                                <div id="lifeline-container" class="flex items-center space-x-2">
+                                    <button id="lifeline-fifty-fifty" class="lifeline-button p-2 w-10 h-10 rounded-full bg-yellow-400 hover:bg-yellow-500 text-white dark:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors shadow-md" title="50/50 Joker Hakkı">
+                                        <span class="font-bold">½</span>
+                                    </button>
+                                    <button id="lifeline-extra-time" class="lifeline-button p-2 w-10 h-10 rounded-full bg-green-400 hover:bg-green-500 text-white dark:bg-green-600 dark:hover:bg-green-500 transition-colors shadow-md" title="Ekstra Süre Jokeri">
+                                        <i class="fas fa-stopwatch"></i>
+                                    </button>
+                                </div>
+                                <div id="timer-container" class="text-lg font-bold">Kalan Süre: <span id="countdown" class="text-blue-600">30</span></div>
+                            </div>
                         </div>
                         <div class="text-gray-700 dark:text-gray-300 mb-4">
                             <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>

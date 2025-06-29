@@ -8,7 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
         soundEnabled: true,
         theme: 'light',
         leaderboardInterval: null,
-        currentQuestionData: null
+        currentQuestionData: null,
+        timerInterval: null,
+        timeLeft: 30,
+        lifelines: {
+            fiftyFifty: 1,
+            extraTime: 1
+        }
     };
 
     // --- KATEGORİLER ---
@@ -49,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
         explanationText: document.getElementById('explanation-text'),
         timerContainer: document.getElementById('timer-container'),
         countdown: document.getElementById('countdown'),
+        lifelineContainer: document.getElementById('lifeline-container'),
+        lifelineFiftyFifty: document.getElementById('lifeline-fifty-fifty'),
+        lifelineExtraTime: document.getElementById('lifeline-extra-time'),
         // Stats & Leaderboard
         userTotalScore: document.getElementById('user-total-score'),
         categoryStatsBody: document.getElementById('category-stats-body'),
@@ -227,6 +236,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isInitial) localStorage.setItem('soundEnabled', JSON.stringify(enabled));
     };
 
+    const updateLifelineUI = () => {
+        const isTrueFalse = state.currentQuestionData && state.currentQuestionData.tip === 'dogru_yanlis';
+
+        dom.lifelineFiftyFifty.disabled = state.lifelines.fiftyFifty <= 0 || isTrueFalse;
+        dom.lifelineFiftyFifty.title = isTrueFalse ? "Bu soru tipinde kullanılamaz." : "50/50 Joker Hakkı";
+
+        dom.lifelineExtraTime.disabled = state.lifelines.extraTime <= 0;
+
+        const allUsed = state.lifelines.fiftyFifty <= 0 && state.lifelines.extraTime <= 0;
+        dom.lifelineContainer.classList.toggle('hidden', allUsed);
+    };
+
     // --- OYUN MANTIĞI ---
     const displayQuestion = (data) => {
         state.currentQuestionData = data;
@@ -257,18 +278,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.optionsContainer.appendChild(btn);
             });
         }
+        updateLifelineUI();
         startTimer();
     };
 
     const startTimer = () => {
-        let timeLeft = 30;
-        dom.countdown.textContent = timeLeft;
+        state.timeLeft = 30;
+        dom.countdown.textContent = state.timeLeft;
         dom.timerContainer.classList.remove('hidden');
         clearInterval(state.timerInterval);
         state.timerInterval = setInterval(async () => {
-            timeLeft--;
-            dom.countdown.textContent = timeLeft;
-            if (timeLeft <= 0) {
+            state.timeLeft--;
+            dom.countdown.textContent = state.timeLeft;
+            if (state.timeLeft <= 0) {
                 clearInterval(state.timerInterval);
                 playSound(dom.timeoutSound);
                 await handleAnswerSubmission('TIMEOUT');
@@ -279,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleAnswerSubmission = async (answer) => {
         clearInterval(state.timerInterval);
         dom.timerContainer.classList.add('hidden');
+        dom.lifelineContainer.classList.add('hidden');
         showLoading(true, 'Cevap kontrol ediliyor...');
 
         const result = await apiCall('submit_answer', {
@@ -314,6 +337,36 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.questionContainer.classList.add('hidden');
             dom.categorySelectionContainer.classList.remove('hidden');
         }
+
+        dom.lifelineFiftyFifty.addEventListener('click', () => {
+            if (dom.lifelineFiftyFifty.disabled) return;
+
+            playSound(dom.correctSound);
+            state.lifelines.fiftyFifty--;
+            updateLifelineUI();
+
+            const correctAnswer = state.currentQuestionData.correct_answer;
+            const options = Array.from(dom.optionsContainer.querySelectorAll('.option-button'));
+            const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
+
+            wrongOptions.sort(() => 0.5 - Math.random()); // Rastgele karıştır
+
+            wrongOptions[0].classList.add('opacity-20', 'pointer-events-none');
+            wrongOptions[0].disabled = true;
+            wrongOptions[1].classList.add('opacity-20', 'pointer-events-none');
+            wrongOptions[1].disabled = true;
+        });
+
+        dom.lifelineExtraTime.addEventListener('click', () => {
+            if (dom.lifelineExtraTime.disabled) return;
+
+            playSound(dom.correctSound);
+            state.lifelines.extraTime--;
+            updateLifelineUI();
+
+            state.timeLeft += 15;
+            dom.countdown.textContent = state.timeLeft;
+        });
     };
 
     // --- OLAY DİNLEYİCİLERİ (EVENT LISTENERS) ---
@@ -447,6 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- BAŞLANGIÇ FONKSİYONLARI ---
     const initializeUserSession = async (userData) => {
         state.currentUser = userData;
+        state.lifelines = { fiftyFifty: 1, extraTime: 1 };
+        updateLifelineUI();
         dom.welcomeMessage.textContent = `Hoş geldin, ${userData.username}!`;
 
         if (userData.role === 'admin') {

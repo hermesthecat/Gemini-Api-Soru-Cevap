@@ -24,3 +24,10 @@
         transform: scale(0.9);
     }
 }
+
+.lifeline-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #9ca3af;
+    /* gray-400 */
+}

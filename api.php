@@ -191,7 +191,7 @@ switch ($action) {
                             $_SESSION['start_time'] = time();
 
                             // Kullanıcıya sadece güvenli verileri gönder
-                            $response['data'] = ['tip' => $veri['tip'], 'question' => $veri['soru'], 'siklar' => $veri['siklar'] ?? null, 'kategori' => $kategori, 'difficulty' => $difficulty];
+                            $response['data'] = ['tip' => $veri['tip'], 'question' => $veri['soru'], 'siklar' => $veri['siklar'] ?? null, 'kategori' => $kategori, 'difficulty' => $difficulty, 'correct_answer' => $veri['dogru_cevap']];
                             $response['success'] = true;
                         } else {
                             $response['message'] = 'API\'den gelen soru formatı geçersiz veya eksik alanlar var. Yanıt: ' . $temiz_yanit;
