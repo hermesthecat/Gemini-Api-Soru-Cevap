@@ -261,6 +261,35 @@ try {
     }
   }
 
+  // Duyurular Tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      author_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      target_group ENUM('all', 'users', 'admins') DEFAULT 'all',
+      start_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      end_date DATETIME NOT NULL,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+
+  // Kullanıcıların Okuduğu Duyurular Tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS user_announcements (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      announcement_id INT NOT NULL,
+      read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (announcement_id) REFERENCES announcements(id) ON DELETE CASCADE,
+      UNIQUE KEY (user_id, announcement_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+
   echo "\nKurulum başarıyla tamamlandı!";
 } catch (PDOException $e) {
   die("Kurulum sırasında bir hata oluştu: " . $e->getMessage());

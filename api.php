@@ -77,12 +77,17 @@ try {
         'get_user_data' => [$dataController, 'getUserData', false, true],
         'get_leaderboard' => [$dataController, 'getLeaderboard', false, true],
         'get_user_achievements' => [$dataController, 'getUserAchievements', false, true],
+        'get_active_announcements' => [$dataController, 'getActiveAnnouncements', false, true],
+        'mark_announcements_as_read' => [$dataController, 'markAnnouncementsAsRead', true, true],
 
         // Admin Routes
         'admin_get_dashboard_data' => [$adminController, 'getDashboardData', false, true],
         'admin_get_all_users' => [$adminController, 'getAllUsers', false, true],
         'admin_delete_user' => [$adminController, 'deleteUser', true, true],
         'admin_update_user_role' => [$adminController, 'updateUserRole', true, true],
+        'admin_get_announcements' => [$adminController, 'getAnnouncements', false, true],
+        'admin_create_announcement' => [$adminController, 'createAnnouncement', true, true],
+        'admin_delete_announcement' => [$adminController, 'deleteAnnouncement', true, true],
 
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],

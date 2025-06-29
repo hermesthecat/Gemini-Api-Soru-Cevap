@@ -108,6 +108,27 @@ const ui = (() => {
         document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tabId } }));
     };
 
+    const showAdminTab = (tabId) => {
+        dom.adminUsersTab?.classList.add('hidden');
+        dom.adminAnnouncementsTab?.classList.add('hidden');
+        
+        const tabToShow = document.getElementById(`admin-${tabId}-tab`);
+        if(tabToShow) {
+            tabToShow.classList.remove('hidden');
+        }
+
+        dom.adminTabs?.querySelectorAll('.admin-tab-button').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-500');
+            btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-600');
+        });
+
+        const activeButton = dom.adminTabs?.querySelector(`[data-tab="${tabId}"]`);
+        if(activeButton) {
+            activeButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-500');
+            activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-600');
+        }
+    };
+
     const renderWelcomeMessage = (username, avatar) => {
         if (!dom.welcomeMessage) return;
         dom.welcomeMessage.textContent = `Hoş Geldin, ${username}!`;
@@ -311,6 +332,32 @@ const ui = (() => {
             tr.appendChild(actionsCell);
 
             dom.adminUserListBody.appendChild(tr);
+        });
+    };
+
+    const renderAdminAnnouncementsList = (announcements) => {
+        if (!dom.announcementsListBody) return;
+        dom.announcementsListBody.innerHTML = '';
+
+        if(announcements.length === 0) {
+            dom.announcementsListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Mevcut duyuru bulunmuyor.</td></tr>';
+            return;
+        }
+
+        announcements.forEach(ann => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b dark:border-gray-700';
+            tr.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${ann.title}</td>
+                <td class="px-6 py-4">${ann.target_group}</td>
+                <td class="px-6 py-4">${new Date(ann.end_date).toLocaleString()}</td>
+                <td class="px-6 py-4">
+                    <button data-id="${ann.id}" class="delete-announcement-btn text-red-500 hover:text-red-700" title="Duyuruyu Sil">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            dom.announcementsListBody.appendChild(tr);
         });
     };
 
@@ -705,12 +752,55 @@ const ui = (() => {
         }
     };
 
+    const showAnnouncementsModal = (show) => {
+        if (!dom.announcementModal) return;
+        if (show) {
+            dom.announcementModal.classList.remove('hidden');
+            setTimeout(() => {
+                dom.announcementModal.classList.remove('opacity-0');
+                dom.announcementModal.querySelector('#announcement-modal-content').classList.remove('scale-95');
+            }, 10);
+        } else {
+            dom.announcementModal.classList.add('opacity-0');
+            dom.announcementModal.querySelector('#announcement-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                dom.announcementModal.classList.add('hidden');
+            }, 300);
+        }
+    };
+
+    const renderAnnouncementsModal = (announcements) => {
+        if (!dom.announcementModalBody) return;
+        dom.announcementModalBody.innerHTML = '';
+        announcements.forEach(ann => {
+            const annEl = document.createElement('div');
+            annEl.className = 'border-b border-gray-200 dark:border-gray-700 pb-4';
+            annEl.innerHTML = `
+                <h3 class="font-bold text-lg text-gray-800 dark:text-gray-100">${ann.title}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${new Date(ann.created_at).toLocaleString()} </p>
+                <p class="mt-2 text-gray-700 dark:text-gray-300">${ann.content}</p>
+            `;
+            dom.announcementModalBody.appendChild(annEl);
+        });
+    };
+
+    const updateAnnouncementsBadge = (count) => {
+        if (!dom.announcementsBadge) return;
+        if (count > 0) {
+            dom.announcementsBadge.textContent = count;
+            dom.announcementsBadge.classList.remove('hidden');
+        } else {
+            dom.announcementsBadge.classList.add('hidden');
+        }
+    };
+
     return {
         init,
         showView,
         showLoading,
         showToast,
         showTab,
+        showAdminTab,
         renderWelcomeMessage,
         toggleAdminButton,
         renderAchievements,
@@ -718,6 +808,7 @@ const ui = (() => {
         renderUserData,
         renderAdminDashboard,
         renderAdminUserList,
+        renderAdminAnnouncementsList,
         renderFriendSearchResults,
         renderPendingRequests,
         renderFriendsList,
@@ -725,6 +816,9 @@ const ui = (() => {
         renderDuelsList,
         populateAvatarGrid,
         updateAvatarDisplay,
+        showAnnouncementsModal,
+        renderAnnouncementsModal,
+        updateAnnouncementsBadge,
         // Duel Game UI
         renderDuelGame,
         renderDuelQuestion,

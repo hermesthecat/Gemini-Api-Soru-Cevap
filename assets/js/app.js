@@ -52,6 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
         adminTotalUsers: document.getElementById('admin-total-users'),
         adminTotalQuestions: document.getElementById('admin-total-questions'),
         adminUserListBody: document.getElementById('admin-user-list-body'),
+        adminTabs: document.getElementById('admin-tabs'),
+        adminUsersTab: document.getElementById('admin-users-tab'),
+        adminAnnouncementsTab: document.getElementById('admin-announcements-tab'),
+        createAnnouncementForm: document.getElementById('create-announcement-form'),
+        announcementsListBody: document.getElementById('announcements-list-body'),
         // Ayarlar
         themeToggle: document.getElementById('theme-toggle'),
         themeToggleDarkIcon: document.getElementById('theme-toggle-dark-icon'),
@@ -65,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationText: document.getElementById('notification-text'),
         // Başarım Modalı
         achievementModal: document.getElementById('achievement-modal'),
+        // Duyuru Modalı
+        announcementModal: document.getElementById('announcement-modal'),
+        announcementModalCloseBtn: document.getElementById('announcement-modal-close-btn'),
+        announcementModalOkBtn: document.getElementById('announcement-modal-ok-btn'),
+        announcementModalBody: document.getElementById('announcement-modal-body'),
+        announcementsBtn: document.getElementById('announcements-btn'),
+        announcementsBadge: document.getElementById('announcements-badge'),
         // Arkadaşlar Sekmesi
         friendSearchInput: document.getElementById('friend-search-input'),
         friendSearchResults: document.getElementById('friend-search-results'),
@@ -130,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             friendsHandler.init(dom);
             duelHandler.init(dom);
             questHandler.init(dom);
+            announcementHandler.init(dom);
 
             // Özel olayları dinle
             this.addEventListeners();
@@ -172,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statsHandler.startLeaderboardUpdates();
             friendsHandler.updateAll();
             questHandler.updateQuests();
+            announcementHandler.checkForAnnouncements();
         },
 
         onLogout() {
@@ -184,6 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
         onShowAdminView() {
             ui.showView('admin-view');
             adminHandler.updateAll();
+            announcementHandler.updateAnnouncementsList();
+            ui.showAdminTab('users');
         },
 
         onShowMainView() {

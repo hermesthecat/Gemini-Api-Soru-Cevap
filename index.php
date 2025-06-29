@@ -82,7 +82,15 @@
                         <i id="sound-on-icon" class="fas fa-volume-up hidden"></i>
                         <i id="sound-off-icon" class="fas fa-volume-mute hidden"></i>
                     </button>
-                    <button id="logout-btn" class="text-sm bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-lg transition-colors">Çıkış Yap</button>
+                    <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400" title="Çıkış Yap">
+                        <i class="fas fa-sign-out-alt fa-lg"></i>
+                    </button>
+                    <div class="relative">
+                        <button id="announcements-btn" class="text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400" title="Duyurular">
+                            <i class="fas fa-bell fa-lg"></i>
+                        </button>
+                        <span id="announcements-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden"></span>
+                    </div>
                 </div>
             </header>
 
@@ -275,56 +283,105 @@
         </div>
 
         <!-- ===== ADMİN PANELİ EKRANI (Admin giriş yaptığında görünür) ===== -->
-        <div id="admin-view" class="hidden">
-            <!-- Üst Bar -->
-            <header class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold">Yönetim Paneli</h1>
-                    <p class="text-gray-500 dark:text-gray-400">Uygulama genel verileri ve kullanıcı yönetimi</p>
+        <div id="admin-view" class="hidden p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Yönetim Paneli</h1>
+                    <button id="user-view-btn-admin" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Oyuncu Görünümüne Geç</button>
                 </div>
-                <button id="user-view-btn" class="text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded-lg transition-colors">Oyuncu Görünümüne Geç</button>
-            </header>
 
-            <!-- Dashboard İstatistik Kartları -->
-            <div id="admin-dashboard-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
-                    <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                        <i class="fas fa-users fa-2x text-blue-500"></i>
+                <!-- İstatistikler -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- Toplam Kullanıcı -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
+                        <i class="fas fa-users fa-3x text-blue-500"></i>
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400">Toplam Kullanıcı</p>
+                            <p id="admin-total-users" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-gray-500 dark:text-gray-400">Toplam Kullanıcı</p>
-                        <p id="admin-total-users" class="text-2xl font-bold">0</p>
+                    <!-- Toplam Cevaplanan Soru -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
+                        <i class="fas fa-question-circle fa-3x text-green-500"></i>
+                        <div>
+                            <p class="text-gray-500 dark:text-gray-400">Toplam Cevaplanan Soru</p>
+                            <p id="admin-total-questions" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
-                    <div class="bg-green-100 dark:bg-green-900 p-3 rounded-full">
-                        <i class="fas fa-question-circle fa-2x text-green-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 dark:text-gray-400">Cevaplanan Soru Sayısı</p>
-                        <p id="admin-total-questions" class="text-2xl font-bold">0</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Kullanıcı Yönetim Tablosu -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <h2 class="text-xl font-semibold mb-4 dark:text-white">Kullanıcı Yönetimi</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Kullanıcı</th>
-                                <th scope="col" class="px-6 py-3">Puan</th>
-                                <th scope="col" class="px-6 py-3">Rol</th>
-                                <th scope="col" class="px-6 py-3">Kayıt Tarihi</th>
-                                <th scope="col" class="px-6 py-3">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-user-list-body">
-                            <!-- JS ile doldurulacak -->
-                        </tbody>
-                    </table>
+                <!-- Yönetim Sekmeleri -->
+                <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="admin-tabs">
+                        <li class="mr-2">
+                            <button class="admin-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="users">Kullanıcı Yönetimi</button>
+                        </li>
+                        <li class="mr-2">
+                            <button class="admin-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="announcements">Duyuru Yönetimi</button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Kullanıcı Yönetimi Sekmesi -->
+                <div id="admin-users-tab" class="admin-tab-content">
+                    <!-- ... existing user management table ... -->
+                </div>
+
+                <!-- Duyuru Yönetimi Sekmesi -->
+                <div id="admin-announcements-tab" class="admin-tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Yeni Duyuru Formu -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                <h3 class="text-xl font-bold mb-4">Yeni Duyuru Oluştur</h3>
+                                <form id="create-announcement-form" class="space-y-4">
+                                    <div>
+                                        <label for="announcement-title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Başlık</label>
+                                        <input type="text" id="announcement-title" name="title" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700">
+                                    </div>
+                                    <div>
+                                        <label for="announcement-content" class="block text-sm font-medium text-gray-700 dark:text-gray-300">İçerik</label>
+                                        <textarea id="announcement-content" name="content" rows="4" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700"></textarea>
+                                    </div>
+                                    <div>
+                                        <label for="announcement-target" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Hedef Grup</label>
+                                        <select id="announcement-target" name="target_group" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700">
+                                            <option value="all">Tüm Kullanıcılar</option>
+                                            <option value="users">Sadece Normal Kullanıcılar</option>
+                                            <option value="admins">Sadece Adminler</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="announcement-end-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Bitiş Tarihi</label>
+                                        <input type="datetime-local" id="announcement-end-date" name="end_date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700">
+                                    </div>
+                                    <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Duyuruyu Yayınla</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Mevcut Duyurular Listesi -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                                 <h3 class="text-xl font-bold mb-4">Mevcut Duyurular</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead class="bg-gray-50 dark:bg-gray-700">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlık</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hedef</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bitiş Tarihi</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlem</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="announcements-list-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                            <!-- Duyurular buraya JS ile eklenecek -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -450,6 +507,22 @@
         </div>
     </div>
 
+    <!-- Duyuru Modalı -->
+    <div id="announcement-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="announcement-modal-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-lg transform scale-95 transition-transform duration-300 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center"><i class="fas fa-bullhorn mr-3 text-blue-500"></i>Duyurular</h2>
+                <button id="announcement-modal-close-btn" class="text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
+            </div>
+            <div id="announcement-modal-body" class="space-y-4">
+                <!-- Duyuru içerikleri buraya gelecek -->
+            </div>
+            <div class="mt-6 text-right">
+                <button id="announcement-modal-ok-btn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600">Okudum</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Ses Efektleri -->
     <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/success.ogg" preload="auto"></audio>
     <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>
@@ -468,6 +541,7 @@
     <script src="assets/js/friends-handler.js"></script>
     <script src="assets/js/duel-handler.js"></script>
     <script src="assets/js/quest-handler.js"></script>
+    <script src="assets/js/announcement-handler.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 

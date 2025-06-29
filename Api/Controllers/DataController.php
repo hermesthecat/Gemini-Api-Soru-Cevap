@@ -65,4 +65,65 @@ class DataController
         $stmt->execute([$_SESSION['user_id']]);
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
+
+    public function getActiveAnnouncements()
+    {
+        $user_id = $_SESSION['user_id'];
+        $user_role = $_SESSION['user_role'];
+
+        // Kullanıcının rolüne göre hedef grupları belirle
+        $target_groups = ['all'];
+        if ($user_role === 'admin') {
+            $target_groups[] = 'admins';
+        }
+        $target_groups[] = 'users'; // 'users' tüm rolleri kapsar (şimdilik)
+
+        $placeholders = implode(',', array_fill(0, count($target_groups), '?'));
+
+        $stmt = $this->pdo->prepare("
+            SELECT a.id, a.title, a.content, a.created_at
+            FROM announcements a
+            LEFT JOIN user_announcements ua ON a.id = ua.announcement_id AND ua.user_id = :user_id
+            WHERE a.is_active = TRUE
+              AND a.start_date <= CURRENT_TIMESTAMP
+              AND a.end_date >= CURRENT_TIMESTAMP
+              AND a.target_group IN ($placeholders)
+              AND ua.id IS NULL -- Sadece okunmamış olanları getir
+            ORDER BY a.created_at DESC
+        ");
+
+        $params = array_merge([$user_role], [$user_id]);
+        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
+        foreach ($target_groups as $k => $group) {
+            $stmt->bindValue(($k + 1), $group);
+        }
+
+        $stmt->execute();
+        return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    public function markAnnouncementsAsRead($data)
+    {
+        $user_id = $_SESSION['user_id'];
+        $announcement_ids = $data['ids'] ?? [];
+
+        if (empty($announcement_ids) || !is_array($announcement_ids)) {
+            return ['success' => false, 'message' => 'Geçersiz ID.'];
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO user_announcements (user_id, announcement_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE read_at = CURRENT_TIMESTAMP"
+            );
+            foreach ($announcement_ids as $id) {
+                $stmt->execute([$user_id, $id]);
+            }
+            $this->pdo->commit();
+            return ['success' => true];
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            return ['success' => false, 'message' => 'Duyurular okunmuş olarak işaretlenemedi.'];
+        }
+    }
 }
