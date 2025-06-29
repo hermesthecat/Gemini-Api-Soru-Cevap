@@ -136,8 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const achievementData = {
-        'seri_galibi_10': { name: 'Seri Galibi', icon: 'fa-trophy', color: 'yellow', description: 'Üst üste 10 soruyu doğru cevapladın!' },
+        'ilk_adim': { name: 'İlk Adım', icon: 'fa-shoe-prints', color: 'green', description: 'İlk sorunu doğru cevapladın, tebrikler!' },
         'hiz_tutkunu': { name: 'Hız Tutkunu', icon: 'fa-bolt', color: 'blue', description: 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!' },
+        'seri_galibi_10': { name: 'Seri Galibi', icon: 'fa-trophy', color: 'yellow', description: 'Üst üste 10 soruyu doğru cevapladın!' },
+        'seri_galibi_25': { name: 'Yenilmez', icon: 'fa-crown', color: 'red', description: 'İnanılmaz! 25 soruyu art arda doğru bildin!' },
+        'merakli': { name: 'Meraklı', icon: 'fa-compass', color: 'purple', description: 'Tüm kategorilerden en az bir soru cevapladın!' },
+        'puan_avcisi_1000': { name: 'Puan Avcısı', icon: 'fa-star', color: 'yellow', description: 'Toplamda 1000 puana ulaştın!' },
         'uzman_tarih': { name: 'Tarih Kurdu', icon: 'fa-history', color: 'blue', description: 'Tarih kategorisinde 20 soruya doğru cevap verdin!' },
         'uzman_spor': { name: 'Spor Gurusu', icon: 'fa-futbol', color: 'green', description: 'Spor kategorisinde 20 soruya doğru cevap verdin!' },
         'uzman_bilim': { name: 'Bilim Kaşifi', icon: 'fa-atom', color: 'purple', description: 'Bilim kategorisinde 20 soruya doğru cevap verdin!' },

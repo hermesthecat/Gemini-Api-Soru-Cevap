@@ -258,8 +258,10 @@ switch ($action) {
                             }
                         };
 
-                        // Başarım 1: Seri Galibi (10 ardışık doğru)
-                        if ($_SESSION['consecutive_correct'] >= 10) {
+                        // Başarım 1: Seri Galibi
+                        if ($_SESSION['consecutive_correct'] >= 25) {
+                            $grant_achievement('seri_galibi_25');
+                        } elseif ($_SESSION['consecutive_correct'] >= 10) {
                             $grant_achievement('seri_galibi_10');
                         }
 
@@ -274,6 +276,29 @@ switch ($action) {
                         $cat_corrects = $stmt_cat->fetchColumn();
                         if ($cat_corrects && $cat_corrects >= 20) {
                             $grant_achievement("uzman_{$kategori}");
+                        }
+
+                        // Başarım 4: İlk Adım (İlk doğru cevap)
+                        $stmt_total_correct = $pdo->prepare("SELECT SUM(correct_answers) FROM user_stats WHERE user_id = ?");
+                        $stmt_total_correct->execute([$user_id]);
+                        if ($stmt_total_correct->fetchColumn() == 1) {
+                            $grant_achievement('ilk_adim');
+                        }
+
+                        // Başarım 5: Meraklı (Tüm kategorilerden oynamış)
+                        // Not: Kategorileri bir config dosyasında tutmak daha iyi olur, şimdilik sabit.
+                        $kategori_sayisi = 6;
+                        $stmt_cats_played = $pdo->prepare("SELECT COUNT(DISTINCT category) FROM user_stats WHERE user_id = ?");
+                        $stmt_cats_played->execute([$user_id]);
+                        if ($stmt_cats_played->fetchColumn() >= $kategori_sayisi) {
+                            $grant_achievement('merakli');
+                        }
+
+                        // Başarım 6: Puan Avcısı (1000 puana ulaşma)
+                        $stmt_score = $pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+                        $stmt_score->execute([$user_id]);
+                        if ($stmt_score->fetchColumn() >= 1000) {
+                            $grant_achievement('puan_avcisi_1000');
                         }
                     }
                 } catch (PDOException $e) {
