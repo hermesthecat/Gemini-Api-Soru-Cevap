@@ -399,35 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.categorySelectionContainer.classList.remove('hidden');
         }
 
-        dom.lifelineFiftyFifty.addEventListener('click', () => {
-            if (dom.lifelineFiftyFifty.disabled) return;
-
-            playSound(dom.correctSound);
-            state.lifelines.fiftyFifty--;
-            updateLifelineUI();
-
-            const correctAnswer = state.currentQuestionData.correct_answer;
-            const options = Array.from(dom.optionsContainer.querySelectorAll('.option-button'));
-            const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
-
-            wrongOptions.sort(() => 0.5 - Math.random()); // Rastgele karıştır
-
-            wrongOptions[0].classList.add('opacity-20', 'pointer-events-none');
-            wrongOptions[0].disabled = true;
-            wrongOptions[1].classList.add('opacity-20', 'pointer-events-none');
-            wrongOptions[1].disabled = true;
-        });
-
-        dom.lifelineExtraTime.addEventListener('click', () => {
-            if (dom.lifelineExtraTime.disabled) return;
-
-            playSound(dom.correctSound);
-            state.lifelines.extraTime--;
-            updateLifelineUI();
-
-            state.timeLeft += 15;
-            dom.countdown.textContent = state.timeLeft;
-        });
     };
 
     // --- OLAY DİNLEYİCİLERİ (EVENT LISTENERS) ---
@@ -555,6 +526,36 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.optionsContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.option-button');
             if (btn) handleAnswerSubmission(btn.dataset.answer);
+        });
+
+        dom.lifelineFiftyFifty.addEventListener('click', () => {
+            if (dom.lifelineFiftyFifty.disabled) return;
+
+            playSound(dom.correctSound);
+            state.lifelines.fiftyFifty--;
+            updateLifelineUI();
+
+            const correctAnswer = state.currentQuestionData.correct_answer;
+            const options = Array.from(dom.optionsContainer.querySelectorAll('.option-button'));
+            const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
+
+            wrongOptions.sort(() => 0.5 - Math.random()); // Rastgele karıştır
+
+            wrongOptions[0].classList.add('opacity-20', 'pointer-events-none');
+            wrongOptions[0].disabled = true;
+            wrongOptions[1].classList.add('opacity-20', 'pointer-events-none');
+            wrongOptions[1].disabled = true;
+        });
+
+        dom.lifelineExtraTime.addEventListener('click', () => {
+            if (dom.lifelineExtraTime.disabled) return;
+
+            playSound(dom.correctSound);
+            state.lifelines.extraTime--;
+            updateLifelineUI();
+
+            state.timeLeft += 15;
+            dom.countdown.textContent = state.timeLeft;
         });
     };
 
