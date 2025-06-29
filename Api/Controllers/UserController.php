@@ -60,12 +60,33 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
+        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        if ($user) {
+            // Rate Limiting Kontrolü
+            $lockout_time = 15 * 60; // 15 dakika
+            $max_attempts = 5;
+            
+            if ($user['failed_login_attempts'] >= $max_attempts) {
+                $time_since_last = time() - strtotime($user['last_login_attempt']);
+                if ($time_since_last < $lockout_time) {
+                    http_response_code(429); // Too Many Requests
+                    $remaining_time = ceil(($lockout_time - $time_since_last) / 60);
+                    return ['success' => false, 'message' => "Çok fazla başarısız deneme. Lütfen {$remaining_time} dakika sonra tekrar deneyin."];
+                }
+            }
+        }
+
         if ($user && password_verify($password, $user['password'])) {
-            session_regenerate_id(true); // Oturum sabitleme saldırılarına karşı koruma
+            // Başarılı giriş: deneme sayacını sıfırla
+            if ($user['failed_login_attempts'] > 0) {
+                $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = 0, last_login_attempt = NULL WHERE id = ?");
+                $stmt->execute([$user['id']]);
+            }
+
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['user_role'] = $user['role'];
@@ -81,6 +102,12 @@ class UserController
                 ]
             ];
         } else {
+            // Başarısız giriş: deneme sayacını artır
+            if ($user) {
+                $stmt = $this->pdo->prepare("UPDATE users SET failed_login_attempts = failed_login_attempts + 1, last_login_attempt = CURRENT_TIMESTAMP WHERE id = ?");
+                $stmt->execute([$user['id']]);
+            }
+
             http_response_code(401); // Unauthorized
             return ['success' => false, 'message' => 'Kullanıcı adı veya şifre hatalı.'];
         }

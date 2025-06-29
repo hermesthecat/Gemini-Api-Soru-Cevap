@@ -3,27 +3,44 @@ const game = {
     dom: null,
     ui: null,
 
-    init(state, dom, ui) {
-        this.state = state;
+    init(dom) {
         this.dom = dom;
-        this.ui = ui;
+        this.populateCategories(appData.categories);
         this.addEventListeners();
     },
 
-    updateLifelineUI() {
-        const isTrueFalse = this.state.currentQuestionData && this.state.currentQuestionData.tip === 'dogru_yanlis';
+    populateCategories(categories) {
+        if (!this.dom.categoryButtons) return;
+        this.dom.categoryButtons.innerHTML = '';
+        for (const [key, value] of Object.entries(categories)) {
+            const button = document.createElement('button');
+            button.className = `category-button bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center justify-center text-center transition transform hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-${value.color}-500`;
+            button.dataset.kategori = key;
 
-        this.dom.lifelineFiftyFifty.disabled = this.state.lifelines.fiftyFifty <= 0 || isTrueFalse;
+            button.innerHTML = `
+                <i class="fas ${value.icon} fa-3x text-${value.color}-500 mb-2"></i>
+                <span class="font-semibold text-gray-700 dark:text-gray-200">${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            `;
+            this.dom.categoryButtons.appendChild(button);
+        }
+    },
+
+    updateLifelineUI() {
+        const lifelines = appState.get('lifelines');
+        const isTrueFalse = appState.get('currentQuestionData')?.tip === 'dogru_yanlis';
+
+        this.dom.lifelineFiftyFifty.disabled = lifelines.fiftyFifty <= 0 || isTrueFalse;
         this.dom.lifelineFiftyFifty.title = isTrueFalse ? "Bu soru tipinde kullanılamaz." : "50/50 Joker Hakkı";
 
-        this.dom.lifelineExtraTime.disabled = this.state.lifelines.extraTime <= 0;
+        this.dom.lifelineExtraTime.disabled = lifelines.extraTime <= 0;
+        this.dom.lifelinePass.disabled = lifelines.pass <= 0;
 
-        const allUsed = this.state.lifelines.fiftyFifty <= 0 && this.state.lifelines.extraTime <= 0;
+        const allUsed = lifelines.fiftyFifty <= 0 && lifelines.extraTime <= 0 && lifelines.pass <= 0;
         this.dom.lifelineContainer.classList.toggle('hidden', allUsed);
     },
 
     displayQuestion(data) {
-        this.state.currentQuestionData = data;
+        appState.set('currentQuestionData', data);
         this.dom.questionContainer.classList.remove('hidden');
         this.dom.categorySelectionContainer.classList.add('hidden');
         this.dom.explanationContainer.classList.add('hidden');
@@ -56,36 +73,38 @@ const game = {
     },
 
     startTimer() {
-        this.state.timeLeft = 30;
-        this.dom.countdown.textContent = this.state.timeLeft;
+        appState.set('timeLeft', 30);
+        this.dom.countdown.textContent = appState.get('timeLeft');
         this.dom.timerContainer.classList.remove('hidden');
-        clearInterval(this.state.timerInterval);
-        this.state.timerInterval = setInterval(async () => {
-            this.state.timeLeft--;
-            this.dom.countdown.textContent = this.state.timeLeft;
-            if (this.state.timeLeft <= 0) {
-                clearInterval(this.state.timerInterval);
+        clearInterval(appState.get('timerInterval'));
+
+        const timerInterval = setInterval(async () => {
+            let timeLeft = appState.get('timeLeft');
+            timeLeft--;
+            appState.set('timeLeft', timeLeft);
+            this.dom.countdown.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(appState.get('timerInterval'));
                 document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'timeout' } }));
                 await this.handleAnswerSubmission('TIMEOUT');
             }
         }, 1000);
+        appState.set('timerInterval', timerInterval);
     },
 
     async handleAnswerSubmission(answer) {
-        clearInterval(this.state.timerInterval);
+        clearInterval(appState.get('timerInterval'));
         this.dom.timerContainer.classList.add('hidden');
         this.dom.lifelineContainer.classList.add('hidden');
         
-        // Yükleme ekranı artık api.call içinde yönetiliyor.
         const result = await api.call('submit_answer', {
             answer: answer,
-            kategori: this.state.currentQuestionData.kategori
+            kategori: appState.get('currentQuestionData').kategori
         });
 
         if (result && result.success) {
             const { is_correct, correct_answer, explanation, new_achievements } = result.data;
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: is_correct ? 'correct' : 'incorrect' } }));
-
 
             this.dom.optionsContainer.querySelectorAll('.option-button').forEach(btn => {
                 btn.disabled = true;
@@ -99,19 +118,35 @@ const game = {
             this.dom.explanationText.textContent = explanation;
             this.dom.explanationContainer.classList.remove('hidden');
 
-            // Ana uygulamaya istatistikleri güncellemesi için haber ver
             document.dispatchEvent(new CustomEvent('answerSubmitted', { detail: { new_achievements } }));
-
 
             setTimeout(() => {
                 this.dom.questionContainer.classList.add('hidden');
                 this.dom.categorySelectionContainer.classList.remove('hidden');
             }, 3000);
         } else {
-            // Hata api.call tarafından gösterildi, sadece arayüzü eski haline getirelim.
             if (result && result.message) {
                  this.ui.showToast(result.message, 'error');
             }
+            this.dom.questionContainer.classList.add('hidden');
+            this.dom.categorySelectionContainer.classList.remove('hidden');
+        }
+    },
+
+    async getNewQuestion() {
+        const currentQuestion = appState.get('currentQuestionData');
+        if (!currentQuestion) return;
+
+        clearInterval(appState.get('timerInterval'));
+
+        const result = await api.call('get_question', {
+            kategori: currentQuestion.kategori,
+            difficulty: currentQuestion.difficulty
+        });
+        if (result && result.success) {
+            this.displayQuestion(result.data);
+        } else if (result && result.message) {
+            this.ui.showToast(result.message, 'error');
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
         }
@@ -121,7 +156,7 @@ const game = {
         this.dom.difficultyButtons.addEventListener('click', (e) => {
             const btn = e.target.closest('.difficulty-button');
             if (btn) {
-                this.state.difficulty = btn.dataset.zorluk;
+                appState.set('difficulty', btn.dataset.zorluk);
                 this.dom.difficultyButtons.querySelectorAll('.difficulty-button').forEach(b => {
                     b.classList.remove('bg-blue-500', 'text-white', 'font-semibold');
                     b.classList.add('bg-gray-200', 'dark:bg-gray-700');
@@ -134,19 +169,16 @@ const game = {
         this.dom.categoryButtons.addEventListener('click', async (e) => {
             const btn = e.target.closest('.category-button');
             if (btn) {
-                // Yükleme ekranı api.call içinde yönetiliyor.
                 const result = await api.call('get_question', {
                     kategori: btn.dataset.kategori,
-                    difficulty: this.state.difficulty
+                    difficulty: appState.get('difficulty')
                 });
 
                 if (result && result.success) {
                     this.displayQuestion(result.data);
                 } else if (result && result.message) {
-                    // Soru formatı hatası gibi özel mesajları göster.
                     this.ui.showToast(result.message, 'error');
                 }
-                // Diğer tüm hatalar (network vs) zaten api.call tarafından gösterildi.
             }
         });
 
@@ -159,14 +191,17 @@ const game = {
             if (this.dom.lifelineFiftyFifty.disabled) return;
 
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-            this.state.lifelines.fiftyFifty--;
+            
+            const lifelines = appState.get('lifelines');
+            lifelines.fiftyFifty--;
+            appState.set('lifelines', lifelines);
             this.updateLifelineUI();
 
-            const correctAnswer = this.state.currentQuestionData.correct_answer;
+            const correctAnswer = appState.get('currentQuestionData').correct_answer;
             const options = Array.from(this.dom.optionsContainer.querySelectorAll('.option-button'));
             const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
 
-            wrongOptions.sort(() => 0.5 - Math.random()); // Rastgele karıştır
+            wrongOptions.sort(() => 0.5 - Math.random());
 
             wrongOptions[0].classList.add('opacity-20', 'pointer-events-none');
             wrongOptions[0].disabled = true;
@@ -178,11 +213,29 @@ const game = {
             if (this.dom.lifelineExtraTime.disabled) return;
 
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-            this.state.lifelines.extraTime--;
+            
+            const lifelines = appState.get('lifelines');
+            lifelines.extraTime--;
+            appState.set('lifelines', lifelines);
             this.updateLifelineUI();
 
-            this.state.timeLeft += 15;
-            this.dom.countdown.textContent = this.state.timeLeft;
+            let timeLeft = appState.get('timeLeft');
+            timeLeft += 15;
+            appState.set('timeLeft', timeLeft);
+            this.dom.countdown.textContent = timeLeft;
+        });
+
+        this.dom.lifelinePass.addEventListener('click', () => {
+            if (this.dom.lifelinePass.disabled) return;
+
+            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
+
+            const lifelines = appState.get('lifelines');
+            lifelines.pass--;
+            appState.set('lifelines', lifelines);
+            this.updateLifelineUI();
+
+            this.getNewQuestion();
         });
     }
 }; 

@@ -42,11 +42,13 @@ try {
       `username` VARCHAR(50) NOT NULL UNIQUE,
       `password` VARCHAR(255) NOT NULL,
       `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+      `failed_login_attempts` INT NOT NULL DEFAULT 0,
+      `last_login_attempt` TIMESTAMP NULL DEFAULT NULL,
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_users);
-  echo "Tablo 'users' başarıyla oluşturuldu.\n";
+  echo "Tablo 'users' (rate limiting sütunları ile) başarıyla oluşturuldu.\n";
 
   // `leaderboard` tablosu (users tablosuna bağlı)
   $sql_leaderboard = "

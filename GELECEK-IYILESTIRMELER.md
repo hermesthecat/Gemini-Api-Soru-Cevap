@@ -41,13 +41,13 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 - [x] **SQL Injection'ı Önleme:** Tüm veritabanı sorgularında `prepared statements` kullanıldığından emin ol.
 - [x] **XSS (Cross-Site Scripting) Önleme:** Kullanıcıdan gelen ve ekrana basılan tüm verileri (örneğin, kullanıcı adı) `htmlspecialchars` gibi fonksiyonlarla temizle.
 - [x] **CSRF (Cross-Site Request Forgery) Koruması:** Form gönderimlerinde ve önemli API isteklerinde CSRF token'ları kullan.
-- [ ] **Rate Limiting:** Özellikle giriş (login) ve kayıt (register) gibi işlemlere, kısa sürede çok sayıda denemeyi önlemek için hız sınırlaması (rate limiting) ekle.
+- [x] **Rate Limiting:** Özellikle giriş (login) ve kayıt (register) gibi işlemlere, kısa sürede çok sayıda denemeyi önlemek için hız sınırlaması (rate limiting) ekle.
 
 ### 4. Kullanıcı Deneyimi (UX) ve Arayüz (UI) Geliştirmeleri
 
-- [ ] **Cevap Sonrası Geri Bildirim:** Cevap doğru veya yanlış olduğunda şıkların renklerini (doğruyu yeşil, yanlışı kırmızı) anında değiştir.
-- [ ] **Jokerler:** "Yarı yarıya", "Süreyi uzat" veya "Pas geç" gibi jokerler ekle.
-- [ ] **Kategori ve Zorluk Seçimi:** Kategori seçme ekranını daha görsel ve çekici hale getir.
+- [x] **Cevap Sonrası Geri Bildirim:** Cevap doğru veya yanlış olduğunda şıkların renklerini (doğruyu yeşil, yanlışı kırmızı) anında değiştir.
+- [x] **Jokerler:** "Yarı yarıya", "Süreyi uzat" veya "Pas geç" gibi jokerler ekle.
+- [x] **Kategori ve Zorluk Seçimi:** Kategori seçme ekranını daha görsel ve çekici hale getir.
 - [ ] **Başarımlar:** Kazanılan başarımlar için daha dikkat çekici bir bildirim (modal veya özel bir animasyon) göster. Başarımlar sayfasını daha detaylı hale getir.
 - [ ] **Profil Sayfası:** Kullanıcıların kendi istatistiklerini ve başarımlarını daha detaylı görebileceği bir profil sayfası oluştur.
 

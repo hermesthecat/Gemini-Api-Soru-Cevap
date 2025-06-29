@@ -85,97 +85,121 @@
                 </div>
             </header>
 
-            <!-- İçerik Alanı (Yarışma, İstatistikler, Liderlik Tablosu) -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Sol Taraf (Yarışma) -->
-                <main id="game-container" class="lg:col-span-2 space-y-8">
-                    <!-- Kategori Seçim Alanı -->
-                    <div id="category-selection-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold mb-4 text-center dark:text-white">Zorluk Seçin</h2>
-                        <div class="flex justify-center mb-6 space-x-2" id="difficulty-buttons">
-                            <button data-zorluk="kolay" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Kolay</button>
-                            <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
-                            <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Zor</button>
-                        </div>
-                        <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center dark:text-white dark:border-gray-700">Kategori Seçin</h2>
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
-                            <!-- Kategori butonları JS ile doldurulacak -->
-                        </div>
-                    </div>
+            <!-- Sekme Butonları -->
+            <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="main-tabs">
+                    <li class="mr-2">
+                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="yarışma">
+                            <i class="fas fa-gamepad mr-2"></i>Yarışma
+                        </button>
+                    </li>
+                    <li class="mr-2">
+                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="profil">
+                            <i class="fas fa-user-chart mr-2"></i>Profil ve İstatistikler
+                        </button>
+                    </li>
+                </ul>
+            </div>
 
-                    <!-- Soru Alanı -->
-                    <div id="question-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <span id="question-category" class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm"></span>
-                            <div class="flex items-center space-x-4">
-                                <!-- Joker Butonları -->
-                                <div id="lifeline-container" class="flex items-center space-x-2">
-                                    <button id="lifeline-fifty-fifty" class="lifeline-button p-2 w-10 h-10 rounded-full bg-yellow-400 hover:bg-yellow-500 text-white dark:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors shadow-md" title="50/50 Joker Hakkı">
-                                        <span class="font-bold">½</span>
-                                    </button>
-                                    <button id="lifeline-extra-time" class="lifeline-button p-2 w-10 h-10 rounded-full bg-green-400 hover:bg-green-500 text-white dark:bg-green-600 dark:hover:bg-green-500 transition-colors shadow-md" title="Ekstra Süre Jokeri">
-                                        <i class="fas fa-stopwatch"></i>
-                                    </button>
-                                </div>
-                                <div id="timer-container" class="text-lg font-bold">Kalan Süre: <span id="countdown" class="text-blue-600">30</span></div>
+            <!-- Sekme İçerikleri -->
+            <div id="tab-content">
+                <!-- Yarışma Sekmesi İçeriği -->
+                <div id="yarışma-tab" class="main-tab-content">
+                    <main id="game-container" class="space-y-8">
+                        <!-- Kategori Seçim Alanı -->
+                        <div id="category-selection-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4 text-center dark:text-white">Zorluk Seçin</h2>
+                            <div class="flex justify-center mb-6 space-x-2" id="difficulty-buttons">
+                                <button data-zorluk="kolay" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Kolay</button>
+                                <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
+                                <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Zor</button>
+                            </div>
+                            <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center dark:text-white dark:border-gray-700">Kategori Seçin</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
+                                <!-- Kategori butonları JS ile doldurulacak -->
                             </div>
                         </div>
-                        <div class="text-gray-700 dark:text-gray-300 mb-4">
-                            <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
-                            <p id="question-text"></p>
-                        </div>
-                        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"></div>
-                        <div id="explanation-container" class="hidden mt-6 p-4 bg-blue-50 dark:bg-gray-700/50 border-l-4 border-blue-500">
-                            <h4 class="font-bold text-blue-800 dark:text-blue-300 mb-1">Açıklama</h4>
-                            <p id="explanation-text" class="text-blue-700 dark:text-blue-400"></p>
-                        </div>
-                    </div>
-                </main>
 
-                <!-- Sağ Taraf (İstatistik ve Liderlik) -->
-                <aside class="space-y-8">
-                    <!-- İstatistikler -->
-                    <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Kişisel İstatistikler</h2>
-                        <div class="text-center mb-4 border-b dark:border-gray-700 pb-4">
-                            <p class="text-gray-500 dark:text-gray-400">Toplam Puan</p>
-                            <p id="user-total-score" class="text-3xl font-bold text-blue-600">0</p>
+                        <!-- Soru Alanı -->
+                        <div id="question-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <span id="question-category" class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm"></span>
+                                <div class="flex items-center space-x-4">
+                                    <!-- Joker Butonları -->
+                                    <div id="lifeline-container" class="flex items-center space-x-2">
+                                        <button id="lifeline-fifty-fifty" class="lifeline-button p-2 w-10 h-10 rounded-full bg-yellow-400 hover:bg-yellow-500 text-white dark:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors shadow-md" title="50/50 Joker Hakkı">
+                                            <span class="font-bold">½</span>
+                                        </button>
+                                        <button id="lifeline-extra-time" class="lifeline-button p-2 w-10 h-10 rounded-full bg-green-400 hover:bg-green-500 text-white dark:bg-green-600 dark:hover:bg-green-500 transition-colors shadow-md" title="Ekstra Süre Jokeri">
+                                            <i class="fas fa-stopwatch"></i>
+                                        </button>
+                                        <button id="lifeline-pass" class="lifeline-button p-2 w-10 h-10 rounded-full bg-blue-400 hover:bg-blue-500 text-white dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors shadow-md" title="Soruyu Geç Jokeri">
+                                            <i class="fas fa-forward"></i>
+                                        </button>
+                                    </div>
+                                    <div id="timer-container" class="text-lg font-bold">Kalan Süre: <span id="countdown" class="text-blue-600">30</span></div>
+                                </div>
+                            </div>
+                            <div class="text-gray-700 dark:text-gray-300 mb-4">
+                                <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
+                                <p id="question-text"></p>
+                            </div>
+                            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"></div>
+                            <div id="explanation-container" class="hidden mt-6 p-4 bg-blue-50 dark:bg-gray-700/50 border-l-4 border-blue-500">
+                                <h4 class="font-bold text-blue-800 dark:text-blue-300 mb-1">Açıklama</h4>
+                                <p id="explanation-text" class="text-blue-700 dark:text-blue-400"></p>
+                            </div>
                         </div>
-                        <h3 class="text-lg font-semibold mb-3 dark:text-white">Kategori Detayları</h3>
-                        <div id="category-stats-container" class="max-h-60 overflow-y-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
-                                    <tr>
-                                        <th class="py-2 px-2">Kategori</th>
-                                        <th class="py-2 px-2 text-center">Soru</th>
-                                        <th class="py-2 px-2 text-center">Doğru</th>
-                                        <th class="py-2 px-2 text-center">%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="category-stats-body">
+                    </main>
+                </div>
+
+                <!-- Profil Sekmesi İçeriği -->
+                <div id="profil-tab" class="main-tab-content hidden">
+                    <aside class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Sol Taraf (İstatistikler ve Liderlik) -->
+                        <div class="space-y-8">
+                            <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                                <h2 class="text-xl font-semibold mb-4 dark:text-white">Kişisel İstatistikler</h2>
+                                <div class="text-center mb-4 border-b dark:border-gray-700 pb-4">
+                                    <p class="text-gray-500 dark:text-gray-400">Toplam Puan</p>
+                                    <p id="user-total-score" class="text-3xl font-bold text-blue-600">0</p>
+                                </div>
+                                <h3 class="text-lg font-semibold mb-3 dark:text-white">Kategori Detayları</h3>
+                                <div id="category-stats-container" class="max-h-60 overflow-y-auto">
+                                    <table class="w-full text-left text-sm">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                                            <tr>
+                                                <th class="py-2 px-2">Kategori</th>
+                                                <th class="py-2 px-2 text-center">Soru</th>
+                                                <th class="py-2 px-2 text-center">Doğru</th>
+                                                <th class="py-2 px-2 text-center">%</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="category-stats-body">
+                                            <!-- JS ile doldurulacak -->
+                                        </tbody>
+                                    </table>
+                                    <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz veri yok.</p>
+                                </div>
+                            </div>
+                             <div id="leaderboard-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                                <h2 class="text-xl font-semibold mb-4 dark:text-white">Liderlik Tablosu</h2>
+                                <ol id="leaderboard-list" class="space-y-3">
                                     <!-- JS ile doldurulacak -->
-                                </tbody>
-                            </table>
-                            <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz veri yok.</p>
+                                </ol>
+                                <p id="leaderboard-loading" class="text-gray-500 dark:text-gray-400 text-center py-4">Yükleniyor...</p>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Liderlik Tablosu -->
-                    <div id="leaderboard-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Liderlik Tablosu</h2>
-                        <ol id="leaderboard-list" class="space-y-3">
-                            <!-- JS ile doldurulacak -->
-                        </ol>
-                        <p id="leaderboard-loading" class="text-gray-500 dark:text-gray-400 text-center py-4">Yükleniyor...</p>
-                    </div>
-                    <!-- Başarım Rozetleri -->
-                    <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
-                        <div id="achievements-list" class="flex flex-wrap gap-4 justify-center">
-                            <!-- JS ile doldurulacak -->
+                        <!-- Sağ Taraf (Başarımlar) -->
+                        <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
+                            <div id="achievements-list" class="flex flex-wrap gap-4 justify-center">
+                                <!-- JS ile doldurulacak -->
+                            </div>
+                            <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz kazanılmış rozet yok.</p>
                         </div>
-                        <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz kazanılmış rozet yok.</p>
-                    </div>
-                </aside>
+                    </aside>
+                </div>
             </div>
         </div>
 

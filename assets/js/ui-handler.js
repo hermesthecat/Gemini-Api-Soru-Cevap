@@ -46,6 +46,31 @@ const ui = (() => {
         }, 3000);
     };
 
+    const showTab = (tabId) => {
+        // Tüm sekme içeriklerini gizle
+        dom.yarışmaTab?.classList.add('hidden');
+        dom.profilTab?.classList.add('hidden');
+
+        // İlgili sekme içeriğini göster
+        const tabToShow = document.getElementById(`${tabId}-tab`);
+        if (tabToShow) {
+            tabToShow.classList.remove('hidden');
+        }
+
+        // Tüm sekme buton stillerini sıfırla
+        dom.mainTabs?.querySelectorAll('.main-tab-button').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-500', 'dark:border-blue-500');
+            btn.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300');
+        });
+
+        // Aktif sekme butonunu stillendir
+        const activeButton = dom.mainTabs?.querySelector(`[data-tab="${tabId}"]`);
+        if (activeButton) {
+            activeButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-500', 'dark:border-blue-500');
+            activeButton.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300');
+        }
+    };
+
     const renderWelcomeMessage = (username) => {
         if (!dom.welcomeMessage) return;
         dom.welcomeMessage.textContent = `Hoş Geldin, ${username}!`;
@@ -205,6 +230,7 @@ const ui = (() => {
         showView,
         showLoading,
         showToast,
+        showTab,
         renderWelcomeMessage,
         toggleAdminButton,
         renderAchievements,

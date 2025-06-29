@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn: document.getElementById('logout-btn'),
         adminViewBtn: document.getElementById('admin-view-btn'),
         userViewBtn: document.getElementById('user-view-btn'),
+        // Sekmeler
+        mainTabs: document.getElementById('main-tabs'),
+        yarışmaTab: document.getElementById('yarışma-tab'),
+        profilTab: document.getElementById('profil-tab'),
         // Game
         gameContainer: document.getElementById('game-container'),
         categorySelectionContainer: document.getElementById('category-selection-container'),
@@ -32,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lifelineContainer: document.getElementById('lifeline-container'),
         lifelineFiftyFifty: document.getElementById('lifeline-fifty-fifty'),
         lifelineExtraTime: document.getElementById('lifeline-extra-time'),
+        lifelinePass: document.getElementById('lifeline-pass'),
         // Stats & Leaderboard
         userTotalScore: document.getElementById('user-total-score'),
         categoryStatsBody: document.getElementById('category-stats-body'),
@@ -96,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userData = e.detail;
             appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
             appState.set('csrfToken', userData.csrf_token);
-            appState.set('lifelines', { fiftyFifty: 1, extraTime: 1 });
+            appState.set('lifelines', { fiftyFifty: 1, extraTime: 1, pass: 1 });
             
             game.updateLifelineUI();
             ui.renderWelcomeMessage(userData.username);
@@ -105,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             statsHandler.updateAll();
             statsHandler.startLeaderboardUpdates();
-            game.populateCategories(appData.categories);
         },
 
         onLogout() {

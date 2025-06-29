@@ -12,7 +12,8 @@ const appState = (() => {
         timeLeft: 30,
         lifelines: {
             fiftyFifty: 1,
-            extraTime: 1
+            extraTime: 1,
+            pass: 1
         }
     };
 

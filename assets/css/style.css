@@ -31,3 +31,13 @@
     background-color: #9ca3af;
     /* gray-400 */
 }
+
+/* Yeni Kategori Butonları için Stiller */
+.category-button {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.category-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+}
