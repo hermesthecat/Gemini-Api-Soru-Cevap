@@ -352,6 +352,23 @@
                     answer
                 });
                 if (data) {
+                    // --- YENİ: Gelişmiş Geri Bildirim ---
+                    // Tüm butonların tıklanabilirliğini kaldır ve hover efektini sıfırla.
+                    document.querySelectorAll('.option-button').forEach(btn => {
+                        btn.disabled = true;
+                        btn.classList.remove('hover:bg-blue-50');
+
+                        // Doğru cevabı her zaman yeşil yap
+                        if (btn.dataset.answer === data.correct_answer) {
+                            btn.classList.add('bg-green-200', 'border-green-500', 'font-semibold');
+                        } 
+                        // Kullanıcının cevabı yanlışsa, onu kırmızı yap
+                        else if (btn.dataset.answer === answer && !data.is_correct) {
+                            btn.classList.add('bg-red-200', 'border-red-500', 'font-semibold');
+                        }
+                    });
+                    // --- BİTTİ: Gelişmiş Geri Bildirim ---
+
                     // İstatistikleri güncelle
                     state.stats.total_questions++;
                     if (data.is_correct) {
@@ -392,9 +409,6 @@
                 document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
 
                 const answer = button.dataset.answer;
-
-                // Seçilen cevabı vurgula
-                button.classList.add('bg-yellow-200', 'border-yellow-400');
 
                 await handleAnswerSubmission(answer);
             };
