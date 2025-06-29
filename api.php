@@ -33,6 +33,7 @@ switch ($action) {
     case 'get_question':
         // Yeni bir soru oluşturur ve döndürür.
         $kategori = $request_data['kategori'] ?? 'genel kültür';
+        $difficulty = $request_data['difficulty'] ?? 'orta'; // Zorluk seviyesini al, varsayılan 'orta'
         if (empty($kategori)) {
             $response['message'] = 'Kategori belirtilmedi.';
             break;
@@ -45,7 +46,7 @@ switch ($action) {
         $gemini = new GeminiAPI(GEMINI_API_KEY);
 
         try {
-            $prompt = "Lütfen {$kategori} kategorisinde orta zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
+            $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
             {
                 \"soru\": \"(soru metni buraya)\",
                 \"siklar\": {
@@ -74,7 +75,8 @@ switch ($action) {
                     $response['data'] = [
                         'question' => $veri['soru'],
                         'siklar' => $veri['siklar'],
-                        'kategori' => $kategori
+                        'kategori' => $kategori,
+                        'difficulty' => $difficulty // Zorluğu yanıta ekle
                     ];
                 } else {
                     $response['message'] = 'Soru formatı geçersiz.';

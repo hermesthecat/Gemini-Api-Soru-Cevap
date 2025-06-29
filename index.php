@@ -77,7 +77,14 @@
             <!-- Kategori Seçim Alanı -->
             <div id="category-selection-container">
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                    <h2 class="text-xl font-semibold mb-4">Kategori Seçin</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-center">Zorluk Seçin</h2>
+                    <div class="flex justify-center mb-6 space-x-2" id="difficulty-buttons">
+                        <button data-zorluk="kolay" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors">Kolay</button>
+                        <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
+                        <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition-colors">Zor</button>
+                    </div>
+
+                    <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center">Kategori Seçin</h2>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
                         <button data-kategori="tarih" class="category-button bg-blue-100 hover:bg-blue-200 p-4 rounded-lg"><i class="fas fa-history mb-2"></i><span class="block">Tarih</span></button>
                         <button data-kategori="spor" class="category-button bg-green-100 hover:bg-green-200 p-4 rounded-lg"><i class="fas fa-futbol mb-2"></i><span class="block">Spor</span></button>
@@ -150,6 +157,7 @@
             const questionContainer = document.getElementById('question-container');
             const statsContainer = document.getElementById('stats-container');
             const categoryButtons = document.getElementById('category-buttons');
+            const difficultyButtons = document.getElementById('difficulty-buttons');
             const questionCategory = document.getElementById('question-category');
             const changeCategoryButton = document.getElementById('change-category-button');
             const questionText = document.getElementById('question-text');
@@ -169,6 +177,7 @@
                 },
                 history: [],
                 currentQuestion: null, // Mevcut soru ve şıkları tutmak için
+                difficulty: 'orta', // Varsayılan zorluk seviyesi
             };
             let timer;
 
@@ -178,6 +187,7 @@
                 const persistentState = {
                     stats: state.stats,
                     history: state.history,
+                    difficulty: state.difficulty,
                 };
                 localStorage.setItem('quizAppState', JSON.stringify(persistentState));
             };
@@ -188,6 +198,7 @@
                     const parsedState = JSON.parse(savedState);
                     state.stats = parsedState.stats;
                     state.history = parsedState.history;
+                    state.difficulty = parsedState.difficulty;
                 }
             };
 
@@ -279,7 +290,9 @@
 
             const displayQuestion = (data) => {
                 state.currentQuestion = data; // Mevcut soruyu state'e kaydet
-                questionCategory.textContent = data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1);
+                const kategoriText = data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1);
+                const zorlukText = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
+                questionCategory.innerHTML = `${kategoriText} <span class="font-normal text-gray-500">- ${zorlukText}</span>`;
                 questionText.textContent = data.question;
                 optionsContainer.innerHTML = '';
                 ['A', 'B', 'C', 'D'].forEach(opt => {
@@ -339,17 +352,35 @@
                 clearError();
                 const kategori = button.dataset.kategori;
                 const data = await apiCall('get_question', {
-                    kategori
+                    kategori: kategori,
+                    difficulty: state.difficulty
                 });
                 if (data) {
                     displayQuestion(data);
                 }
             };
 
+            const handleDifficultySelection = (e) => {
+                const button = e.target.closest('.difficulty-button');
+                if (!button) return;
+
+                // State'i güncelle
+                state.difficulty = button.dataset.zorluk;
+
+                // Arayüzü güncelle
+                document.querySelectorAll('.difficulty-button').forEach(btn => {
+                    btn.classList.remove('bg-blue-500', 'text-white', 'font-semibold');
+                    btn.classList.add('bg-gray-200', 'hover:bg-gray-300');
+                });
+                button.classList.add('bg-blue-500', 'text-white', 'font-semibold');
+                button.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+            };
+
             const handleAnswerSubmission = async (answer) => {
                 stopTimer();
                 const data = await apiCall('submit_answer', {
-                    answer
+                    answer,
+                    difficulty: state.difficulty
                 });
                 if (data) {
                     // --- YENİ: Gelişmiş Geri Bildirim ---
@@ -435,6 +466,7 @@
             };
 
             // --- Olay Dinleyicileri (Event Listeners) ---
+            difficultyButtons.addEventListener('click', handleDifficultySelection);
             categoryButtons.addEventListener('click', handleCategorySelection);
             optionsContainer.addEventListener('click', handleOptionClick);
             resetStatsButton.addEventListener('click', handleResetStats);
