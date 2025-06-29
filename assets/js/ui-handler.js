@@ -9,9 +9,9 @@ const ui = (() => {
         dom.authView?.classList.add('hidden');
         dom.mainView?.classList.add('hidden');
         dom.adminView?.classList.add('hidden');
-        
+
         const viewToShow = document.getElementById(viewId);
-        if(viewToShow) {
+        if (viewToShow) {
             viewToShow.classList.remove('hidden');
         }
     };
@@ -24,7 +24,7 @@ const ui = (() => {
         if (!dom.notificationToast || !dom.notificationText) return;
 
         dom.notificationText.textContent = message;
-        
+
         const colorClasses = {
             info: 'bg-blue-500',
             success: 'bg-green-500',
@@ -48,7 +48,7 @@ const ui = (() => {
 
     const renderAchievements = (achievements, achievementData) => {
         if (!dom.achievementsList || !dom.noAchievementsMessage) return;
-        
+
         dom.achievementsList.innerHTML = '';
         if (achievements && achievements.length > 0) {
             dom.noAchievementsMessage.classList.add('hidden');

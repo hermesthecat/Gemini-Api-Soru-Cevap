@@ -1,13 +1,16 @@
 <?php
 
-class UserController {
+class UserController
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function register($data) {
+    public function register($data)
+    {
         $username = $data['username'] ?? '';
         $password = $data['password'] ?? '';
 
@@ -40,7 +43,8 @@ class UserController {
         }
     }
 
-    public function login($data) {
+    public function login($data)
+    {
         $username = $data['username'] ?? '';
         $password = $data['password'] ?? '';
 
@@ -70,12 +74,14 @@ class UserController {
         }
     }
 
-    public function logout() {
+    public function logout()
+    {
         session_destroy();
         return ['success' => true, 'message' => 'Çıkış yapıldı.'];
     }
 
-    public function checkSession() {
+    public function checkSession()
+    {
         if (isset($_SESSION['user_id'])) {
             return [
                 'success' => true,
@@ -86,4 +92,4 @@ class UserController {
             return ['success' => false, 'message' => 'Oturum bulunamadı.'];
         }
     }
-} 
+}

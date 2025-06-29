@@ -1,13 +1,16 @@
 <?php
 
-class DataController {
+class DataController
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    public function getUserData() {
+    public function getUserData()
+    {
         $user_id = $_SESSION['user_id'];
         $user_data = [];
 
@@ -24,7 +27,8 @@ class DataController {
         return ['success' => true, 'data' => $user_data];
     }
 
-    public function getLeaderboard() {
+    public function getLeaderboard()
+    {
         $stmt = $this->pdo->prepare("
             SELECT u.username, l.score 
             FROM leaderboard l
@@ -36,9 +40,10 @@ class DataController {
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    public function getUserAchievements() {
+    public function getUserAchievements()
+    {
         $stmt = $this->pdo->prepare("SELECT achievement_key, achieved_at FROM user_achievements WHERE user_id = ? ORDER BY achieved_at DESC");
         $stmt->execute([$_SESSION['user_id']]);
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
-} 
+}

@@ -1,13 +1,16 @@
 <?php
 
-class AdminController {
+class AdminController
+{
     private $pdo;
 
-    public function __construct($pdo) {
+    public function __construct($pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    private function checkAdmin() {
+    private function checkAdmin()
+    {
         if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
             http_response_code(403); // Forbidden
             return ['success' => false, 'message' => 'Bu alana erişim yetkiniz yok.'];
@@ -15,7 +18,8 @@ class AdminController {
         return true;
     }
 
-    public function getDashboardData() {
+    public function getDashboardData()
+    {
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         $stmt_users = $this->pdo->query("SELECT COUNT(*) FROM users");
@@ -33,9 +37,10 @@ class AdminController {
         ];
     }
 
-    public function getAllUsers() {
+    public function getAllUsers()
+    {
         if (($check = $this->checkAdmin()) !== true) return $check;
-        
+
         $stmt = $this->pdo->query("
             SELECT u.id, u.username, u.role, u.created_at, l.score 
             FROM users u 
@@ -45,7 +50,8 @@ class AdminController {
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-    public function deleteUser($data) {
+    public function deleteUser($data)
+    {
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         $user_id_to_delete = $data['user_id'] ?? 0;
@@ -61,7 +67,8 @@ class AdminController {
         return ['success' => false, 'message' => 'Geçersiz kullanıcı ID.'];
     }
 
-    public function updateUserRole($data) {
+    public function updateUserRole($data)
+    {
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         $user_id_to_update = $data['user_id'] ?? 0;
@@ -77,7 +84,7 @@ class AdminController {
             $success = $stmt->rowCount() > 0;
             return ['success' => $success, 'message' => $success ? 'Kullanıcı rolü güncellendi.' : 'İşlem başarısız.'];
         }
-        
+
         return ['success' => false, 'message' => 'Geçersiz kullanıcı ID veya rol.'];
     }
-} 
+}

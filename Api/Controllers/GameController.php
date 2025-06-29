@@ -1,15 +1,18 @@
 <?php
 
-class GameController {
+class GameController
+{
     private $pdo;
     private $gemini;
 
-    public function __construct($pdo, $geminiApiKey) {
+    public function __construct($pdo, $geminiApiKey)
+    {
         $this->pdo = $pdo;
         $this->gemini = new GeminiAPI($geminiApiKey);
     }
 
-    public function getQuestion($data) {
+    public function getQuestion($data)
+    {
         unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
 
         $kategori = $data['kategori'] ?? 'genel kültür';
@@ -28,7 +31,7 @@ class GameController {
             $veri = json_decode($temiz_yanit, true);
 
             if (json_last_error() !== JSON_ERROR_NONE || !$this->isQuestionValid($veri)) {
-                 return ['success' => false, 'message' => 'API\'den gelen soru formatı geçersiz veya eksik alanlar var.'];
+                return ['success' => false, 'message' => 'API\'den gelen soru formatı geçersiz veya eksik alanlar var.'];
             }
 
             $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
@@ -52,7 +55,8 @@ class GameController {
         }
     }
 
-    public function submitAnswer($data) {
+    public function submitAnswer($data)
+    {
         if (!isset($_SESSION['current_question_answer'])) {
             return ['success' => false, 'message' => 'Aktif soru bulunamadı.'];
         }
@@ -60,15 +64,15 @@ class GameController {
         $user_answer = $data['answer'] ?? null;
         $kategori = $data['kategori'] ?? 'bilinmiyor';
         $is_correct = ($user_answer === $_SESSION['current_question_answer']);
-        
+
         if ($is_correct) {
             $this->updateStatsAndScore($kategori);
         } else {
-             $_SESSION['consecutive_correct'] = 0;
+            $_SESSION['consecutive_correct'] = 0;
         }
 
         $yeni_basarimlar = $is_correct ? $this->checkAchievements($kategori) : [];
-        
+
         $response = [
             'success' => true,
             'data' => [
@@ -82,10 +86,11 @@ class GameController {
         unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time'], $_SESSION['current_question_difficulty']);
         return $response;
     }
-    
+
     // --- Yardımcı Fonksiyonlar ---
-    
-    private function updateStatsAndScore($kategori) {
+
+    private function updateStatsAndScore($kategori)
+    {
         $user_id = $_SESSION['user_id'];
         $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
         $puan = 10 + max(0, 30 - $gecen_sure);
@@ -93,12 +98,12 @@ class GameController {
 
         try {
             $this->pdo->beginTransaction();
-            
+
             // İstatistiği güncelle
             $sql_stat = "INSERT INTO user_stats (user_id, category, total_questions, correct_answers) VALUES (?, ?, 1, 1) ON DUPLICATE KEY UPDATE total_questions = total_questions + 1, correct_answers = correct_answers + 1";
             $stmt_stat = $this->pdo->prepare($sql_stat);
             $stmt_stat->execute([$user_id, $kategori]);
-            
+
             // Skoru güncelle
             $sql_score = "UPDATE leaderboard SET score = score + ? WHERE user_id = ?";
             $stmt_score = $this->pdo->prepare($sql_score);
@@ -112,7 +117,8 @@ class GameController {
         }
     }
 
-    private function checkAchievements($kategori) {
+    private function checkAchievements($kategori)
+    {
         $user_id = $_SESSION['user_id'];
         $yeni_basarimlar = [];
         $mevcut_basarimlar = [];
@@ -131,7 +137,7 @@ class GameController {
                     $mevcut_basarimlar[] = $key;
                 }
             };
-            
+
             // Başarım kontrolleri...
             // Seri Galibi
             if ($_SESSION['consecutive_correct'] >= 25) $grant_achievement('seri_galibi_25');
@@ -153,11 +159,12 @@ class GameController {
         } catch (PDOException $e) {
             error_log("Başarım kontrol hatası: " . $e->getMessage());
         }
-        
+
         return $yeni_basarimlar;
     }
 
-    private function generatePrompt($tip, $kategori, $difficulty) {
+    private function generatePrompt($tip, $kategori, $difficulty)
+    {
         if ($tip === 'coktan_secmeli') {
             return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver: {\"tip\": \"coktan_secmeli\", \"soru\": \"(soru metni buraya)\", \"siklar\": {\"A\": \"(A şıkkı buraya)\", \"B\": \"(B şıkkı buraya)\", \"C\": \"(C şıkkı buraya)\", \"D\": \"(D şıkkı buraya)\"}, \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\", \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"}";
         } else { // dogru_yanlis
@@ -165,7 +172,8 @@ class GameController {
         }
     }
 
-    private function isQuestionValid($veri) {
+    private function isQuestionValid($veri)
+    {
         if (!isset($veri['tip'], $veri['soru'], $veri['dogru_cevap'], $veri['aciklama'])) {
             return false;
         }
@@ -174,4 +182,4 @@ class GameController {
         }
         return true;
     }
-} 
+}

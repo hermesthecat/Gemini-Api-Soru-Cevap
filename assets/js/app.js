@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Özel olayları dinle
             this.addEventListeners();
-            
+
             // Oturum kontrolü ile uygulamayı başlat
             auth.checkUserSession();
         },
@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statsHandler.startLeaderboardUpdates();
             game.populateCategories(categories);
         },
-        
+
         onLogout() {
             state.currentUser = null;
             clearInterval(state.leaderboardInterval);

@@ -3,17 +3,17 @@ const settingsHandler = (() => {
 
     const init = (domElements) => {
         dom = domElements;
-        
+
         // Kayıtlı ayarları yükle
         const savedTheme = localStorage.getItem('theme') || 'light';
         const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
-        
+
         appState.set('theme', savedTheme);
         appState.set('soundEnabled', soundEnabled);
-        
+
         applyTheme(savedTheme);
         applySoundSetting(soundEnabled);
-        
+
         addEventListeners();
     };
 

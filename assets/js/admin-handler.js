@@ -54,7 +54,7 @@ const adminHandler = (() => {
             }
         }
     };
-    
+
     const updateAll = () => {
         updateDashboard();
         updateUserList();
@@ -66,14 +66,14 @@ const adminHandler = (() => {
                 const target = e.target;
                 const userRow = target.closest('tr');
                 if (!userRow) return;
-                
+
                 const userId = userRow.dataset.userId;
-                
+
                 // Rol değiştirme
                 if (target.classList.contains('role-select')) {
                     // event listener'ı doğrudan select'e ekleyince daha iyi olur
                 }
-                
+
                 // Kullanıcı silme
                 if (target.closest('.delete-user-btn')) {
                     e.preventDefault();

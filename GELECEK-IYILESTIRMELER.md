@@ -1,36 +1,60 @@
-# Gelecek İçin Yeni İyileştirme Fikirleri
+# Gelecek İyileştirmeler ve Yol Haritası
 
-Projenin mevcut çok kullanıcılı SPA yapısı, üzerine yeni özellikler inşa etmek için sağlam bir temel oluşturmaktadır. İşte projeyi daha da ileriye taşıyabilecek bazı yeni fikirler:
+Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve potansiyel özelliklerini özetlemektedir.
 
-## 1. Kod Yapısı ve Sürdürülebilirlik
+---
 
-- **Frontend Modülerizasyonu (`app.js`):** Mevcut `app.js` dosyasını sorumluluklarına göre daha küçük JavaScript modüllerine ayırmak:
-  - `api.js`: Sunucu ile iletişim.
-  - `ui.js`: DOM manipülasyonları ve arayüz güncellemeleri.
-  - `game.js`: Oyun akışı mantığı.
-  - `auth.js`: Kullanıcı giriş/kayıt işlemleri.
-  - `state.js`: Global uygulama durumu yönetimi.
-- **Backend Yapılandırması (`api.php`):**
-  - **Controller Sınıfları:** `switch-case` yapısını `UserController`, `GameController`, `AdminController` gibi sınıflara bölerek kod organizasyonunu iyileştirmek.
-  - **Servis Katmanı:** Başarım kontrolü gibi karmaşık iş mantıklarını `AchievementService` gibi ayrı sınıflara taşımak.
-- **Merkezi Yapılandırma:** Kategoriler ve başarım metinleri gibi verileri hem frontend hem de backend'de tekrar etmek yerine, veritabanından veya ortak bir JSON dosyasından yönetmek.
+### 1. Kod Yapısı ve Sürdürülebilirlik (✓ Tamamlandı)
 
-## 2. Hatalar ve Anlık İyileştirmeler
+- **Backend'i Yeniden Yapılandırma:**
+  - [x] `api.php` dosyasını, gelen isteklere göre ilgili Controller sınıflarını çağıran bir yönlendiriciye (router) dönüştür.
+  - [x] `UserController` oluşturuldu: Kullanıcı `register`, `login`, `logout` ve `check_session` işlemlerini yönetir.
+  - [x] `GameController` oluşturuldu: Oyun mantığını (`get_question`, `submit_answer`) yönetir.
+  - [x] `AdminController` oluşturuldu: Admin paneli işlemlerini (`get_dashboard_data`, `get_all_users` vb.) yönetir.
+  - [x] `DataController` oluşturuldu: Genel veri çekme işlemlerini (`get_user_data`, `get_leaderboard` vb.) yönetir.
 
-- **Joker Butonu Hatası:** `app.js` içinde `handleAnswerSubmission` fonksiyonunda tekrar tekrar eklenen olay dinleyicilerini, uygulama başlangıcında bir kez eklenecek şekilde `addEventListeners` fonksiyonuna taşımak.
-- **Kullanılmayan CSS Animasyonu:** `style.css`'teki `.answer-feedback` animasyonunu, cevaplar gösterilirken kullanarak daha iyi bir görsel geri bildirim sağlamak.
+- **Frontend'i Modüler Hale Getirme:**
+  - [x] API çağrılarını `api-handler.js` içine taşı.
+  - [x] UI (arayüz) güncellemelerini (`showView`, `showToast` vb.) `ui-handler.js` içine taşı.
+  - [x] Kimlik doğrulama (Auth) işlemlerini (`login`, `register`, `logout`) `auth-handler.js` içine taşı.
+  - [x] Oyun mantığını (soru gösterme, cevaplama, zamanlayıcı) `game-handler.js` içine taşı.
+  - [x] **(Yeni)** `app.js`'i daha da sadeleştir:
+    - [x] Statik verileri (kategoriler, başarım bilgileri) `app-data.js`'e taşı.
+    - [x] Dinamik uygulama durumunu (state) `app-state.js`'e taşı.
+    - [x] İstatistik, liderlik tablosu ve başarım güncelleme mantığını `stats-handler.js`'e taşı.
+    - [x] Admin paneli mantığını `admin-handler.js`'e taşı.
+    - [x] Ayarlar (tema, ses) mantığını `settings-handler.js`'e taşı.
+    - [x] `app.js`'i sadece modülleri başlatan ve aralarındaki iletişimi yöneten bir orkestratöre dönüştür.
 
-## 3. Kullanıcı Deneyimi (UX) İyileştirmeleri
+- **Veritabanı Şemasını İyileştirme:**
+  - [ ] `user_stats` tablosuna zorluk seviyesi ve harcanan zaman gibi daha detaylı istatistikler ekle.
+  - [ ] Başarımlar için ayrı bir `achievements` tablosu oluşturarak başarım tanımlarını (isim, açıklama, ikon) veritabanında sakla.
 
-- **Gelişmiş Oyun Akışı:** Soru cevaplandıktan sonra otomatik olarak kategori ekranına dönmek yerine, "Aynı Kategoriden Devam Et" veya "Yeni Kategori Seç" gibi seçenekler sunmak.
-- **Süre Bittiğinde Geri Bildirim:** Zamanlayıcı dolduğunda da doğru cevabı ve açıklamasını kullanıcıya göstermek.
-- **Joker Kullanım Geri Bildirimi:** Joker kullanıldığında hangi jokerin kullanıldığını ve etkisini belirten kısa bir bildirim (toast) göstermek.
+### 2. Hata Yönetimi ve Kullanıcı Geribildirimi
 
-## 4. Potansiyel Yeni Özellikler
+- [ ] **Frontend Hata Yönetimi:** `apiCall` fonksiyonunda `try-catch` bloklarını kullanarak API'den dönen hataları (örneğin, sunucu hatası, geçersiz istek) yakala ve `showToast` ile kullanıcıya anlamlı mesajlar göster.
+- [ ] **Backend Hata Yönetimi:** PHP tarafında `try-catch` bloklarını daha etkin kullan. Veritabanı veya API hatalarında uygun HTTP durum kodları (örneğin, 400, 401, 500) ve açıklayıcı JSON mesajları döndür.
+- [ ] **Yükleme Durumları:** Soru yüklenirken, cevap gönderilirken veya veri çekilirken tam ekran bir "yükleniyor" animasyonu göster.
 
-- **Sosyal Özellikler:** Arkadaş ekleme ve düello (meydan okuma) sistemi.
-- **Yeni Oyun Modları:** "Süreli Mücadele" (belirli bir sürede en çok doğruyu yapma) veya "Hayatta Kalma" (yanlış yapana kadar devam etme) gibi modlar.
-- **Kişiselleştirilebilir Profiller:** Kullanıcıların avatar seçebileceği veya profil sayfalarına küçük notlar ekleyebileceği bir yapı.
-- **Şifre Sıfırlama:** "Şifremi Unuttum" özelliği ile e-posta üzerinden parola sıfırlama imkanı.
-- **Genişletilmiş Joker Sistemi:** "Pas Geçme" veya "İzleyiciye Sor" (diğer oyuncuların cevap oranlarını görme) gibi yeni jokerler eklemek.
-- **Haftalık/Aylık Liderlik Tabloları:** Tüm zamanların liderlik tablosuna ek olarak periyodik tablolar oluşturarak rekabeti canlı tutmak.
+### 3. Güvenlik İyileştirmeleri
+
+- [ ] **SQL Injection'ı Önleme:** Tüm veritabanı sorgularında `prepared statements` kullanıldığından emin ol.
+- [ ] **XSS (Cross-Site Scripting) Önleme:** Kullanıcıdan gelen ve ekrana basılan tüm verileri (örneğin, kullanıcı adı) `htmlspecialchars` gibi fonksiyonlarla temizle.
+- [ ] **CSRF (Cross-Site Request Forgery) Koruması:** Form gönderimlerinde ve önemli API isteklerinde CSRF token'ları kullan.
+- [ ] **Rate Limiting:** Özellikle giriş (login) ve kayıt (register) gibi işlemlere, kısa sürede çok sayıda denemeyi önlemek için hız sınırlaması (rate limiting) ekle.
+
+### 4. Kullanıcı Deneyimi (UX) ve Arayüz (UI) Geliştirmeleri
+
+- [ ] **Cevap Sonrası Geri Bildirim:** Cevap doğru veya yanlış olduğunda şıkların renklerini (doğruyu yeşil, yanlışı kırmızı) anında değiştir.
+- [ ] **Jokerler:** "Yarı yarıya", "Süreyi uzat" veya "Pas geç" gibi jokerler ekle.
+- [ ] **Kategori ve Zorluk Seçimi:** Kategori seçme ekranını daha görsel ve çekici hale getir.
+- [ ] **Başarımlar:** Kazanılan başarımlar için daha dikkat çekici bir bildirim (modal veya özel bir animasyon) göster. Başarımlar sayfasını daha detaylı hale getir.
+- [ ] **Profil Sayfası:** Kullanıcıların kendi istatistiklerini ve başarımlarını daha detaylı görebileceği bir profil sayfası oluştur.
+
+### 5. Yeni Özellik Fikirleri
+
+- [ ] **Düello Modu:** İki kullanıcının aynı anda aynı soruları çözdüğü bir rekabet modu.
+- [ ] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
+- [ ] **Arkadaş Ekleme ve Meydan Okuma:** Kullanıcıların birbirini arkadaş olarak ekleyip meydan okuması.
+- [ ] **Farklı Soru Tipleri:** Resimli sorular, sıralama soruları gibi yeni soru formatları ekle.
+- [ ] **Avatar ve Özelleştirme:** Kullanıcıların profil fotoğrafı veya avatar seçebilmesi.

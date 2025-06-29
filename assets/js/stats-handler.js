@@ -40,13 +40,13 @@ const statsHandler = (() => {
             ui.showToast(`Kullanıcı verileri çekilemedi: ${error.message}`, 'error');
         }
     };
-    
+
     const updateAll = () => {
         updateUserData();
         updateLeaderboard();
         updateAchievements();
     };
-    
+
     const startLeaderboardUpdates = () => {
         if (appState.get('leaderboardInterval')) {
             clearInterval(appState.get('leaderboardInterval'));
