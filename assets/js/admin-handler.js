@@ -7,50 +7,34 @@ const adminHandler = (() => {
     };
 
     const updateDashboard = async () => {
-        try {
-            const result = await api.call('admin_get_dashboard_data');
-            if (result && result.success) {
-                ui.renderAdminDashboard(result.data);
-            }
-        } catch (error) {
-            ui.showToast(`Admin verileri alınamadı: ${error.message}`, 'error');
+        const result = await api.call('admin_get_dashboard_data', {}, 'POST', false);
+        if (result && result.success) {
+            ui.renderAdminDashboard(result.data);
         }
     };
 
     const updateUserList = async () => {
-        try {
-            const result = await api.call('admin_get_all_users');
-            if (result && result.success) {
-                const currentUser = appState.get('currentUser');
-                ui.renderAdminUserList(result.data, currentUser.id);
-            }
-        } catch (error) {
-            ui.showToast(`Kullanıcı listesi alınamadı: ${error.message}`, 'error');
+        const result = await api.call('admin_get_all_users', {}, 'POST', false);
+        if (result && result.success) {
+            const currentUser = appState.get('currentUser');
+            ui.renderAdminUserList(result.data, currentUser.id);
         }
     };
 
     const handleUserRoleChange = async (userId, newRole) => {
-        try {
-            const result = await api.call('admin_update_user_role', { user_id: userId, new_role: newRole });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
-            if (result.success) {
-                updateUserList(); // Listeyi yenile
-            }
-        } catch (error) {
-            ui.showToast(`Rol güncellenemedi: ${error.message}`, 'error');
+        const result = await api.call('admin_update_user_role', { user_id: userId, new_role: newRole });
+        ui.showToast(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            updateUserList();
         }
     };
 
     const handleUserDelete = async (userId, username) => {
         if (confirm(`'${username}' adlı kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
-            try {
-                const result = await api.call('admin_delete_user', { user_id: userId });
-                ui.showToast(result.message, result.success ? 'success' : 'error');
-                if (result.success) {
-                    updateUserList(); // Listeyi yenile
-                }
-            } catch (error) {
-                ui.showToast(`Kullanıcı silinemedi: ${error.message}`, 'error');
+            const result = await api.call('admin_delete_user', { user_id: userId });
+            ui.showToast(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
+                updateUserList();
             }
         }
     };

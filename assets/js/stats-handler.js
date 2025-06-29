@@ -6,38 +6,25 @@ const statsHandler = (() => {
     };
 
     const updateAchievements = async () => {
-        try {
-            const result = await api.call('get_user_achievements');
-            if (result && result.success) {
-                ui.renderAchievements(result.data);
-            } else {
-                ui.renderAchievements([]); // Hata durumunda boş liste gönder
-            }
-        } catch (error) {
-            ui.showToast(`Başarımlar yüklenemedi: ${error.message}`, 'error');
+        const result = await api.call('get_user_achievements', {}, 'POST', false);
+        if (result && result.success) {
+            ui.renderAchievements(result.data);
+        } else if (!result.success) {
+            ui.renderAchievements([]);
         }
     };
 
     const updateLeaderboard = async () => {
-        try {
-            const result = await api.call('get_leaderboard');
-            if (result && result.success) {
-                ui.renderLeaderboard(result.data);
-            }
-        } catch (error) {
-            console.error("Liderlik tablosu hatası:", error);
-            // Liderlik tablosu kritik değil, kullanıcıya hata göstermeyebiliriz.
+        const result = await api.call('get_leaderboard', {}, 'POST', false);
+        if (result && result.success) {
+            ui.renderLeaderboard(result.data);
         }
     };
 
     const updateUserData = async () => {
-        try {
-            const result = await api.call('get_user_data');
-            if (result && result.success) {
-                ui.renderUserData(result.data);
-            }
-        } catch (error) {
-            ui.showToast(`Kullanıcı verileri çekilemedi: ${error.message}`, 'error');
+        const result = await api.call('get_user_data', {}, 'POST', false);
+        if (result && result.success) {
+            ui.renderUserData(result.data);
         }
     };
 
@@ -51,8 +38,8 @@ const statsHandler = (() => {
         if (appState.get('leaderboardInterval')) {
             clearInterval(appState.get('leaderboardInterval'));
         }
-        updateLeaderboard(); // İlk başta hemen yükle
-        const intervalId = setInterval(updateLeaderboard, 60000); // Her 60 saniyede bir güncelle
+        updateLeaderboard();
+        const intervalId = setInterval(updateLeaderboard, 60000);
         appState.set('leaderboardInterval', intervalId);
     };
 

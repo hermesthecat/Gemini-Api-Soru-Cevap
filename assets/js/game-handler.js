@@ -75,50 +75,45 @@ const game = {
         clearInterval(this.state.timerInterval);
         this.dom.timerContainer.classList.add('hidden');
         this.dom.lifelineContainer.classList.add('hidden');
-        this.ui.showLoading(true, 'Cevap kontrol ediliyor...');
+        
+        // Yükleme ekranı artık api.call içinde yönetiliyor.
+        const result = await api.call('submit_answer', {
+            answer: answer,
+            kategori: this.state.currentQuestionData.kategori
+        });
 
-        try {
-            const result = await apiCall('submit_answer', {
-                answer: answer,
-                kategori: this.state.currentQuestionData.kategori
+        if (result && result.success) {
+            const { is_correct, correct_answer, explanation, new_achievements } = result.data;
+            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: is_correct ? 'correct' : 'incorrect' } }));
+
+
+            this.dom.optionsContainer.querySelectorAll('.option-button').forEach(btn => {
+                btn.disabled = true;
+                if (btn.dataset.answer === correct_answer) {
+                    btn.classList.add('bg-green-200', 'dark:bg-green-500', 'font-semibold');
+                } else if (btn.dataset.answer === answer && !is_correct) {
+                    btn.classList.add('bg-red-200', 'dark:bg-red-500', 'font-semibold');
+                }
             });
 
-            if (result && result.success) {
-                const { is_correct, correct_answer, explanation, new_achievements } = result.data;
-                document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: is_correct ? 'correct' : 'incorrect' } }));
+            this.dom.explanationText.textContent = explanation;
+            this.dom.explanationContainer.classList.remove('hidden');
+
+            // Ana uygulamaya istatistikleri güncellemesi için haber ver
+            document.dispatchEvent(new CustomEvent('answerSubmitted', { detail: { new_achievements } }));
 
 
-                this.dom.optionsContainer.querySelectorAll('.option-button').forEach(btn => {
-                    btn.disabled = true;
-                    if (btn.dataset.answer === correct_answer) {
-                        btn.classList.add('bg-green-200', 'dark:bg-green-500', 'font-semibold');
-                    } else if (btn.dataset.answer === answer && !is_correct) {
-                        btn.classList.add('bg-red-200', 'dark:bg-red-500', 'font-semibold');
-                    }
-                });
-
-                this.dom.explanationText.textContent = explanation;
-                this.dom.explanationContainer.classList.remove('hidden');
-
-                // Ana uygulamaya istatistikleri güncellemesi için haber ver
-                document.dispatchEvent(new CustomEvent('answerSubmitted', { detail: { new_achievements } }));
-
-
-                setTimeout(() => {
-                    this.dom.questionContainer.classList.add('hidden');
-                    this.dom.categorySelectionContainer.classList.remove('hidden');
-                }, 3000);
-            } else {
-                this.ui.showToast(result.message || 'Cevap gönderilirken bir hata oluştu.', 'error');
+            setTimeout(() => {
                 this.dom.questionContainer.classList.add('hidden');
                 this.dom.categorySelectionContainer.classList.remove('hidden');
+            }, 3000);
+        } else {
+            // Hata api.call tarafından gösterildi, sadece arayüzü eski haline getirelim.
+            if (result && result.message) {
+                 this.ui.showToast(result.message, 'error');
             }
-        } catch (error) {
-            this.ui.showToast(`Cevap gönderilemedi: ${error.message}`, 'error');
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
-        } finally {
-            this.ui.showLoading(false);
         }
     },
 
@@ -139,22 +134,19 @@ const game = {
         this.dom.categoryButtons.addEventListener('click', async (e) => {
             const btn = e.target.closest('.category-button');
             if (btn) {
-                this.ui.showLoading(true, 'Soru hazırlanıyor...');
-                try {
-                    const result = await apiCall('get_question', {
-                        kategori: btn.dataset.kategori,
-                        difficulty: this.state.difficulty
-                    });
-                    if (result && result.success) {
-                        this.displayQuestion(result.data);
-                    } else {
-                        this.ui.showToast(result.message || 'Soru alınamadı.', 'error');
-                    }
-                } catch (error) {
-                    this.ui.showToast(error.message, 'error');
-                } finally {
-                    this.ui.showLoading(false);
+                // Yükleme ekranı api.call içinde yönetiliyor.
+                const result = await api.call('get_question', {
+                    kategori: btn.dataset.kategori,
+                    difficulty: this.state.difficulty
+                });
+
+                if (result && result.success) {
+                    this.displayQuestion(result.data);
+                } else if (result && result.message) {
+                    // Soru formatı hatası gibi özel mesajları göster.
+                    this.ui.showToast(result.message, 'error');
                 }
+                // Diğer tüm hatalar (network vs) zaten api.call tarafından gösterildi.
             }
         });
 
