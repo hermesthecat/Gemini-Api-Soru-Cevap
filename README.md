@@ -6,9 +6,12 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 
 - **Dinamik Soru Üretimi:** Google Gemini API'si ile her seferinde özgün sorular oluşturulur.
 - **Tek Sayfa Uygulaması (SPA):** `fetch` API'si ve AJAX sayesinde sayfa yenilenmeden akıcı bir kullanıcı deneyimi sunar.
+- **Çoklu Soru Tipi:** Çoktan seçmeli ve Doğru/Yanlış formatlarında rastgele sorular sunarak yarışmayı dinamik tutar.
 - **Çoklu Kategori ve Zorluk:** Tarih, Spor, Bilim gibi kategorilerde "Kolay", "Orta" ve "Zor" seviyelerinde yarışma imkanı.
-- **Kalıcı İstatistikler:** Kullanıcının başarı istatistikleri, tarayıcının `localStorage` özelliği kullanılarak saklanır ve tarayıcı kapatılıp açılsa bile korunur.
-- **Gelişmiş Cevap Geri Bildirimi:** Cevap verildiğinde, seçenekler üzerinde doğru şık yeşil, yanlış şık ise kırmızı ile vurgulanır.
+- **Detaylı İstatistikler:** Genel başarı oranının yanı sıra, her kategori için ayrı ayrı detaylı istatistikler tutulur ve gösterilir.
+- **Kalıcı Veri:** Kullanıcının tema tercihi ve tüm istatistikleri, tarayıcının `localStorage` özelliği kullanılarak saklanır.
+- **Gelişmiş Geri Bildirim:** Cevap verildiğinde, seçenekler üzerinde doğru/yanlış şıklar vurgulanır ve doğru cevabın neden doğru olduğuna dair bir açıklama sunulur.
+- **Açık/Koyu Tema:** Kullanıcının tercihine veya sistem ayarlarına göre değişen modern ve göz dostu arayüz.
 - **Zaman Sınırı:** Her soru için 30 saniyelik geri sayım sayacı.
 - **Duyarlı Tasarım:** Tailwind CSS ile oluşturulmuş modern ve mobil uyumlu arayüz.
 
@@ -67,14 +70,14 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 Uygulama, ön uç (frontend) ve arka uç (backend) olarak ikiye ayrılmış modern bir yapı kullanır:
 
-1. **Başlatma:** Kullanıcı `index.php`'yi açtığında, `assets/js/app.js` dosyası çalışır. Varsa `localStorage`'dan kaydedilmiş istatistikleri yükler ve ana kategori seçim ekranını oluşturur.
+1. **Başlatma:** Kullanıcı `index.php`'yi açtığında, `assets/js/app.js` dosyası çalışır. `localStorage`'dan kaydedilmiş tema tercihini ve istatistikleri yükler, arayüzü buna göre hazırlar.
 2. **Soru İsteği:** Kullanıcı bir zorluk ve kategori seçtiğinde, `app.js` bu bilgileri içeren bir AJAX isteğini `api.php`'ye gönderir.
-3. **Soru Üretme:** `api.php`, gelen isteğe göre `GeminiAPI.php` sınıfını kullanarak Google Gemini'den uygun bir soru oluşturmasını ister.
-4. **Soru Gönderme:** `api.php`, Gemini'den aldığı soruyu, şıkları ve kategori bilgisini JSON formatında ön uca (JavaScript'e) geri gönderir. *Doğru cevap bu aşamada kesinlikle kullanıcıya gönderilmez*, bunun yerine sunucuda geçici olarak saklanır.
-5. **Soru Gösterimi:** `app.js`, aldığı soru verisiyle arayüzü günceller, soruyu ve şıkları ekranda gösterir ve 30 saniyelik sayacı başlatır.
-6. **Cevap Kontrolü:** Kullanıcı bir şıkkı seçtiğinde, `app.js` seçilen cevabı yeni bir AJAX isteği ile tekrar `api.php`'ye gönderir.
-7. **Sonuç Bildirimi:** `api.php`, gelen cevabı sunucuda saklanan doğru cevapla karşılaştırır ve sonucun doğruluğunu (`is_correct`) ve doğru şıkkın ne olduğunu (`correct_answer`) içeren bir JSON yanıtı oluşturur.
-8. **Arayüz Güncelleme:** `app.js` bu sonuç verisini alır. Şıkları doğru/yanlış olarak renklendirir, istatistikleri günceller ve `localStorage`'a kaydeder. Birkaç saniye sonra kullanıcıyı tekrar kategori seçim ekranına yönlendirir.
+3. **Soru Üretme:** `api.php`, gelen isteğe göre rastgele bir soru tipi (`coktan_secmeli` veya `dogru_yanlis`) seçer. Bu tipe uygun bir komut oluşturarak Google Gemini'den soru, cevap, şıklar (varsa) ve bir açıklama üretmesini ister.
+4. **Soru Gönderme:** `api.php`, Gemini'den aldığı verileri (soru tipi dahil) JSON formatında ön uca gönderir. *Doğru cevap ve açıklama bu aşamada kullanıcıya gönderilmez*, sunucuda geçici olarak `$_SESSION` içinde saklanır.
+5. **Soru Gösterimi:** `app.js`, aldığı verinin tipine göre arayüzü dinamik olarak oluşturur (çoktan seçmeli veya doğru/yanlış butonları), soruyu ekranda gösterir ve sayacı başlatır.
+6. **Cevap Kontrolü:** Kullanıcı bir seçim yaptığında, `app.js` seçilen cevabı yeni bir AJAX isteği ile tekrar `api.php`'ye gönderir.
+7. **Sonuç Bildirimi:** `api.php`, gelen cevabı sunucuda saklanan doğru cevapla karşılaştırır ve sonucun doğruluğunu (`is_correct`), doğru cevabı (`correct_answer`) ve açıklamayı (`explanation`) içeren bir JSON yanıtı oluşturur.
+8. **Arayüz Güncelleme:** `app.js` bu sonuç verisini alır. Arayüzü (şık renklendirme, açıklama alanı) günceller. İlgili kategorinin istatistiğini artırır ve hem genel hem de kategori bazlı istatistik tablolarını yeniden çizer. Tüm yeni veriler `localStorage`'a kaydedilir. Birkaç saniye sonra kullanıcıyı tekrar kategori seçim ekranına yönlendirir.
 
 ## Ekran Görüntüleri
 

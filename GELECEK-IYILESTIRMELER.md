@@ -2,32 +2,31 @@
 
 Projenin mevcut SPA yapısı, üzerine yeni özellikler inşa etmek için sağlam bir temel oluşturmaktadır. İşte projeyi daha da ileriye taşıyabilecek bazı yeni fikirler:
 
-## 1. Detaylı Cevap Açıklamaları
+## 1. Daha Fazla Soru Tipi
 
-**Fikir:** Kullanıcı bir cevabı işaretledikten sonra, sadece doğru/yanlış sonucunu göstermek yerine, doğru cevabın neden doğru olduğuna dair 1-2 cümlelik kısa bir açıklama sunmak. Bu açıklama, soruyla birlikte Gemini API'sinden istenebilir ve cevap ekranında gösterilebilir.
+**Mevcut Durum:** Çoktan seçmeli ve Doğru/Yanlış soru tipleri destekleniyor.
 
-**Fayda:** Uygulamanın eğitici değerini önemli ölçüde artırır. Kullanıcıların sadece neyin doğru olduğunu değil, neden doğru olduğunu da öğrenmelerini sağlar.
+**Fikir:** Yarışmayı daha da çeşitlendirmek için yeni soru formatları eklemek:
 
-## 2. Tema Seçenekleri (Koyu/Açık Mod)
+- **Boşluk Doldurma:** Kullanıcının bir metin kutusuna kısa bir cevap yazdığı sorular.
+- **Görsel Sorular:** Bir resim gösterip onunla ilgili soru sormak (Gemini'nin görsel anlama yetenekleri kullanılabilir).
 
-**Fikir:** Arayüze, kullanıcıların açık ve koyu tema arasında geçiş yapmasını sağlayan bir buton eklemek. Kullanıcının seçimi, bir sonraki ziyaretinde hatırlanması için `localStorage`'da saklanabilir.
+**Fayda:** Tekrar oynanabilirliği artırır ve farklı bilgi türlerini test eder.
 
-**Fayda:** Kullanıcı deneyimini kişiselleştirir, göz yorgunluğunu azaltır ve uygulamaya modern bir dokunuş katar.
-
-## 3. Farklı Soru Tipleri
-
-**Fikir:** Klasik çoktan seçmeli formatına ek olarak "Doğru/Yanlış" veya "Boşluk Doldurma" gibi yeni soru türleri eklemek. `api.php` ve `app.js`, farklı soru tiplerini işleyecek şekilde güncellenmelidir. API'ye gönderilen prompt, istenen soru formatını belirtmelidir.
-
-**Fayda:** Yarışmayı daha çeşitli, dinamik ve ilgi çekici hale getirir. Tekrar oynanabilirliği artırır.
-
-## 4. Kategoriye Özel İstatistikler
-
-**Fikir:** Genel başarı oranının yanı sıra, kullanıcının her bir kategorideki performansını ayrı ayrı takip etmek ve göstermek (Örn: "Tarih: %80 başarı, Spor: %60 başarı").
-
-**Fayda:** Kullanıcılara hangi alanlarda daha güçlü veya zayıf oldukları konusunda detaylı geri bildirim sunar.
-
-## 5. Progressive Web App (PWA) Yetenekleri
+## 2. Progressive Web App (PWA) Yetenekleri
 
 **Fikir:** Projeye bir `manifest.json` dosyası ve bir `service worker` (`sw.js`) ekleyerek temel PWA yetenekleri kazandırmak. Bu sayede kullanıcılar uygulamayı telefonlarının veya bilgisayarlarının ana ekranına bir kısayol olarak ekleyebilir.
 
 **Fayda:** Uygulamaya daha "yerel" bir uygulama hissi verir ve erişilebilirliği artırır. Gelecekte çevrimdışı çalışma gibi özelliklerin de önünü açar.
+
+## 3. Liderlik Tablosu (Leaderboard)
+
+**Fikir:** Kullanıcıların puanlarını (örneğin doğru cevap başına +10 puan, kalan saniye başına +1 puan gibi) hesaplayarak anonim bir liderlik tablosu oluşturmak. Bu, basit bir veritabanı (örneğin SQLite) veya bir bulut veritabanı (Firebase) gerektirebilir.
+
+**Fayda:** Rekabetçi bir element ekleyerek kullanıcıların etkileşimini ve geri dönme oranını artırır.
+
+## 4. Ses Efektleri ve Ayarları
+
+**Fikir:** Doğru/yanlış cevaplar, süre bitimi gibi olaylar için basit ses efektleri eklemek. Kullanıcıların bu sesleri açıp kapatabileceği bir ayar butonu da sunulmalıdır.
+
+**Fayda:** Kullanıcıya anında işitsel geri bildirim vererek deneyimi daha etkileşimli ve eğlenceli hale getirir.
