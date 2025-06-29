@@ -4,7 +4,7 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 
 ---
 
-### 1. Kod Yapısı ve Sürdürülebilirlik (✓ Tamamlandı)
+## 1. Kod Yapısı ve Sürdürülebilirlik (✓ Tamamlandı)
 
 - **Backend'i Yeniden Yapılandırma:**
   - [x] `api.php` dosyasını, gelen isteklere göre ilgili Controller sınıflarını çağıran bir yönlendiriciye (router) dönüştür.
@@ -30,20 +30,20 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
   - [x] `user_stats` tablosuna zorluk seviyesi ve harcanan zaman gibi daha detaylı istatistikler ekle.
   - [x] Başarımlar için ayrı bir `achievements` tablosu oluşturarak başarım tanımlarını (isim, açıklama, ikon) veritabanında sakla.
 
-### 2. Hata Yönetimi ve Kullanıcı Geribildirimi
+## 2. Hata Yönetimi ve Kullanıcı Geribildirimi
 
 - [x] **Frontend Hata Yönetimi:** `apiCall` fonksiyonunda `try-catch` bloklarını kullanarak API'den dönen hataları (örneğin, sunucu hatası, geçersiz istek) yakala ve `showToast` ile kullanıcıya anlamlı mesajlar göster.
 - [x] **Backend Hata Yönetimi:** PHP tarafında `try-catch` bloklarını daha etkin kullan. Veritabanı veya API hatalarında uygun HTTP durum kodları (örneğin, 400, 401, 500) ve açıklayıcı JSON mesajları döndür.
 - [x] **Yükleme Durumları:** Soru yüklenirken, cevap gönderilirken veya veri çekilirken tam ekran bir "yükleniyor" animasyonu göster.
 
-### 3. Güvenlik İyileştirmeleri
+## 3. Güvenlik İyileştirmeleri
 
 - [x] **SQL Injection'ı Önleme:** Tüm veritabanı sorgularında `prepared statements` kullanıldığından emin ol.
 - [x] **XSS (Cross-Site Scripting) Önleme:** Kullanıcıdan gelen ve ekrana basılan tüm verileri (örneğin, kullanıcı adı) `htmlspecialchars` gibi fonksiyonlarla temizle.
 - [x] **CSRF (Cross-Site Request Forgery) Koruması:** Form gönderimlerinde ve önemli API isteklerinde CSRF token'ları kullan.
 - [x] **Rate Limiting:** Özellikle giriş (login) ve kayıt (register) gibi işlemlere, kısa sürede çok sayıda denemeyi önlemek için hız sınırlaması (rate limiting) ekle.
 
-### 4. Kullanıcı Deneyimi (UX) ve Arayüz (UI) Geliştirmeleri
+## 4. Kullanıcı Deneyimi (UX) ve Arayüz (UI) Geliştirmeleri
 
 - [x] **Cevap Sonrası Geri Bildirim:** Cevap doğru veya yanlış olduğunda şıkların renklerini (doğruyu yeşil, yanlışı kırmızı) anında değiştir.
 - [x] **Jokerler:** "Yarı yarıya", "Süreyi uzat" veya "Pas geç" gibi jokerler ekle.
@@ -51,7 +51,7 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 - [x] **Başarımlar:** Kazanılan başarımlar için daha dikkat çekici bir bildirim (modal veya özel bir animasyon) göster. Başarımlar sayfasını daha detaylı hale getir.
 - [x] **Profil Sayfası:** Kullanıcıların kendi istatistiklerini ve başarımlarını daha detaylı görebileceği bir profil sayfası oluştur.
 
-### 5. Sosyal Özellikler ve Rekabet
+## 5. Sosyal Özellikler ve Rekabet
 
 - **Arkadaşlık Sistemi:**
   - [x] `friends` veritabanı tablosu oluşturuldu.
@@ -66,7 +66,7 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
   - [x] Düello oyun ekranını oluşturma (5 soruluk özel yarışma).
   - [x] Düello sonuçlarını kaydetme ve gösterme.
 
-### 6. Gelecek Fikirleri
+## 6. Gelecek Fikirleri
 
 - [x] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
 - [ ] **Farklı Soru Tipleri:** Resimli sorular, sıralama soruları gibi yeni soru formatları ekle.
