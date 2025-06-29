@@ -19,7 +19,7 @@ const questHandler = (() => {
 
         setTimeout(() => {
             for (const quest of completedQuests) {
-                const message = `Görev Tamamlandı: "${quest.name}" (+${quest.reward_points} Puan!)`;
+                const message = `Görev Tamamlandı: "${quest.name}" (+${quest.reward_points} Puan & +${quest.reward_coins} Jeton!)`;
                 ui.showToast(message, 'success');
                 // Puan animasyonu vs eklenebilir
                 document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'achievement' } }));

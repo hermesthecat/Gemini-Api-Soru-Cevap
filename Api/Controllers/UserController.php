@@ -65,7 +65,7 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt, avatar FROM users WHERE username = ?");
+        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt, avatar, coins FROM users WHERE username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -96,6 +96,7 @@ class UserController
             $_SESSION['username'] = $user['username'];
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_avatar'] = $user['avatar'];
+            $_SESSION['user_coins'] = $user['coins'];
             $csrf_token = $this->generateCsrfToken();
             return [
                 'success' => true,
@@ -105,6 +106,7 @@ class UserController
                     'username' => $user['username'],
                     'role' => $user['role'],
                     'avatar' => $user['avatar'],
+                    'coins' => $user['coins'],
                     'csrf_token' => $csrf_token
                 ]
             ];
@@ -138,6 +140,7 @@ class UserController
                     'username' => $_SESSION['username'],
                     'role' => $_SESSION['user_role'],
                     'avatar' => $_SESSION['user_avatar'] ?? 'default.svg',
+                    'coins' => $_SESSION['user_coins'] ?? 0,
                     'csrf_token' => $csrf_token
                 ]
             ];

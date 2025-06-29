@@ -295,8 +295,9 @@ const ui = (() => {
     const renderUserData = (userData) => {
         if (!dom.userTotalScore || !dom.categoryStatsBody || !dom.noStatsMessage) return;
 
-        const { score, stats } = userData;
+        const { score, stats, coins } = userData;
         dom.userTotalScore.textContent = score;
+        if(dom.userCoinBalance) dom.userCoinBalance.textContent = coins;
 
         dom.categoryStatsBody.innerHTML = '';
         if (stats && stats.length > 0) {
@@ -850,6 +851,12 @@ const ui = (() => {
         }
     };
 
+    const updateCoinBalance = (coins) => {
+        if (dom.userCoinBalance) {
+            dom.userCoinBalance.textContent = coins;
+        }
+    };
+
     return {
         init,
         showView,
@@ -884,6 +891,7 @@ const ui = (() => {
         toggleDuelNextButton,
         renderDuelSummary,
         // Quests
-        renderQuests
+        renderQuests,
+        updateCoinBalance
     };
 })(); 

@@ -69,9 +69,17 @@
         <div id="main-view" class="hidden">
             <!-- Üst Bar -->
             <header class="flex justify-between items-center mb-6">
-                <div id="user-info" class="flex items-center space-x-3">
-                    <img id="user-avatar-display" src="" alt="Avatar" class="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700">
-                    <span id="welcome-message" class="font-semibold"></span>
+                <div id="user-info" class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <img id="user-avatar-display" src="assets/images/avatars/avatar1.svg" alt="User Avatar" class="w-10 h-10 rounded-full">
+                        <div class="ml-3">
+                            <h2 id="welcome-message" class="text-sm font-semibold text-gray-700 dark:text-gray-200">Hoş Geldin, ...!</h2>
+                            <div class="flex items-center text-sm text-yellow-500 font-bold">
+                                <i class="fas fa-coins mr-1"></i>
+                                <span id="user-coin-balance">0</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button id="admin-view-btn" class="hidden text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>

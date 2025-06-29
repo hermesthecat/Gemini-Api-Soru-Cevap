@@ -310,11 +310,26 @@ class DuelController
         if ($new_status === 'completed') {
             $opponent_score_column = $is_challenger ? 'opponent_score' : 'challenger_score';
             $opponent_score = $duel[$opponent_score_column];
+            $duel_win_coins = 50; // Düello kazanma ödülü
 
             if ($score > $opponent_score) {
                 $winner_id = $user_id;
+                // Kazanan jetonları alsın
+                $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
+                $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
+                 // Session'ı güncelle
+                if($winner_id == $_SESSION['user_id']){
+                    $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $duel_win_coins;
+                }
             } else if ($opponent_score > $score) {
                 $winner_id = $is_challenger ? $duel['opponent_id'] : $duel['challenger_id'];
+                // Kazanan jetonları alsın
+                $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
+                $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
+                 // Session'ı güncelle
+                if($winner_id == $_SESSION['user_id']){
+                    $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $duel_win_coins;
+                }
             } else { // Berabere
                 $winner_id = 0; // 0 ID'sini berabere olarak kullanalım. NULL da olabilir.
             }

@@ -99,7 +99,7 @@ class QuestController
 
         // Şimdi tamamlanmış olabilecek görevleri kontrol et
         $stmt_check = $pdo->prepare("
-            SELECT uq.quest_key, uq.progress, uq.goal, q.reward_points, q.name
+            SELECT uq.quest_key, uq.progress, uq.goal, q.reward_points, q.reward_coins, q.name
             FROM user_quests uq
             JOIN quests q ON uq.quest_key = q.quest_key
             WHERE uq.user_id = ?
@@ -118,19 +118,23 @@ class QuestController
                     SET is_completed = TRUE, completed_at = CURRENT_TIMESTAMP 
                     WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
                 ");
-                $stmt_add_points = $pdo->prepare("
-                    UPDATE leaderboard SET score = score + ? WHERE user_id = ?
+                $stmt_add_rewards = $pdo->prepare("
+                    UPDATE leaderboard SET score = score + ?, coins = coins + ? WHERE user_id = ?
                 ");
 
                 foreach ($completed_quests as $quest) {
                     // Görevi tamamlandı olarak işaretle
                     $stmt_complete_quest->execute([$user_id, $quest['quest_key'], $today]);
-                    // Ödül puanını ekle
-                    $stmt_add_points->execute([$quest['reward_points'], $user_id]);
+                    // Ödül puanını ve jetonunu ekle
+                    $stmt_add_rewards->execute([$quest['reward_points'], $quest['reward_coins'], $user_id]);
+                    
+                    // Session'ı güncelle
+                    $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $quest['reward_coins'];
 
                     $newly_completed_quests[] = [
                         'name' => $quest['name'],
-                        'reward_points' => $quest['reward_points']
+                        'reward_points' => $quest['reward_points'],
+                        'reward_coins' => $quest['reward_coins']
                     ];
                 }
                 $pdo->commit();

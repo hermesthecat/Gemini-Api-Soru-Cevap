@@ -103,7 +103,8 @@ try {
         `type` ENUM('solve_category', 'solve_difficulty', 'consecutive_days', 'win_duels') NOT NULL,
         `target` VARCHAR(50) DEFAULT NULL COMMENT 'e.g., ''tarih'' or ''zor''',
         `default_goal` INT NOT NULL,
-        `reward_points` INT NOT NULL
+        `reward_points` INT NOT NULL,
+        `reward_coins` INT NOT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ";
   $pdo->exec($sql_quests);
@@ -132,10 +133,12 @@ try {
   $sql_leaderboard = "
     CREATE TABLE `leaderboard` (
       `id` INT AUTO_INCREMENT PRIMARY KEY,
-      `user_id` INT NOT NULL UNIQUE,
+      `user_id` INT NOT NULL,
       `score` INT NOT NULL DEFAULT 0,
+      `coins` INT NOT NULL DEFAULT 100,
       `last_updated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+      FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      UNIQUE KEY `user_id` (`user_id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_leaderboard);

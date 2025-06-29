@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Main View Header
         welcomeMessage: document.getElementById('welcome-message'),
         logoutBtn: document.getElementById('logout-btn'),
+        userCoinBalance: document.getElementById('user-coin-balance'),
         adminViewBtn: document.getElementById('admin-view-btn'),
         userViewBtn: document.getElementById('user-view-btn'),
         // Sekmeler
@@ -181,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             game.updateLifelineUI();
             ui.renderWelcomeMessage(userData.username, userData.avatar);
+            ui.updateCoinBalance(userData.coins);
             ui.toggleAdminButton(userData.role === 'admin');
             ui.showView('main-view');
             ui.showTab('yarışma');

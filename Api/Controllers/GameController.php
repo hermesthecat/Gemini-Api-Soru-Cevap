@@ -102,9 +102,11 @@ class GameController
     {
         $user_id = $_SESSION['user_id'];
         $puan = 0;
+        $coins_earned = 0;
 
         if ($is_correct) {
             $puan = 10 + max(0, 30 - $gecen_sure);
+            $coins_earned = 5; // Her doğru cevap için 5 jeton
             $_SESSION['consecutive_correct'] = ($_SESSION['consecutive_correct'] ?? 0) + 1;
         }
 
@@ -122,11 +124,14 @@ class GameController
             $stmt_stat = $this->pdo->prepare($sql_stat);
             $stmt_stat->execute([$user_id, $kategori, $difficulty, $is_correct ? 1 : 0, $gecen_sure]);
 
-            // Skoru güncelle (sadece doğru cevapta)
-            if ($is_correct && $puan > 0) {
-                $sql_score = "UPDATE leaderboard SET score = score + ? WHERE user_id = ?";
+            // Skoru ve jetonu güncelle (sadece doğru cevapta)
+            if ($is_correct && ($puan > 0 || $coins_earned > 0)) {
+                $sql_score = "UPDATE leaderboard SET score = score + ?, coins = coins + ? WHERE user_id = ?";
                 $stmt_score = $this->pdo->prepare($sql_score);
-                $stmt_score->execute([$puan, $user_id]);
+                $stmt_score->execute([$puan, $coins_earned, $user_id]);
+                
+                // Session'daki jeton miktarını da güncelle
+                $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $coins_earned;
             }
 
             $this->pdo->commit();

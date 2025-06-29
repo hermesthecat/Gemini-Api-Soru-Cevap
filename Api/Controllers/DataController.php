@@ -14,10 +14,13 @@ class DataController
         $user_id = $_SESSION['user_id'];
         $user_data = [];
 
-        // Liderlik tablosundan skor al
-        $stmt_score = $this->pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+        // Liderlik tablosundan skor ve jeton al
+        $stmt_score = $this->pdo->prepare("SELECT score, coins FROM leaderboard WHERE user_id = ?");
         $stmt_score->execute([$user_id]);
-        $user_data['score'] = $stmt_score->fetchColumn() ?: 0;
+        $leaderboard_data = $stmt_score->fetch(PDO::FETCH_ASSOC);
+
+        $user_data['score'] = $leaderboard_data['score'] ?? 0;
+        $user_data['coins'] = $leaderboard_data['coins'] ?? 0;
 
         // İstatistikleri al (zorluk seviyelerine göre gruplayarak birleştir)
         $stmt_stats = $this->pdo->prepare("
