@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elementleri ---
+    const rootHtml = document.documentElement;
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingText = document.getElementById('loading-text');
     const errorContainer = document.getElementById('error-container');
@@ -31,8 +35,33 @@ document.addEventListener('DOMContentLoaded', () => {
         history: [],
         currentQuestion: null, // Mevcut soru ve şıkları tutmak için
         difficulty: 'orta', // Varsayılan zorluk seviyesi
+        theme: 'light', // Varsayılan tema
     };
     let timer;
+
+    // --- Tema Fonksiyonları ---
+    const applyTheme = (theme, isInitial = false) => {
+        state.theme = theme;
+        if (theme === 'dark') {
+            rootHtml.classList.add('dark');
+            themeToggleLightIcon.classList.remove('hidden');
+            themeToggleDarkIcon.classList.add('hidden');
+        } else {
+            rootHtml.classList.remove('dark');
+            themeToggleDarkIcon.classList.remove('hidden');
+            themeToggleLightIcon.classList.add('hidden');
+        }
+        // Başlangıç yüklemesi değilse (yani kullanıcı butona tıkladıysa) ayarı kaydet
+        if (!isInitial) {
+            saveStateToLocalStorage();
+        }
+    };
+
+    const handleThemeToggle = () => {
+        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+        applyTheme(newTheme);
+    };
+
 
     // --- LocalStorage Fonksiyonları ---
     const saveStateToLocalStorage = () => {
@@ -40,16 +69,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const persistentState = {
             stats: state.stats,
             history: state.history,
+            theme: state.theme
         };
         localStorage.setItem('quizAppState', JSON.stringify(persistentState));
     };
 
     const loadStateFromLocalStorage = () => {
-        const savedState = localStorage.getItem('quizAppState');
-        if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            state.stats = parsedState.stats;
-            state.history = parsedState.history;
+        const savedStateJSON = localStorage.getItem('quizAppState');
+        if (savedStateJSON) {
+            const savedState = JSON.parse(savedStateJSON);
+            state.stats = savedState.stats || {
+                total_questions: 0,
+                correct_answers: 0
+            };
+            state.history = savedState.history || [];
+            // Temayı state'e yükle, ancak henüz uygulama (initialize halledecek)
+            state.theme = savedState.theme;
         }
     };
 
@@ -120,11 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('history-container');
         container.innerHTML = '';
         if (!history || history.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-center">Henüz hiç soru cevaplamadınız.</p>';
+            container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>';
             return;
         }
         history.forEach(item => {
-            const isCorrectClass = item.is_correct ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500';
+            const isCorrectClass = item.is_correct ?
+                'bg-green-100 dark:bg-green-900/50 border-green-500 dark:border-green-700' :
+                'bg-red-100 dark:bg-red-900/50 border-red-500 dark:border-red-700';
             const userAnswerText = item.siklar[item.user_answer] || 'Cevap bulunamadı';
             let historyHtml = `
                 <div class="p-3 rounded-lg border-l-4 ${isCorrectClass}">
@@ -150,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ['A', 'B', 'C', 'D'].forEach(opt => {
             if (data.siklar[opt]) {
                 const button = document.createElement('button');
-                button.className = 'option-button p-4 text-left rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors';
+                button.className = 'option-button p-4 text-left rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700';
                 button.dataset.answer = opt;
                 button.innerHTML = `<span class="font-semibold">${opt}</span>) ${data.siklar[opt]}`;
                 optionsContainer.appendChild(button);
@@ -222,10 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Arayüzü güncelle
         document.querySelectorAll('.difficulty-button').forEach(btn => {
             btn.classList.remove('bg-blue-500', 'text-white', 'font-semibold');
-            btn.classList.add('bg-gray-200', 'hover:bg-gray-300');
+            btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
         });
         button.classList.add('bg-blue-500', 'text-white', 'font-semibold');
-        button.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+        button.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
     };
 
     const handleAnswerSubmission = async (answer) => {
@@ -238,15 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tüm butonların tıklanabilirliğini kaldır ve hover efektini sıfırla.
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.disabled = true;
-                btn.classList.remove('hover:bg-blue-50');
+                btn.classList.remove('hover:bg-blue-50', 'dark:hover:bg-gray-700');
 
                 // Doğru cevabı her zaman yeşil yap
                 if (btn.dataset.answer === data.correct_answer) {
-                    btn.classList.add('bg-green-200', 'border-green-500', 'font-semibold');
+                    btn.classList.add('bg-green-200', 'dark:bg-green-500', 'border-green-500', 'dark:border-green-400', 'font-semibold', 'dark:text-white');
                 }
                 // Kullanıcının cevabı yanlışsa, onu kırmızı yap
                 else if (btn.dataset.answer === answer && !data.is_correct) {
-                    btn.classList.add('bg-red-200', 'border-red-500', 'font-semibold');
+                    btn.classList.add('bg-red-200', 'dark:bg-red-500', 'border-red-500', 'dark:border-red-400', 'font-semibold', 'dark:text-white');
                 }
             });
 
@@ -317,12 +354,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Başlangıç Fonksiyonu ---
     const initialize = async () => {
         loadStateFromLocalStorage();
+
+        // Kayıtlı tema veya sistem tercihine göre temayı uygula
+        const savedTheme = state.theme;
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+        applyTheme(initialTheme, true); // `true` ile başlangıç ayarı olduğunu belirt
+
         updateStatsUI(state.stats);
         updateHistoryUI(state.history);
         showView('categories');
     };
 
     // --- Olay Dinleyicileri (Event Listeners) ---
+    themeToggle.addEventListener('click', handleThemeToggle);
     difficultyButtons.addEventListener('click', handleDifficultySelection);
     categoryButtons.addEventListener('click', handleCategorySelection);
     optionsContainer.addEventListener('click', handleOptionClick);
