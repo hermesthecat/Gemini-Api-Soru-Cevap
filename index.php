@@ -162,7 +162,35 @@
 
 
             // --- Uygulama Durumu (State) ---
+            let state = {
+                stats: {
+                    total_questions: 0,
+                    correct_answers: 0
+                },
+                history: [],
+                currentQuestion: null, // Mevcut soru ve şıkları tutmak için
+            };
             let timer;
+
+            // --- LocalStorage Fonksiyonları ---
+            const saveStateToLocalStorage = () => {
+                // Sadece kalıcı olması gereken verileri kaydet
+                const persistentState = {
+                    stats: state.stats,
+                    history: state.history,
+                };
+                localStorage.setItem('quizAppState', JSON.stringify(persistentState));
+            };
+
+            const loadStateFromLocalStorage = () => {
+                const savedState = localStorage.getItem('quizAppState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+                    state.stats = parsedState.stats;
+                    state.history = parsedState.history;
+                }
+            };
+
 
             // --- API Fonksiyonları ---
             const apiCall = async (action, data = {}) => {
@@ -239,7 +267,7 @@
                     let historyHtml = `
                         <div class="p-3 rounded-lg border-l-4 ${isCorrectClass}">
                             <p class="font-semibold mb-1">${item.question}</p>
-                            <p class="text-sm">Sizin Cevabınız: <span class="font-bold">${item.user_answer}) ${userAnswerText}</span></p>`;
+                            <p class="text-sm">Sizin Cevabınız: <span class="font-bold">${item.user_answer || 'Süre Doldu'}) ${userAnswerText}</span></p>`;
                     if (!item.is_correct) {
                         const correctAnswerText = item.siklar[item.correct_answer];
                         historyHtml += `<p class="text-sm">Doğru Cevap: <span class="font-bold">${item.correct_answer}) ${correctAnswerText}</span></p>`;
@@ -250,6 +278,7 @@
             };
 
             const displayQuestion = (data) => {
+                state.currentQuestion = data; // Mevcut soruyu state'e kaydet
                 questionCategory.textContent = data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1);
                 questionText.textContent = data.question;
                 optionsContainer.innerHTML = '';
@@ -323,9 +352,31 @@
                     answer
                 });
                 if (data) {
+                    // İstatistikleri güncelle
+                    state.stats.total_questions++;
+                    if (data.is_correct) {
+                        state.stats.correct_answers++;
+                    }
+
+                    // Geçmiş öğesini oluştur
+                    const historyItem = {
+                        question: state.currentQuestion.question,
+                        siklar: state.currentQuestion.siklar,
+                        user_answer: answer === 'TIMEOUT' ? null : answer,
+                        correct_answer: data.correct_answer,
+                        is_correct: data.is_correct,
+                    };
+                    state.history.unshift(historyItem);
+                    if (state.history.length > 5) {
+                        state.history.pop();
+                    }
+
+                    // Yeni durumu kaydet ve UI'ı güncelle
+                    saveStateToLocalStorage();
+                    updateStatsUI(state.stats);
+                    updateHistoryUI(state.history);
+
                     showAnswerFeedback(data.is_correct);
-                    updateStatsUI(data.stats);
-                    updateHistoryUI(data.history);
                     setTimeout(() => showView('categories'), 2000); // 2 saniye sonra kategori seçimine dön
                 } else {
                     showView('categories'); // Hata olursa direk kategori seçimine dön
@@ -349,20 +400,23 @@
             };
 
             const handleResetStats = async () => {
-                const data = await apiCall('reset_stats');
-                if (data) {
-                    updateStatsUI(data.stats);
-                    updateHistoryUI(data.history);
-                }
+                // State'i sıfırla
+                state.stats = {
+                    total_questions: 0,
+                    correct_answers: 0
+                };
+                state.history = [];
+                // LocalStorage'ı temizle ve UI'ı güncelle
+                saveStateToLocalStorage();
+                updateStatsUI(state.stats);
+                updateHistoryUI(state.history);
             };
 
             // --- Başlangıç Fonksiyonu ---
             const initialize = async () => {
-                const data = await apiCall('get_initial_state');
-                if (data) {
-                    updateStatsUI(data.stats);
-                    updateHistoryUI(data.history);
-                }
+                loadStateFromLocalStorage();
+                updateStatsUI(state.stats);
+                updateHistoryUI(state.history);
                 showView('categories');
             };
 
