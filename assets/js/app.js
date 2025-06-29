@@ -1,32 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- UYGULAMA DURUMU (STATE) ---
-    const state = {
-        currentUser: null, // { id: 1, username: '...', role: '...' }
-        difficulty: 'orta',
-        currentCategory: null,
-        soundEnabled: true,
-        theme: 'light',
-        leaderboardInterval: null,
-        currentQuestionData: null,
-        timerInterval: null,
-        timeLeft: 30,
-        lifelines: {
-            fiftyFifty: 1,
-            extraTime: 1
-        }
-    };
-
-    // --- KATEGORİLER ---
-    const categories = {
-        'tarih': { icon: 'fa-history', color: 'blue' },
-        'spor': { icon: 'fa-futbol', color: 'green' },
-        'bilim': { icon: 'fa-atom', color: 'purple' },
-        'sanat': { icon: 'fa-palette', color: 'yellow' },
-        'coğrafya': { icon: 'fa-globe-americas', color: 'red' },
-        'genel kültür': { icon: 'fa-brain', color: 'indigo' }
-    };
-
     // --- DOM ELEMENTLERİ ---
     const dom = {
         appContainer: document.getElementById('app-container'),
@@ -94,9 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const App = {
         init() {
             // Tüm modülleri DOM elementleriyle başlat
+            // Modüller ihtiyaç duydukları diğer modüllere (örn: appState, ui) global olarak erişir.
             ui.init(dom);
-            auth.init(dom);
-            game.init(state, dom, ui);
+            auth.init(dom); 
+            game.init(dom);
             statsHandler.init(dom);
             adminHandler.init(dom);
             settingsHandler.init(dom);
@@ -114,28 +88,31 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('logoutSuccess', this.onLogout);
             document.addEventListener('showAdminView', this.onShowAdminView);
             document.addEventListener('showMainView', this.onShowMainView);
+            document.addEventListener('answerSubmitted', this.onAnswerSubmitted);
+            document.addEventListener('playSound', this.onPlaySound);
         },
 
         onLoginSuccess(e) {
             const userData = e.detail;
-            state.currentUser = userData;
-            state.lifelines = { fiftyFifty: 1, extraTime: 1 };
-            game.updateLifelineUI(); // Oyun başlangıcında jokerleri ayarla
-            dom.welcomeMessage.textContent = `Hoş Geldin, ${userData.username}!`;
-            dom.adminViewBtn.classList.toggle('hidden', userData.role !== 'admin');
+            appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
+            appState.set('csrfToken', userData.csrf_token);
+            appState.set('lifelines', { fiftyFifty: 1, extraTime: 1 });
+            
+            game.updateLifelineUI();
+            ui.renderWelcomeMessage(userData.username);
+            ui.toggleAdminButton(userData.role === 'admin');
             ui.showView('main-view');
 
-            // Verileri yükle
             statsHandler.updateAll();
             statsHandler.startLeaderboardUpdates();
-            game.populateCategories(categories);
+            game.populateCategories(appData.categories);
         },
 
         onLogout() {
-            state.currentUser = null;
-            clearInterval(state.leaderboardInterval);
-            ui.showView('auth-view');
+            appState.set('currentUser', null);
+            appState.set('csrfToken', null); // Oturum kapatılınca token'ı temizle
             statsHandler.stopLeaderboardUpdates();
+            ui.showView('auth-view');
         },
 
         onShowAdminView() {
@@ -146,6 +123,29 @@ document.addEventListener('DOMContentLoaded', () => {
         onShowMainView() {
             ui.showView('main-view');
             statsHandler.updateAll();
+        },
+
+        onAnswerSubmitted(e) {
+            // Cevap gönderildikten sonra istatistikleri ve başarımları güncelle
+            statsHandler.updateUserData();
+            statsHandler.updateAchievements();
+            
+            // Eğer yeni bir başarım kazanıldıysa, toast ile göster
+            const { new_achievements } = e.detail;
+            if (new_achievements && new_achievements.length > 0) {
+                // Not: Bu sadece bir anahtar döner, başarım detaylarını almak için
+                // appData veya state içinden bakmak gerekebilir. Şimdilik basit tutalım.
+                ui.showToast(`Yeni başarım kazandın: ${new_achievements.join(', ')}!`, 'success');
+            }
+        },
+
+        onPlaySound(e) {
+            if (!appState.get('soundEnabled')) return;
+            const sound = dom[`${e.detail.sound}Sound`];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play();
+            }
         }
     };
 

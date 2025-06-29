@@ -46,6 +46,16 @@ const ui = (() => {
         }, 3000);
     };
 
+    const renderWelcomeMessage = (username) => {
+        if (!dom.welcomeMessage) return;
+        dom.welcomeMessage.textContent = `Hoş Geldin, ${username}!`;
+    };
+
+    const toggleAdminButton = (isAdmin) => {
+        if (!dom.adminViewBtn) return;
+        dom.adminViewBtn.classList.toggle('hidden', !isAdmin);
+    };
+
     const renderAchievements = (achievements) => {
         if (!dom.achievementsList || !dom.noAchievementsMessage) return;
         
@@ -195,6 +205,8 @@ const ui = (() => {
         showView,
         showLoading,
         showToast,
+        renderWelcomeMessage,
+        toggleAdminButton,
         renderAchievements,
         renderLeaderboard,
         renderUserData,

@@ -85,6 +85,18 @@ try {
             http_response_code(401); // Unauthorized
             $response = ['success' => false, 'message' => 'Bu işlem için giriş yapmalısınız.'];
         } else {
+            // CSRF Token Kontrolü (POST ile gelen ve kimlik doğrulaması gerektiren tüm işlemler için)
+            $isPostRequest = $_SERVER['REQUEST_METHOD'] === 'POST';
+            if ($isPostRequest && $needsAuth) {
+                $csrf_header = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+                if (empty($csrf_header) || !hash_equals($_SESSION['csrf_token'] ?? '', $csrf_header)) {
+                    http_response_code(403); // Forbidden
+                    $response = ['success' => false, 'message' => 'Geçersiz güvenlik anahtarı (CSRF). Lütfen sayfayı yenileyip tekrar deneyin.'];
+                    echo json_encode($response);
+                    exit();
+                }
+            }
+
             // Metodu çağır
             $data = $needsData ? $request_data : [];
             $response = $data ? $controller->$method($data) : $controller->$method();

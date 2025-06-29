@@ -13,6 +13,12 @@ const api = (() => {
             },
         };
 
+        // POST isteklerine CSRF token ekle
+        const csrfToken = appState.get('csrfToken');
+        if (method === 'POST' && csrfToken) {
+            options.headers['X-CSRF-Token'] = csrfToken;
+        }
+
         if (method === 'POST') {
             options.body = JSON.stringify({ action, ...data });
         }
