@@ -55,8 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
         adminTabs: document.getElementById('admin-tabs'),
         adminUsersTab: document.getElementById('admin-users-tab'),
         adminAnnouncementsTab: document.getElementById('admin-announcements-tab'),
+        adminStatsTab: document.getElementById('admin-stats-tab'),
         createAnnouncementForm: document.getElementById('create-announcement-form'),
         announcementsListBody: document.getElementById('announcements-list-body'),
+        categoryChart: document.getElementById('category-chart'),
+        answersChart: document.getElementById('answers-chart'),
+        usersChart: document.getElementById('users-chart'),
         // Ayarlar
         themeToggle: document.getElementById('theme-toggle'),
         themeToggleDarkIcon: document.getElementById('theme-toggle-dark-icon'),

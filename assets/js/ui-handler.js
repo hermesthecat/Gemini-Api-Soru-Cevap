@@ -1,5 +1,6 @@
 const ui = (() => {
     let dom = {};
+    let charts = {}; // To store chart instances
 
     const init = (domElements) => {
         dom = domElements;
@@ -47,38 +48,6 @@ const ui = (() => {
         }, 3000);
     };
 
-    const showAchievementModal = (achievement) => {
-        if (!dom.achievementModal) return;
-
-        // Modalı doldur
-        const iconContainer = dom.achievementModal.querySelector('#achievement-modal-icon-container');
-        const nameEl = dom.achievementModal.querySelector('#achievement-modal-name');
-        const descriptionEl = dom.achievementModal.querySelector('#achievement-modal-description');
-        const closeBtn = dom.achievementModal.querySelector('#achievement-modal-close-btn');
-
-        iconContainer.innerHTML = `<i class="fas ${achievement.icon} fa-5x text-${achievement.color}-500"></i>`;
-        nameEl.textContent = achievement.name;
-        descriptionEl.textContent = achievement.description;
-
-        // Modalı göster
-        dom.achievementModal.classList.remove('hidden');
-        setTimeout(() => { // Tarayıcının 'hidden' sınıfının kaldırılmasını işlemesi için kısa bir gecikme
-            dom.achievementModal.classList.remove('opacity-0');
-            dom.achievementModal.querySelector('#achievement-modal-content').classList.remove('scale-95');
-        }, 10);
-
-        // Kapatma butonu
-        const closeHandler = () => {
-            dom.achievementModal.classList.add('opacity-0');
-            dom.achievementModal.querySelector('#achievement-modal-content').classList.add('scale-95');
-            setTimeout(() => {
-                dom.achievementModal.classList.add('hidden');
-                closeBtn.removeEventListener('click', closeHandler);
-            }, 300); // animasyon süresiyle eşleşmeli
-        };
-        closeBtn.addEventListener('click', closeHandler);
-    };
-
     const showTab = (tabId) => {
         // Tüm sekme içeriklerini gizle
         dom.yarışmaTab?.classList.add('hidden');
@@ -111,6 +80,7 @@ const ui = (() => {
     const showAdminTab = (tabId) => {
         dom.adminUsersTab?.classList.add('hidden');
         dom.adminAnnouncementsTab?.classList.add('hidden');
+        dom.adminStatsTab?.classList.add('hidden');
         
         const tabToShow = document.getElementById(`admin-${tabId}-tab`);
         if(tabToShow) {
@@ -126,6 +96,92 @@ const ui = (() => {
         if(activeButton) {
             activeButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-500');
             activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-600');
+        }
+    };
+
+    const destroyChart = (chartName) => {
+        if (charts[chartName]) {
+            charts[chartName].destroy();
+            delete charts[chartName];
+        }
+    };
+    
+    const renderAdvancedStats = (statsData) => {
+        const { most_played_categories, new_users_last_7_days, answer_distribution } = statsData;
+
+        // Destroy existing charts to prevent duplicates
+        destroyChart('categories');
+        destroyChart('answers');
+        destroyChart('users');
+
+        // Chart 1: Most Played Categories (Bar Chart)
+        if (dom.categoryChart && most_played_categories) {
+            const ctx = dom.categoryChart.getContext('2d');
+            charts.categories = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: most_played_categories.map(c => c.category),
+                    datasets: [{
+                        label: 'Oynanma Sayısı',
+                        data: most_played_categories.map(c => c.play_count),
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } },
+                    responsive: true
+                }
+            });
+        }
+
+        // Chart 2: Answer Distribution (Doughnut Chart)
+        if (dom.answersChart && answer_distribution) {
+            const ctx = dom.answersChart.getContext('2d');
+            charts.answers = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: answer_distribution.map(d => `${d.difficulty} (Doğru/Yanlış)`),
+                    datasets: [{
+                        label: 'Cevaplar',
+                        data: answer_distribution.flatMap(d => [d.correct, d.incorrect]),
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)', // green-500
+                            'rgba(239, 68, 68, 0.7)',  // red-500
+                            'rgba(245, 158, 11, 0.7)', // amber-500
+                            'rgba(239, 68, 68, 0.5)',  // red-500/50
+                            'rgba(99, 102, 241, 0.7)', // indigo-500
+                            'rgba(239, 68, 68, 0.3)'   // red-500/30
+                        ],
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        // Chart 3: New Users (Line Chart)
+        if (dom.usersChart && new_users_last_7_days) {
+            const ctx = dom.usersChart.getContext('2d');
+            charts.users = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: new_users_last_7_days.map(u => u.registration_date),
+                    datasets: [{
+                        label: 'Yeni Kullanıcı Sayısı',
+                        data: new_users_last_7_days.map(u => u.user_count),
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } },
+                    responsive: true
+                }
+            });
         }
     };
 
@@ -801,6 +857,7 @@ const ui = (() => {
         showToast,
         showTab,
         showAdminTab,
+        renderAdvancedStats,
         renderWelcomeMessage,
         toggleAdminButton,
         renderAchievements,

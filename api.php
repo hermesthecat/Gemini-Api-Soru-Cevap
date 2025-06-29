@@ -88,6 +88,7 @@ try {
         'admin_get_announcements' => [$adminController, 'getAnnouncements', false, true],
         'admin_create_announcement' => [$adminController, 'createAnnouncement', true, true],
         'admin_delete_announcement' => [$adminController, 'deleteAnnouncement', true, true],
+        'admin_get_advanced_stats' => [$adminController, 'getAdvancedStats', false, true],
 
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],

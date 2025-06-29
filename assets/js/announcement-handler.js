@@ -85,18 +85,6 @@ const announcementHandler = (() => {
                 handleDeleteAnnouncement(deleteBtn.dataset.id);
             }
         });
-
-        // Admin sekme geçişi
-        dom.adminTabs?.addEventListener('click', (e) => {
-             const tabButton = e.target.closest('.admin-tab-button');
-             if(!tabButton) return;
-             
-             const tab = tabButton.dataset.tab;
-             ui.showAdminTab(tab);
-             if(tab === 'announcements') {
-                 updateAnnouncementsList();
-             }
-        });
     };
     
     return {

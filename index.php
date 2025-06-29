@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Tema yönetimi için FOUC önleyici betik
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -319,6 +320,9 @@
                         <li class="mr-2">
                             <button class="admin-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="announcements">Duyuru Yönetimi</button>
                         </li>
+                        <li class="mr-2">
+                            <button class="admin-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="stats">İstatistik Grafikleri</button>
+                        </li>
                     </ul>
                 </div>
 
@@ -380,6 +384,24 @@
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İstatistik Grafikleri Sekmesi -->
+                <div id="admin-stats-tab" class="admin-tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-bold mb-4">En Çok Oynanan Kategoriler</h3>
+                            <canvas id="category-chart"></canvas>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-bold mb-4">Zorluğa Göre Cevap Dağılımı</h3>
+                            <canvas id="answers-chart"></canvas>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg lg:col-span-2">
+                            <h3 class="text-xl font-bold mb-4">Son 7 Günlük Yeni Kullanıcı Kayıtları</h3>
+                            <canvas id="users-chart"></canvas>
                         </div>
                     </div>
                 </div>

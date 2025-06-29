@@ -139,4 +139,48 @@ class AdminController
         }
         return ['success' => false, 'message' => 'Geçersiz duyuru ID.'];
     }
+
+    public function getAdvancedStats() {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        // En çok oynanan 5 kategori
+        $stmt_categories = $this->pdo->query("
+            SELECT category, COUNT(*) as play_count 
+            FROM user_stats 
+            GROUP BY category 
+            ORDER BY play_count DESC 
+            LIMIT 5
+        ");
+        $most_played_categories = $stmt_categories->fetchAll(PDO::FETCH_ASSOC);
+
+        // Son 7 gündeki yeni kullanıcı kayıtları
+        $stmt_users = $this->pdo->query("
+            SELECT DATE(created_at) as registration_date, COUNT(*) as user_count 
+            FROM users 
+            WHERE created_at >= CURDATE() - INTERVAL 7 DAY
+            GROUP BY registration_date
+            ORDER BY registration_date ASC
+        ");
+        $new_users_last_7_days = $stmt_users->fetchAll(PDO::FETCH_ASSOC);
+
+        // Zorluğa göre cevap dağılımı
+        $stmt_answers = $this->pdo->query("
+            SELECT 
+                difficulty, 
+                SUM(correct_answers) as correct, 
+                SUM(total_questions - correct_answers) as incorrect
+            FROM user_stats 
+            GROUP BY difficulty
+        ");
+        $answer_distribution = $stmt_answers->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'success' => true,
+            'data' => [
+                'most_played_categories' => $most_played_categories,
+                'new_users_last_7_days' => $new_users_last_7_days,
+                'answer_distribution' => $answer_distribution,
+            ]
+        ];
+    }
 }
