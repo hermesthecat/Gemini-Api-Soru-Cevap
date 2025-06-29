@@ -18,9 +18,3 @@ Projenin mevcut çok kullanıcılı SPA yapısı, üzerine yeni özellikler inş
 **Fikir:** Projeye bir `manifest.json` dosyası ve bir `service worker` (`sw.js`) ekleyerek temel PWA yetenekleri kazandırmak. Bu sayede kullanıcılar uygulamayı telefonlarının veya bilgisayarlarının ana ekranına bir kısayol olarak ekleyebilir.
 
 **Fayda:** Uygulamaya daha "yerel" bir uygulama hissi verir ve erişilebilirliği artırır. Gelecekte çevrimdışı çalışma gibi özelliklerin de önünü açar.
-
-## 3. Ses Efektleri ve Ayarları
-
-**Fikir:** Doğru/yanlış cevaplar, süre bitimi gibi olaylar için basit ses efektleri eklemek. Kullanıcıların bu sesleri açıp kapatabileceği bir ayar butonu da sunulmalıdır.
-
-**Fayda:** Kullanıcıya anında işitsel geri bildirim vererek deneyimi daha etkileşimli ve eğlenceli hale getirir.

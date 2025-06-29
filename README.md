@@ -31,7 +31,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 1. **Projeyi Klonlayın:**
 
     ```bash
-    git clone https://github.com/kullanici-adiniz/ai-soru-cevap.git
+    git clone https://github.com/hermesthecat/ai-soru-cevap.git
     cd ai-soru-cevap
     ```
 
@@ -91,14 +91,6 @@ Uygulama, modern bir SPA mimarisiyle çalışır:
     - Kullanıcı cevabını `submit_answer` endpoint'ine gönderir.
     - `api.php`, cevabı `$_SESSION`'daki doğru cevapla karşılaştırır, puanı hesaplar ve kullanıcının `user_stats` ve `leaderboard` tablolarındaki verilerini günceller.
 5. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve en güncel istatistik/liderlik tablosu verilerini ekrana yansıtır.
-
-## Ekran Görüntüleri
-
-*Not: Ekran görüntüleri projenin eski, localStorage tabanlı sürümüne aittir ve güncellenmelidir. Yeni sürümde bir giriş ekranı ve farklı bir yerleşim bulunmaktadır.*
-
-| Ana Sayfa | Soru Ekranı | Doğru Cevap | Yanlış Cevap |
-| :---: | :---: | :---: | :---: |
-| ![Ana Sayfa](https://i.ibb.co/SncgVR2/image.png) | ![Örnek Soru Ekranı](https://i.ibb.co/fNnwgc0/image.png) | ![Doğru Cevap](https://i.ibb.co/w4Qtrbj/image.png) | ![Yanlış Cevap](https://i.ibb.co/TTjWyNM/image.png) |
 
 ## Lisans
 
