@@ -117,6 +117,15 @@ if (isset($_POST['kullanici_cevap'])) {
 </head>
 
 <body class="bg-gray-50 min-h-screen">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50">
+        <div class="flex items-center text-white">
+            <i class="fas fa-spinner fa-spin text-4xl mr-4"></i>
+            <span class="text-2xl font-semibold">Soru Yükleniyor...</span>
+        </div>
+    </div>
+
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Hata Mesajı Alanı -->
         <?php if ($error_message): ?>
@@ -144,28 +153,28 @@ if (isset($_POST['kullanici_cevap'])) {
         <?php if (!isset($_SESSION['current_question'])): ?>
             <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
                 <h2 class="text-xl font-semibold mb-4">Kategori Seçin</h2>
-                <form method="POST" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <button type="submit" name="kategori" value="tarih" class="bg-blue-100 hover:bg-blue-200 p-4 rounded-lg">
+                <form id="category-form" method="POST" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <button type="submit" name="kategori" value="tarih" class="category-button bg-blue-100 hover:bg-blue-200 p-4 rounded-lg">
                         <i class="fas fa-history mb-2"></i>
                         <span class="block">Tarih</span>
                     </button>
-                    <button type="submit" name="kategori" value="spor" class="bg-green-100 hover:bg-green-200 p-4 rounded-lg">
+                    <button type="submit" name="kategori" value="spor" class="category-button bg-green-100 hover:bg-green-200 p-4 rounded-lg">
                         <i class="fas fa-futbol mb-2"></i>
                         <span class="block">Spor</span>
                     </button>
-                    <button type="submit" name="kategori" value="bilim" class="bg-purple-100 hover:bg-purple-200 p-4 rounded-lg">
+                    <button type="submit" name="kategori" value="bilim" class="category-button bg-purple-100 hover:bg-purple-200 p-4 rounded-lg">
                         <i class="fas fa-atom mb-2"></i>
                         <span class="block">Bilim</span>
                     </button>
-                    <button type="submit" name="kategori" value="sanat" class="bg-yellow-100 hover:bg-yellow-200 p-4 rounded-lg">
+                    <button type="submit" name="kategori" value="sanat" class="category-button bg-yellow-100 hover:bg-yellow-200 p-4 rounded-lg">
                         <i class="fas fa-palette mb-2"></i>
                         <span class="block">Sanat</span>
                     </button>
-                    <button type="submit" name="kategori" value="coğrafya" class="bg-red-100 hover:bg-red-200 p-4 rounded-lg">
+                    <button type="submit" name="kategori" value="coğrafya" class="category-button bg-red-100 hover:bg-red-200 p-4 rounded-lg">
                         <i class="fas fa-globe-americas mb-2"></i>
                         <span class="block">Coğrafya</span>
                     </button>
-                    <button type="submit" name="kategori" value="genel kültür" class="bg-indigo-100 hover:bg-indigo-200 p-4 rounded-lg">
+                    <button type="submit" name="kategori" value="genel kültür" class="category-button bg-indigo-100 hover:bg-indigo-200 p-4 rounded-lg">
                         <i class="fas fa-brain mb-2"></i>
                         <span class="block">Genel Kültür</span>
                     </button>
@@ -183,7 +192,7 @@ if (isset($_POST['kullanici_cevap'])) {
                             <?php echo htmlspecialchars($_SESSION['kategori']); ?>
                         </span>
                         <div class="relative">
-                            <form method="POST" class="inline">
+                            <form id="category-change-form" method="POST" class="inline">
                                 <select name="kategori" onchange="this.form.submit()"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
                                     <option value="">Kategori Değiştir</option>
@@ -236,6 +245,29 @@ if (isset($_POST['kullanici_cevap'])) {
             <p>© 2024 AI Bilgi Yarışması. Tüm hakları saklıdır.</p>
         </footer>
     </div>
+
+    <script>
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Kategori seçim formları için event listener ekle
+        const categoryForm = document.getElementById('category-form');
+        const categoryChangeForm = document.getElementById('category-change-form');
+
+        const showLoading = () => {
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('hidden');
+            }
+        };
+
+        if (categoryForm) {
+            categoryForm.addEventListener('submit', showLoading);
+        }
+
+        if (categoryChangeForm) {
+            // Dropdown'un formu onchange ile submit edildiği için forma listener ekliyoruz.
+            categoryChangeForm.addEventListener('submit', showLoading);
+        }
+    </script>
 
     <?php if (isset($_SESSION['current_question']) && !isset($sonuc)): ?>
         <script>
