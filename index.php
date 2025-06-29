@@ -252,6 +252,10 @@
     <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>
     <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
+    <script src="assets/js/api-handler.js"></script>
+    <script src="assets/js/ui-handler.js"></script>
+    <script src="assets/js/auth-handler.js"></script>
+    <script src="assets/js/game-handler.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 
