@@ -27,7 +27,7 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
     - [x] `app.js`'i sadece modülleri başlatan ve aralarındaki iletişimi yöneten bir orkestratöre dönüştür.
 
 - **Veritabanı Şemasını İyileştirme:**
-  - [ ] `user_stats` tablosuna zorluk seviyesi ve harcanan zaman gibi daha detaylı istatistikler ekle.
+  - [x] `user_stats` tablosuna zorluk seviyesi ve harcanan zaman gibi daha detaylı istatistikler ekle.
   - [ ] Başarımlar için ayrı bir `achievements` tablosu oluşturarak başarım tanımlarını (isim, açıklama, ikon) veritabanında sakla.
 
 ### 2. Hata Yönetimi ve Kullanıcı Geribildirimi

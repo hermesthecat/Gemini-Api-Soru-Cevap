@@ -63,15 +63,19 @@ class GameController
 
         $user_answer = $data['answer'] ?? null;
         $kategori = $data['kategori'] ?? 'bilinmiyor';
+        $difficulty = $_SESSION['current_question_difficulty'] ?? 'orta';
+        $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
         $is_correct = ($user_answer === $_SESSION['current_question_answer']);
 
         if ($is_correct) {
-            $this->updateStatsAndScore($kategori);
+            $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
         } else {
+            // Yanlış cevapta da istatistiği güncelle
+            $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
             $_SESSION['consecutive_correct'] = 0;
         }
 
-        $yeni_basarimlar = $is_correct ? $this->checkAchievements($kategori) : [];
+        $yeni_basarimlar = $is_correct ? $this->checkAchievements($kategori, $difficulty) : [];
 
         $response = [
             'success' => true,
@@ -89,25 +93,36 @@ class GameController
 
     // --- Yardımcı Fonksiyonlar ---
 
-    private function updateStatsAndScore($kategori)
+    private function updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct)
     {
         $user_id = $_SESSION['user_id'];
-        $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
-        $puan = 10 + max(0, 30 - $gecen_sure);
-        $_SESSION['consecutive_correct'] = ($_SESSION['consecutive_correct'] ?? 0) + 1;
+        $puan = 0;
+
+        if ($is_correct) {
+            $puan = 10 + max(0, 30 - $gecen_sure);
+            $_SESSION['consecutive_correct'] = ($_SESSION['consecutive_correct'] ?? 0) + 1;
+        }
 
         try {
             $this->pdo->beginTransaction();
 
-            // İstatistiği güncelle
-            $sql_stat = "INSERT INTO user_stats (user_id, category, total_questions, correct_answers) VALUES (?, ?, 1, 1) ON DUPLICATE KEY UPDATE total_questions = total_questions + 1, correct_answers = correct_answers + 1";
+            // İstatistiği güncelle (yeni sütunlarla)
+            $sql_stat = "
+                INSERT INTO user_stats (user_id, category, difficulty, correct_answers, total_time_spent) 
+                VALUES (?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                    total_questions = total_questions + 1, 
+                    correct_answers = correct_answers + VALUES(correct_answers),
+                    total_time_spent = total_time_spent + VALUES(total_time_spent)";
             $stmt_stat = $this->pdo->prepare($sql_stat);
-            $stmt_stat->execute([$user_id, $kategori]);
+            $stmt_stat->execute([$user_id, $kategori, $difficulty, $is_correct ? 1 : 0, $gecen_sure]);
 
-            // Skoru güncelle
-            $sql_score = "UPDATE leaderboard SET score = score + ? WHERE user_id = ?";
-            $stmt_score = $this->pdo->prepare($sql_score);
-            $stmt_score->execute([$puan, $user_id]);
+            // Skoru güncelle (sadece doğru cevapta)
+            if ($is_correct && $puan > 0) {
+                $sql_score = "UPDATE leaderboard SET score = score + ? WHERE user_id = ?";
+                $stmt_score = $this->pdo->prepare($sql_score);
+                $stmt_score->execute([$puan, $user_id]);
+            }
 
             $this->pdo->commit();
         } catch (PDOException $e) {
@@ -117,7 +132,7 @@ class GameController
         }
     }
 
-    private function checkAchievements($kategori)
+    private function checkAchievements($kategori, $difficulty)
     {
         $user_id = $_SESSION['user_id'];
         $yeni_basarimlar = [];
@@ -145,6 +160,15 @@ class GameController
 
             // Hız Tutkunu
             if ((time() - $_SESSION['start_time']) <= 5) $grant_achievement('hiz_tutkunu');
+
+            // Zorlu Rakip (yeni user_stats'a göre güncellendi)
+            if ($difficulty === 'zor') {
+                $stmt_diff_check = $this->pdo->prepare("SELECT SUM(correct_answers) FROM user_stats WHERE user_id = ? AND difficulty = 'zor'");
+                $stmt_diff_check->execute([$user_id]);
+                if ($stmt_diff_check->fetchColumn() >= 10) {
+                    $grant_achievement('zorlu_rakip');
+                }
+            }
 
             // Kategori Uzmanı ve Kusursuz
             $stmt_cat = $this->pdo->prepare("SELECT correct_answers, total_questions FROM user_stats WHERE user_id = ? AND category = ?");

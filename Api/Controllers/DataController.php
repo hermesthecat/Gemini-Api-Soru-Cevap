@@ -19,8 +19,16 @@ class DataController
         $stmt_score->execute([$user_id]);
         $user_data['score'] = $stmt_score->fetchColumn() ?: 0;
 
-        // İstatistikleri al
-        $stmt_stats = $this->pdo->prepare("SELECT category, total_questions, correct_answers FROM user_stats WHERE user_id = ?");
+        // İstatistikleri al (zorluk seviyelerine göre gruplayarak birleştir)
+        $stmt_stats = $this->pdo->prepare("
+            SELECT 
+                category, 
+                SUM(total_questions) as total_questions, 
+                SUM(correct_answers) as correct_answers 
+            FROM user_stats 
+            WHERE user_id = ? 
+            GROUP BY category
+        ");
         $stmt_stats->execute([$user_id]);
         $user_data['stats'] = $stmt_stats->fetchAll(PDO::FETCH_ASSOC);
 
