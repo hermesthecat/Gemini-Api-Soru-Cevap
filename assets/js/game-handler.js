@@ -187,16 +187,16 @@ const game = {
             if (btn) this.handleAnswerSubmission(btn.dataset.answer);
         });
 
-        this.dom.lifelineFiftyFifty.addEventListener('click', () => {
+        this.dom.lifelineFiftyFifty.addEventListener('click', async () => {
             if (this.dom.lifelineFiftyFifty.disabled) return;
 
-            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
+            const result = await api.call('use_lifeline', { type: 'fiftyFifty' });
+            if (!result.success) return;
 
-            const lifelines = appState.get('lifelines');
-            lifelines.fiftyFifty--;
-            appState.set('lifelines', lifelines);
+            appState.set('lifelines', result.data.lifelines);
             this.updateLifelineUI();
-
+            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
+            
             const correctAnswer = appState.get('currentQuestionData').correct_answer;
             const options = Array.from(this.dom.optionsContainer.querySelectorAll('.option-button'));
             const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
@@ -209,15 +209,15 @@ const game = {
             wrongOptions[1].disabled = true;
         });
 
-        this.dom.lifelineExtraTime.addEventListener('click', () => {
+        this.dom.lifelineExtraTime.addEventListener('click', async () => {
             if (this.dom.lifelineExtraTime.disabled) return;
 
-            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
+            const result = await api.call('use_lifeline', { type: 'extraTime' });
+            if (!result.success) return;
 
-            const lifelines = appState.get('lifelines');
-            lifelines.extraTime--;
-            appState.set('lifelines', lifelines);
+            appState.set('lifelines', result.data.lifelines);
             this.updateLifelineUI();
+            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
 
             let timeLeft = appState.get('timeLeft');
             timeLeft += 15;
@@ -225,17 +225,17 @@ const game = {
             this.dom.countdown.textContent = timeLeft;
         });
 
-        this.dom.lifelinePass.addEventListener('click', () => {
+        this.dom.lifelinePass.addEventListener('click', async () => {
             if (this.dom.lifelinePass.disabled) return;
+            
+            const result = await api.call('use_lifeline', { type: 'pass' });
+            if (!result.success) return;
 
-            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-
-            const lifelines = appState.get('lifelines');
-            lifelines.pass--;
-            appState.set('lifelines', lifelines);
+            appState.set('lifelines', result.data.lifelines);
             this.updateLifelineUI();
+            document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
 
             this.getNewQuestion();
         });
     }
-}; 
+};

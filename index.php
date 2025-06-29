@@ -121,6 +121,11 @@
                             <i class="fas fa-users mr-2"></i>Arkadaşlar
                         </button>
                     </li>
+                    <li class="mr-2">
+                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="magaza">
+                            <i class="fas fa-store mr-2"></i>Mağaza
+                        </button>
+                    </li>
                 </ul>
             </div>
 
@@ -286,6 +291,15 @@
                             <!-- Düello listesi buraya gelecek -->
                         </div>
                         <p id="no-duels" class="text-gray-500 dark:text-gray-400 text-center py-4 hidden">Gösterilecek düello yok.</p>
+                    </div>
+                </div>
+
+                <!-- Mağaza Tab -->
+                <div id="magaza-tab" class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Joker Mağazası</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Jetonlarını kullanarak joker satın alabilir ve yarışmada avantaj elde edebilirsin.</p>
+                    <div id="shop-items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Shop items will be rendered here by shop-handler.js -->
                     </div>
                 </div>
             </div>

@@ -11,9 +11,9 @@ const appState = (() => {
         timerInterval: null,
         timeLeft: 30,
         lifelines: {
-            fiftyFifty: 1,
-            extraTime: 1,
-            pass: 1
+            fiftyFifty: 0,
+            extraTime: 0,
+            pass: 0
         }
     };
 

@@ -96,6 +96,44 @@ class GameController
         return $response;
     }
 
+    public function useLifeline($data) {
+        $user_id = $_SESSION['user_id'];
+        $type = $data['type'] ?? '';
+
+        $lifeline_map = [
+            'fiftyFifty' => 'lifeline_fifty_fifty',
+            'extraTime' => 'lifeline_extra_time',
+            'pass' => 'lifeline_pass'
+        ];
+
+        if (!array_key_exists($type, $lifeline_map) || ($_SESSION['lifelines'][$type] ?? 0) <= 0) {
+            return ['success' => false, 'message' => 'Geçersiz veya tükenmiş joker.'];
+        }
+
+        $column_name = $lifeline_map[$type];
+
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("UPDATE leaderboard SET $column_name = $column_name - 1 WHERE user_id = ? AND $column_name > 0");
+            $stmt->execute([$user_id]);
+
+            if ($stmt->rowCount() === 0) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Joker kullanılamadı veya tükendi.'];
+            }
+
+            $_SESSION['lifelines'][$type]--;
+            $this->pdo->commit();
+            
+            return ['success' => true, 'data' => ['lifelines' => $_SESSION['lifelines']]];
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            error_log("Lifeline use error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Joker kullanılırken bir hata oluştu.'];
+        }
+    }
+
     // --- Yardımcı Fonksiyonlar ---
 
     private function updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct)

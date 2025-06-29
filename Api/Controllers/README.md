@@ -33,17 +33,22 @@ Bu dizin, uygulamanın ana iş mantığını (business logic) yöneten PHP sın�
 
 - **`GameController.php`**: Tek kişilik ana oyun modunun mantığını yönetir.
   - Gemini API'sini kullanarak yeni bir soru (çoktan seçmeli veya doğru/yanlış) alır.
-  - Kullanıcının cevabını işler, puanı hesaplar, istatistikleri ve liderlik tablosunu günceller.
+  - Kullanıcının cevabını işler, puanı ve jetonu hesaplar, istatistikleri ve liderlik tablosunu günceller.
   - Cevap sonrası kazanılan başarımları ve tamamlanan görevleri kontrol eder.
+  - Joker kullanımını sunucu tarafında işleyerek veritabanından düşer.
 
 - **`QuestController.php`**: Günlük görevler sistemini yönetir.
   - Kullanıcı için günlük görevleri atar veya mevcut olanları getirir.
   - Bir oyun eylemi (örn. soru çözme) sonrasında görev ilerlemesini statik bir metot aracılığıyla günceller.
-  - Tamamlanan görevler için ödülleri (puan) verir.
+  - Tamamlanan görevler için ödülleri (puan ve jeton) verir.
+
+- **`ShopController.php`**: Oyun içi mağaza mantığını yönetir.
+  - Satılabilir ürünleri (şu an için jokerler) listeler.
+  - Kullanıcının jetonlarını kullanarak joker satın alma işlemini gerçekleştirir, jeton bakiyesini ve joker envanterini günceller.
 
 - **`UserController.php`**: Kullanıcı kimlik doğrulama (authentication) ve oturum (session) işlemlerini yönetir.
-  - Yeni kullanıcı kaydı oluşturur (varsayılan avatar ile).
-  - Kullanıcı girişi yapar ve oturum başlatır (avatar bilgisiyle).
+  - Yeni kullanıcı kaydı oluşturur (varsayılan avatar, jeton ve jokerlerle).
+  - Kullanıcı girişi yapar ve oturum başlatır (avatar, jeton ve joker bilgileriyle).
   - Başarısız giriş denemelerini sayarak kaba kuvvet saldırılarına karşı hız sınırlaması (rate limiting) uygular.
   - Kullanıcı çıkışını gerçekleştirir.
   - Mevcut oturumun durumunu kontrol eder ve CSRF token üretir.

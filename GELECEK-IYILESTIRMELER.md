@@ -35,8 +35,8 @@ Bu bölüm, projenin uzun vadeli sağlığı ve ölçeklenebilirliği için daha
 
 ### 1. Oyunlaştırma ve Ekonomi
 
-- [ ] **Oyun İçi Para Birimi:** Doğru cevaplar, tamamlanan görevler ve kazanılan düellolar için "jeton" kazanma sistemi.
-- [ ] **Mağaza:** Kazanılan jetonlarla yeni avatarlar, profil çerçeveleri, tema renkleri veya ek jokerler gibi kozmetik veya işlevsel öğelerin satın alınabileceği bir mağaza.
+- [x] **Oyun İçi Para Birimi:** Doğru cevaplar, tamamlanan görevler ve kazanılan düellolar için "jeton" kazanma sistemi.
+- [x] **Mağaza:** Kazanılan jetonlarla yeni avatarlar, profil çerçeveleri, tema renkleri veya ek jokerler gibi kozmetik veya işlevsel öğelerin satın alınabileceği bir mağaza.
 - [ ] **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden ödül sistemi.
 
 ### 2. Teknik İyileştirmeler
@@ -57,4 +57,6 @@ Bu bölüm, daha önce tamamlanmış olan ana özellikleri ve yeniden yapıland�
 - **Kullanıcı Deneyimi:** Jokerler, cevap sonrası anlık geribildirim, koyu/açık tema, ses ayarları ve başarım bildirimleri gibi özellikler eklendi.
 - **Sosyal Özellikler:** Arkadaşlık sistemi (arama, ekleme, çıkarma) ve arkadaşlarla düello (meydan okuma) modu tamamen entegre edildi.
 - **Oyunlaştırma:** Günlük görevler, 20'den fazla başarım ve dinamik liderlik tablosu eklendi.
+- **Oyun İçi Ekonomi:** Kullanıcıların jeton kazanmasını (doğru cevap, görev, düello) ve bu jetonları joker satın almak için mağazada harcamasını sağlayan sistem entegre edildi. Joker sayıları artık veritabanında kalıcı olarak saklanmaktadır.
 - **Özelleştirme:** Kullanıcıların 10 farklı avatar arasından seçim yapabilmesi sağlandı.
+- **Yönetici Paneli:** Gelişmiş istatistik grafikleri ve duyuru yönetim sistemi eklendi.

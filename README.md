@@ -25,6 +25,10 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 - **Çoklu Kategori ve Zorluk:** Çeşitli kategorilerde "Kolay", "Orta" ve "Zor" seviyelerinde yarışma imkanı.
 - **Açık/Koyu Tema:** Kullanıcının tercihine veya sistem ayarlarına göre değişen modern ve göz dostu arayüz.
 - **Duyarlı Tasarım:** Tailwind CSS ile oluşturulmuş modern ve mobil uyumlu arayüz.
+- **Oyun İçi Para Birimi ve Mağaza:**
+  - Kullanıcılar doğru cevaplardan, görevlerden ve düellolardan "jeton" kazanır.
+  - Kazandıkları jetonları, joker gibi oyun içi avantajlar satın almak için "Mağaza"da harcayabilirler.
+  - Joker sayıları veritabanında kalıcı olarak saklanır.
 
 ## Kullanılan Teknolojiler
 
@@ -80,6 +84,8 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 │       ├── DuelController.php
 │       ├── FriendsController.php
 │       ├── GameController.php
+│       ├── QuestController.php
+│       ├── ShopController.php
 │       └── UserController.php
 ├── assets/
 │   ├── css/style.css
@@ -95,7 +101,9 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 │       ├── auth-handler.js
 │       ├── friends-handler.js
 │       ├── game-handler.js
+│       ├── quest-handler.js
 │       ├── settings-handler.js
+│       ├── shop-handler.js
 │       ├── stats-handler.js
 │       └── ui-handler.js
 ├── api.php             # Ana API yönlendiricisi (Router)

@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         yarışmaTab: document.getElementById('yarışma-tab'),
         profilTab: document.getElementById('profil-tab'),
         arkadaslarTab: document.getElementById('arkadaslar-tab'),
+        magazaTab: document.getElementById('magaza-tab'),
         // Game
         gameContainer: document.getElementById('game-container'),
         categorySelectionContainer: document.getElementById('category-selection-container'),
@@ -103,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyQuestsContainer: document.getElementById('daily-quests-container'),
         dailyQuestsList: document.getElementById('daily-quests-list'),
         dailyQuestsLoading: document.getElementById('daily-quests-loading'),
+        // Mağaza
+        shopItemsContainer: document.getElementById('shop-items-container'),
         // Düello Oyun Ekranı
         duelGameView: document.getElementById('duel-game-view'),
         duelGameOpponentName: document.getElementById('duel-game-opponent-name'),
@@ -148,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             duelHandler.init(dom);
             questHandler.init(dom);
             announcementHandler.init(dom);
+            shopHandler.init(dom);
 
             // Özel olayları dinle
             this.addEventListeners();
@@ -178,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const userData = e.detail;
             appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role, avatar: userData.avatar });
             appState.set('csrfToken', userData.csrf_token);
-            appState.set('lifelines', { fiftyFifty: 1, extraTime: 1, pass: 1 });
+            appState.set('lifelines', userData.lifelines);
 
             game.updateLifelineUI();
             ui.renderWelcomeMessage(userData.username, userData.avatar);
@@ -252,6 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 friendsHandler.updateAll();
             } else if (tabId === 'profil') {
                 statsHandler.updateAll();
+            } else if (tabId === 'magaza') {
+                shopHandler.loadShop();
             }
             // Diğer sekmeler için de güncellemeler buraya eklenebilir
         }

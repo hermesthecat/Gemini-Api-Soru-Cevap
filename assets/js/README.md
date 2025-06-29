@@ -77,5 +77,9 @@ Ana orkestrasyon `app.js` tarafından yönetilir ve her modül belirli bir göre
   - Günlük görevleri `api-handler` ile çeker ve `ui-handler` ile ekrana basar.
   - Bir görev tamamlandığında bildirim gösterir.
 
+- **`shop-handler.js`**: Mağaza arayüzünün mantığını yönetir.
+  - Mağaza ürünlerini API'den çeker ve `ui-handler` aracılığıyla ekrana basar.
+  - Kullanıcının joker satın alma işlemlerini yönetir ve arayüzü günceller.
+
 - **`settings-handler.js`**: Ayarlar (tema ve ses) mantığını yönetir.
   - Tema (açık/koyu) ve ses açma/kapama ayarlarını `localStorage`'e kaydeder ve uygular.

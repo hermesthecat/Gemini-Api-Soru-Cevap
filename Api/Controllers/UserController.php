@@ -65,7 +65,10 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, username, password, role, failed_login_attempts, last_login_attempt, avatar, coins FROM users WHERE username = ?");
+        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.avatar, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass 
+            FROM users u
+            JOIN leaderboard l ON u.id = l.user_id
+            WHERE u.username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -97,6 +100,11 @@ class UserController
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['user_avatar'] = $user['avatar'];
             $_SESSION['user_coins'] = $user['coins'];
+            $_SESSION['lifelines'] = [
+                'fiftyFifty' => $user['lifeline_fifty_fifty'],
+                'extraTime' => $user['lifeline_extra_time'],
+                'pass' => $user['lifeline_pass']
+            ];
             $csrf_token = $this->generateCsrfToken();
             return [
                 'success' => true,
@@ -107,6 +115,7 @@ class UserController
                     'role' => $user['role'],
                     'avatar' => $user['avatar'],
                     'coins' => $user['coins'],
+                    'lifelines' => $_SESSION['lifelines'],
                     'csrf_token' => $csrf_token
                 ]
             ];
@@ -141,6 +150,7 @@ class UserController
                     'role' => $_SESSION['user_role'],
                     'avatar' => $_SESSION['user_avatar'] ?? 'default.svg',
                     'coins' => $_SESSION['user_coins'] ?? 0,
+                    'lifelines' => $_SESSION['lifelines'] ?? ['fiftyFifty' => 0, 'extraTime' => 0, 'pass' => 0],
                     'csrf_token' => $csrf_token
                 ]
             ];

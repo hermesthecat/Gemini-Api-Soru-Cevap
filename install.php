@@ -136,6 +136,9 @@ try {
       `user_id` INT NOT NULL,
       `score` INT NOT NULL DEFAULT 0,
       `coins` INT NOT NULL DEFAULT 100,
+      `lifeline_fifty_fifty` INT NOT NULL DEFAULT 1,
+      `lifeline_extra_time` INT NOT NULL DEFAULT 1,
+      `lifeline_pass` INT NOT NULL DEFAULT 1,
       `last_updated` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
       UNIQUE KEY `user_id` (`user_id`)
