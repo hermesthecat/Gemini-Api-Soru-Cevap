@@ -176,7 +176,15 @@ class GameController
             if ($cat_stats['total_questions'] >= 10 && $cat_stats['correct_answers'] == $cat_stats['total_questions']) $grant_achievement("kusursuz_{$kategori}");
         }
 
-        return $yeni_basarimlar;
+        if (!empty($yeni_basarimlar)) {
+            // Anahtarları kullanarak başarımların tüm detaylarını veritabanından çek
+            $placeholders = implode(',', array_fill(0, count($yeni_basarimlar), '?'));
+            $stmt_details = $this->pdo->prepare("SELECT achievement_key, name, description, icon, color FROM achievements WHERE achievement_key IN ($placeholders)");
+            $stmt_details->execute($yeni_basarimlar);
+            return $stmt_details->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return [];
     }
 
     private function generatePrompt($tip, $kategori, $difficulty)

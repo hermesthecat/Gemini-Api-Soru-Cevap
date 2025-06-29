@@ -193,7 +193,7 @@
                         <!-- Sağ Taraf (Başarımlar) -->
                         <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                             <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
-                            <div id="achievements-list" class="flex flex-wrap gap-4 justify-center">
+                            <div id="achievements-list" class="space-y-4">
                                 <!-- JS ile doldurulacak -->
                             </div>
                             <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz kazanılmış rozet yok.</p>
@@ -271,10 +271,24 @@
         <p id="notification-text"></p>
     </div>
 
+    <!-- Başarım Kazanıldı Modalı -->
+    <div id="achievement-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0">
+        <div id="achievement-modal-content" class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl text-center p-8 max-w-sm mx-auto transform scale-95 transition-all duration-300">
+            <h2 class="text-2xl font-bold text-yellow-500 mb-2">Başarım Kazanıldı!</h2>
+            <div id="achievement-modal-icon-container" class="my-6">
+                <!-- Icon JS ile eklenecek -->
+            </div>
+            <h3 id="achievement-modal-name" class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2"></h3>
+            <p id="achievement-modal-description" class="text-gray-600 dark:text-gray-400 mb-6"></p>
+            <button id="achievement-modal-close-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Harika!</button>
+        </div>
+    </div>
+
     <!-- Ses Efektleri -->
     <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/success.ogg" preload="auto"></audio>
     <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>
     <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+    <audio id="achievement-sound" src="https://actions.google.com/sounds/v1/achievements/achievement_bell.ogg" preload="auto"></audio>
 
     <script src="assets/js/api-handler.js"></script>
     <script src="assets/js/app-data.js"></script>

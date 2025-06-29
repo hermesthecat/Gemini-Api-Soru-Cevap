@@ -58,10 +58,9 @@ class DataController
                 a.icon,
                 a.color,
                 ua.achieved_at
-            FROM user_achievements ua
-            JOIN achievements a ON ua.achievement_key = a.achievement_key
-            WHERE ua.user_id = ? 
-            ORDER BY ua.achieved_at DESC
+            FROM achievements a
+            LEFT JOIN user_achievements ua ON a.achievement_key = ua.achievement_key AND ua.user_id = ?
+            ORDER BY ua.achieved_at DESC, a.name ASC
         ");
         $stmt->execute([$_SESSION['user_id']]);
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];

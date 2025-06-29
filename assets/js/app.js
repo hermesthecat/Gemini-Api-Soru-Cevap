@@ -60,10 +60,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay: document.getElementById('loading-overlay'),
         notificationToast: document.getElementById('notification-toast'),
         notificationText: document.getElementById('notification-text'),
+        // Başarım Modalı
+        achievementModal: document.getElementById('achievement-modal'),
         // Sesler
         correctSound: document.getElementById('correct-sound'),
         incorrectSound: document.getElementById('incorrect-sound'),
         timeoutSound: document.getElementById('timeout-sound'),
+        achievementSound: document.getElementById('achievement-sound'),
     };
 
     /**
@@ -129,17 +132,22 @@ document.addEventListener('DOMContentLoaded', () => {
             statsHandler.updateAll();
         },
 
-        onAnswerSubmitted(e) {
-            // Cevap gönderildikten sonra istatistikleri ve başarımları güncelle
+        async onAnswerSubmitted(e) {
+            const { new_achievements } = e.detail;
+
+            // Önce istatistikleri ve arkaplan listesini güncelle
             statsHandler.updateUserData();
             statsHandler.updateAchievements();
-            
-            // Eğer yeni bir başarım kazanıldıysa, toast ile göster
-            const { new_achievements } = e.detail;
+
+            // Eğer yeni bir başarım kazanıldıysa, modal ile göster
             if (new_achievements && new_achievements.length > 0) {
-                // Not: Bu sadece bir anahtar döner, başarım detaylarını almak için
-                // appData veya state içinden bakmak gerekebilir. Şimdilik basit tutalım.
-                ui.showToast(`Yeni başarım kazandın: ${new_achievements.join(', ')}!`, 'success');
+                 // Diğer işlemlerin devam etmesi için modal gösterimini geciktir
+                setTimeout(async () => {
+                    for (const achievement of new_achievements) {
+                        this.onPlaySound({ detail: { sound: 'achievement' } });
+                        await ui.showAchievementModal(achievement);
+                    }
+                }, 500); // 500ms gecikme
             }
         },
 

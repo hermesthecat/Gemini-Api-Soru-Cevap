@@ -46,6 +46,38 @@ const ui = (() => {
         }, 3000);
     };
 
+    const showAchievementModal = (achievement) => {
+        if (!dom.achievementModal) return;
+
+        // Modalı doldur
+        const iconContainer = dom.achievementModal.querySelector('#achievement-modal-icon-container');
+        const nameEl = dom.achievementModal.querySelector('#achievement-modal-name');
+        const descriptionEl = dom.achievementModal.querySelector('#achievement-modal-description');
+        const closeBtn = dom.achievementModal.querySelector('#achievement-modal-close-btn');
+
+        iconContainer.innerHTML = `<i class="fas ${achievement.icon} fa-5x text-${achievement.color}-500"></i>`;
+        nameEl.textContent = achievement.name;
+        descriptionEl.textContent = achievement.description;
+        
+        // Modalı göster
+        dom.achievementModal.classList.remove('hidden');
+        setTimeout(() => { // Tarayıcının 'hidden' sınıfının kaldırılmasını işlemesi için kısa bir gecikme
+             dom.achievementModal.classList.remove('opacity-0');
+             dom.achievementModal.querySelector('#achievement-modal-content').classList.remove('scale-95');
+        }, 10);
+       
+        // Kapatma butonu
+        const closeHandler = () => {
+            dom.achievementModal.classList.add('opacity-0');
+            dom.achievementModal.querySelector('#achievement-modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                 dom.achievementModal.classList.add('hidden');
+                 closeBtn.removeEventListener('click', closeHandler);
+            }, 300); // animasyon süresiyle eşleşmeli
+        };
+        closeBtn.addEventListener('click', closeHandler);
+    };
+
     const showTab = (tabId) => {
         // Tüm sekme içeriklerini gizle
         dom.yarışmaTab?.classList.add('hidden');
@@ -83,22 +115,53 @@ const ui = (() => {
 
     const renderAchievements = (achievements) => {
         if (!dom.achievementsList || !dom.noAchievementsMessage) return;
-        
+
         dom.achievementsList.innerHTML = '';
         if (achievements && achievements.length > 0) {
             dom.noAchievementsMessage.classList.add('hidden');
             achievements.forEach(ach => {
+                const isAchieved = ach.achieved_at !== null;
                 const achElement = document.createElement('div');
-                achElement.className = `text-center p-2 bg-${ach.color}-100 dark:bg-${ach.color}-900/50 rounded-lg w-20 h-20 flex flex-col justify-center items-center`;
-                achElement.title = `${ach.name}: ${ach.description}`;
-                achElement.innerHTML = `
-                    <i class="fas ${ach.icon} fa-2x text-${ach.color}-500"></i>
-                    <span class="text-xs mt-1 font-semibold">${ach.name}</span>
-                `;
+                
+                achElement.className = `w-full flex items-start p-4 rounded-lg transition-colors duration-200 ${isAchieved ? 'bg-yellow-50 dark:bg-yellow-900/50' : 'bg-gray-100 dark:bg-gray-800/60'}`;
+                
+                const iconContainer = document.createElement('div');
+                iconContainer.className = `flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full mr-4 ${isAchieved ? `bg-${ach.color}-100 dark:bg-${ach.color}-900` : 'bg-gray-200 dark:bg-gray-700'}`;
+                
+                const icon = document.createElement('i');
+                icon.className = `fas ${isAchieved ? ach.icon : 'fa-lock'} fa-lg ${isAchieved ? `text-${ach.color}-500` : 'text-gray-400'}`;
+                
+                iconContainer.appendChild(icon);
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'flex-grow';
+                
+                const name = document.createElement('h4');
+                name.className = `font-bold ${isAchieved ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}`;
+                name.textContent = ach.name;
+
+                const description = document.createElement('p');
+                description.className = `text-sm ${isAchieved ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`;
+                description.textContent = ach.description;
+                
+                const date = document.createElement('p');
+                if(isAchieved){
+                    date.className = 'text-xs text-gray-500 dark:text-gray-500 mt-1';
+                    date.textContent = `Kazanıldı: ${new Date(ach.achieved_at).toLocaleDateString()}`;
+                }
+
+                textContainer.appendChild(name);
+                textContainer.appendChild(description);
+                if(isAchieved) textContainer.appendChild(date);
+                
+                achElement.appendChild(iconContainer);
+                achElement.appendChild(textContainer);
+
                 dom.achievementsList.appendChild(achElement);
             });
         } else {
             dom.noAchievementsMessage.classList.remove('hidden');
+            dom.noAchievementsMessage.textContent = 'Gösterilecek başarım bulunamadı.';
         }
     };
 
