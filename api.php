@@ -4,7 +4,7 @@
  * AI Bilgi Yarışması - Backend API (Stateless)
  *
  * Bu dosya, ön uçtan (JavaScript) gelen AJAX isteklerini işler.
- * Artık istatistik veya geçmiş tutmaz, sadece soru üretir ve cevapları kontrol eder.
+ * Artık istatistik veya geçmiş tutmaz, sadece soru üretir, cevapları kontrol eder ve skorları yönetir.
  */
 
 // Gerekli dosyaları ve başlangıç ayarlarını dahil et
@@ -16,6 +16,22 @@ session_start();
 
 // Yanıt başlığını JSON olarak ayarla
 header('Content-Type: application/json');
+
+// --- Veritabanı Bağlantısı ---
+$pdo = null;
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    // Veritabanı bağlantı hatasını JSON olarak döndür ve çık
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Veritabanı bağlantı hatası. Lütfen install.php dosyasını çalıştırdığınızdan emin olun.',
+        'error' => $e->getMessage()
+    ]);
+    exit();
+}
 
 // Gelen isteğin içeriğini al
 $request_data = json_decode(file_get_contents('php://input'), true);
@@ -152,8 +168,55 @@ switch ($action) {
         $response['data'] = [
             'is_correct' => $is_correct,
             'correct_answer' => $correct_answer,
-            'explanation' => $explanation
+            'explanation' => $explanation,
+            'time_left' => 30 - $gecen_sure > 0 ? 30 - $gecen_sure : 0
         ];
+        break;
+
+    case 'update_score':
+        // Kullanıcının skorunu veritabanında günceller veya yeni kayıt oluşturur.
+        $user_id = $request_data['user_id'] ?? null;
+        $username = $request_data['username'] ?? 'Anonim Oyuncu';
+        $score = $request_data['score'] ?? 0;
+
+        if (!$user_id) {
+            $response['message'] = 'Kullanıcı ID\'si eksik.';
+            break;
+        }
+
+        try {
+            // INSERT ... ON DUPLICATE KEY UPDATE kullanarak hem ekleme hem güncelleme yap
+            $sql = "
+                INSERT INTO leaderboard (user_id, username, score) 
+                VALUES (:user_id, :username, :score) 
+                ON DUPLICATE KEY UPDATE score = :score, username = :username
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':user_id' => $user_id,
+                ':username' => $username,
+                ':score' => $score
+            ]);
+
+            $response['success'] = true;
+            $response['message'] = 'Skor başarıyla güncellendi.';
+        } catch (PDOException $e) {
+            $response['message'] = 'Skor güncellenirken bir hata oluştu: ' . $e->getMessage();
+        }
+        break;
+
+    case 'get_leaderboard':
+        // Liderlik tablosundaki ilk 10 kişiyi getirir.
+        try {
+            $stmt = $pdo->query("SELECT username, score FROM leaderboard ORDER BY score DESC, last_updated ASC LIMIT 10");
+            $leaderboard = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $response['success'] = true;
+            $response['message'] = 'Liderlik tablosu başarıyla alındı.';
+            $response['data'] = $leaderboard;
+        } catch (PDOException $e) {
+            $response['message'] = 'Liderlik tablosu alınırken bir hata oluştu: ' . $e->getMessage();
+        }
         break;
 }
 
