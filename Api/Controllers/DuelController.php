@@ -317,8 +317,8 @@ class DuelController
                 // Kazanan jetonları alsın
                 $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
                 $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
-                 // Session'ı güncelle
-                if($winner_id == $_SESSION['user_id']){
+                // Session'ı güncelle
+                if ($winner_id == $_SESSION['user_id']) {
                     $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $duel_win_coins;
                 }
             } else if ($opponent_score > $score) {
@@ -326,8 +326,8 @@ class DuelController
                 // Kazanan jetonları alsın
                 $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
                 $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
-                 // Session'ı güncelle
-                if($winner_id == $_SESSION['user_id']){
+                // Session'ı güncelle
+                if ($winner_id == $_SESSION['user_id']) {
                     $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $duel_win_coins;
                 }
             } else { // Berabere

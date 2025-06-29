@@ -140,7 +140,8 @@ class AdminController
         return ['success' => false, 'message' => 'Geçersiz duyuru ID.'];
     }
 
-    public function getAdvancedStats() {
+    public function getAdvancedStats()
+    {
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         // En çok oynanan 5 kategori

@@ -53,3 +53,4 @@ Bu dizin, uygulamanın ana iş mantığını (business logic) yöneten PHP sın�
   - Kullanıcı çıkışını gerçekleştirir.
   - Mevcut oturumun durumunu kontrol eder ve CSRF token üretir.
   - Kullanıcının avatarını güncellemesini sağlar.
+  - Kullanıcı için günlük giriş ödülleri işleyerek veritabanından düşer.

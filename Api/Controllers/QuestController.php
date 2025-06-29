@@ -127,7 +127,7 @@ class QuestController
                     $stmt_complete_quest->execute([$user_id, $quest['quest_key'], $today]);
                     // Ödül puanını ve jetonunu ekle
                     $stmt_add_rewards->execute([$quest['reward_points'], $quest['reward_coins'], $user_id]);
-                    
+
                     // Session'ı güncelle
                     $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $quest['reward_coins'];
 

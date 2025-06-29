@@ -11,6 +11,7 @@ Ana orkestrasyon `app.js` tarafından yönetilir ve her modül belirli bir göre
   - Tüm diğer modülleri (`ui-handler`, `api-handler`, `game-handler` vb.) başlatır.
   - Modüller arasında iletişimi sağlayan genel olay dinleyicilerini (`event listener`) kurar (örn. `loginSuccess`, `answerSubmitted`).
   - Uygulamanın genel yaşam döngüsünü (initialization, state changes) yönetir.
+  - Giriş sonrası günlük ödül bildirimlerini yönetir.
 
 - **`api-handler.js`**: Backend API ile olan tüm iletişimi merkezileştirir.
   - Sunucuya `fetch` istekleri gönderen bir `call` metodu sağlar.
@@ -38,7 +39,7 @@ Ana orkestrasyon `app.js` tarafından yönetilir ve her modül belirli bir göre
 - **`auth-handler.js`**: Kimlik doğrulama (authentication) işlemlerini yönetir.
   - Giriş ve kayıt formlarının gönderilmesini dinler.
   - `api-handler`'ı kullanarak `login` ve `register` isteklerini yapar.
-  - Başarılı giriş veya çıkış durumunda `app.js`'e olaylar (`event`) fırlatır.
+  - Başarılı giriş veya çıkış durumunda `app.js`'e olaylar (`event`) fırlatır (giriş durumunda günlük ödül verisini de içerecek şekilde).
 
 - **`game-handler.js`**: Tek kişilik ana oyun akışını yönetir.
   - Kategori ve zorluk seçimine göre yeni soru ister.

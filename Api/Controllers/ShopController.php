@@ -80,10 +80,10 @@ class ShopController
             // Jokeri ekle
             $stmt_lifeline = $this->pdo->prepare("UPDATE leaderboard SET $lifeline_column = $lifeline_column + 1 WHERE user_id = ?");
             $stmt_lifeline->execute([$user_id]);
-            
+
             // Session'ı güncelle
             $_SESSION['user_coins'] -= $price;
-            if(!isset($_SESSION['lifelines'])) {
+            if (!isset($_SESSION['lifelines'])) {
                 $_SESSION['lifelines'] = [];
             }
             $_SESSION['lifelines'][$item_key] = ($_SESSION['lifelines'][$item_key] ?? 0) + 1;
@@ -97,4 +97,4 @@ class ShopController
             return ['success' => false, 'message' => 'Satın alma sırasında bir hata oluştu.'];
         }
     }
-} 
+}

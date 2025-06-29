@@ -83,18 +83,18 @@ const adminHandler = (() => {
 
         // Admin sekme geçişi
         dom.adminTabs?.addEventListener('click', (e) => {
-             const tabButton = e.target.closest('.admin-tab-button');
-             if(!tabButton) return;
-             
-             const tab = tabButton.dataset.tab;
-             ui.showAdminTab(tab);
-             if(tab === 'announcements') {
+            const tabButton = e.target.closest('.admin-tab-button');
+            if (!tabButton) return;
+
+            const tab = tabButton.dataset.tab;
+            ui.showAdminTab(tab);
+            if (tab === 'announcements') {
                 // Bu anons handler'a taşınmalı veya oradan çağırılmalı
                 // Şimdilik burada bırakıyorum ama en iyi pratik değil
                 announcementHandler.updateAnnouncementsList();
-             } else if (tab === 'stats') {
+            } else if (tab === 'stats') {
                 updateAdvancedStats();
-             }
+            }
         });
     };
 

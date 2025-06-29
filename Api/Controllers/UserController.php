@@ -107,17 +107,17 @@ class UserController
 
                 // Veritabanını güncelle
                 $this->pdo->prepare("UPDATE users SET last_login_date = ?, login_streak = ? WHERE id = ?")
-                     ->execute([$today, $login_streak, $user['id']]);
+                    ->execute([$today, $login_streak, $user['id']]);
 
                 $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?")
-                     ->execute([$reward_coins, $user['id']]);
+                    ->execute([$reward_coins, $user['id']]);
 
                 // Kullanıcıya bilgi vermek için veriyi ayarla
                 $daily_reward = [
                     'coins_earned' => $reward_coins,
                     'streak' => $login_streak
                 ];
-                
+
                 // Yanıtta ve session'da kullanılacak jeton miktarını güncelle
                 $user['coins'] += $reward_coins;
             }

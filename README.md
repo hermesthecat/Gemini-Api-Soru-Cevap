@@ -19,6 +19,7 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 - **Dinamik Liderlik Tablosu:** Kullanıcıların aldıkları puanlara göre sıralandığı ve periyodik olarak güncellenen bir liderlik tablosu bulunur.
 - **Joker Sistemi:** Oyunculara stratejik avantaj sağlayan "%50 Eleme" ve "Ekstra Süre" jokerleri.
 - **Gelişmiş Başarım Sistemi:** "Seri Galibi", "Hız Tutkunu", "Gece Kuşu", "Kategori Uzmanı" gibi çeşitli oyun tarzlarını ödüllendiren 20'den fazla rozet.
+- **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden, ardışık girişlerde artan miktarda jeton veren bir ödül sistemi.
 - **Dinamik Soru Üretimi:** Google Gemini API'si ile her seferinde özgün sorular oluşturulur.
 - **Tek Sayfa Uygulaması (SPA):** `fetch` API'si ve AJAX sayesinde sayfa yenilenmeden akıcı bir kullanıcı deneyimi sunar.
 - **Çoklu Soru Tipi:** Çoktan seçmeli ve Doğru/Yanlış formatlarında rastgele sorular sunarak yarışmayı dinamik tutar.
@@ -45,8 +46,8 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 1. **Projeyi Klonlayın:**
 
     ```bash
-    git clone https://github.com/hermesthecat/ai-soru-cevap.git
-    cd ai-soru-cevap
+    git clone https://github.com/hermesthecat/Gemini-Api-Soru-Cevap.git
+    cd Gemini-Api-Soru-Cevap
     ```
 
 2. **`config.php` Dosyasını Oluşturun:**
@@ -67,7 +68,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 3. **Veritabanını ve Tabloları Kurun:**
     - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`, `quests`, `user_quests`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
+    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`, `quests`, `user_quests`, `announcements`, `user_announcements`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
 
 4. **Uygulamayı Başlatın:**
     - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.

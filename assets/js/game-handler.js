@@ -196,7 +196,7 @@ const game = {
             appState.set('lifelines', result.data.lifelines);
             this.updateLifelineUI();
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-            
+
             const correctAnswer = appState.get('currentQuestionData').correct_answer;
             const options = Array.from(this.dom.optionsContainer.querySelectorAll('.option-button'));
             const wrongOptions = options.filter(btn => btn.dataset.answer !== correctAnswer);
@@ -227,7 +227,7 @@ const game = {
 
         this.dom.lifelinePass.addEventListener('click', async () => {
             if (this.dom.lifelinePass.disabled) return;
-            
+
             const result = await api.call('use_lifeline', { type: 'pass' });
             if (!result.success) return;
 

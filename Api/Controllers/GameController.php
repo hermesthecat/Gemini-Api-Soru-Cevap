@@ -96,7 +96,8 @@ class GameController
         return $response;
     }
 
-    public function useLifeline($data) {
+    public function useLifeline($data)
+    {
         $user_id = $_SESSION['user_id'];
         $type = $data['type'] ?? '';
 
@@ -124,9 +125,8 @@ class GameController
 
             $_SESSION['lifelines'][$type]--;
             $this->pdo->commit();
-            
-            return ['success' => true, 'data' => ['lifelines' => $_SESSION['lifelines']]];
 
+            return ['success' => true, 'data' => ['lifelines' => $_SESSION['lifelines']]];
         } catch (PDOException $e) {
             $this->pdo->rollBack();
             error_log("Lifeline use error: " . $e->getMessage());
@@ -167,7 +167,7 @@ class GameController
                 $sql_score = "UPDATE leaderboard SET score = score + ?, coins = coins + ? WHERE user_id = ?";
                 $stmt_score = $this->pdo->prepare($sql_score);
                 $stmt_score->execute([$puan, $coins_earned, $user_id]);
-                
+
                 // Session'daki jeton miktarını da güncelle
                 $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $coins_earned;
             }

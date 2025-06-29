@@ -81,9 +81,9 @@ const ui = (() => {
         dom.adminUsersTab?.classList.add('hidden');
         dom.adminAnnouncementsTab?.classList.add('hidden');
         dom.adminStatsTab?.classList.add('hidden');
-        
+
         const tabToShow = document.getElementById(`admin-${tabId}-tab`);
-        if(tabToShow) {
+        if (tabToShow) {
             tabToShow.classList.remove('hidden');
         }
 
@@ -93,7 +93,7 @@ const ui = (() => {
         });
 
         const activeButton = dom.adminTabs?.querySelector(`[data-tab="${tabId}"]`);
-        if(activeButton) {
+        if (activeButton) {
             activeButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-500');
             activeButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-600');
         }
@@ -105,7 +105,7 @@ const ui = (() => {
             delete charts[chartName];
         }
     };
-    
+
     const renderAdvancedStats = (statsData) => {
         const { most_played_categories, new_users_last_7_days, answer_distribution } = statsData;
 
@@ -297,7 +297,7 @@ const ui = (() => {
 
         const { score, stats, coins } = userData;
         dom.userTotalScore.textContent = score;
-        if(dom.userCoinBalance) dom.userCoinBalance.textContent = coins;
+        if (dom.userCoinBalance) dom.userCoinBalance.textContent = coins;
 
         dom.categoryStatsBody.innerHTML = '';
         if (stats && stats.length > 0) {
@@ -396,7 +396,7 @@ const ui = (() => {
         if (!dom.announcementsListBody) return;
         dom.announcementsListBody.innerHTML = '';
 
-        if(announcements.length === 0) {
+        if (announcements.length === 0) {
             dom.announcementsListBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Mevcut duyuru bulunmuyor.</td></tr>';
             return;
         }

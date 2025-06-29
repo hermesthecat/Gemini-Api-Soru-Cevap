@@ -389,7 +389,7 @@
                         <!-- Mevcut Duyurular Listesi -->
                         <div class="lg:col-span-2">
                             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
-                                 <h3 class="text-xl font-bold mb-4">Mevcut Duyurular</h3>
+                                <h3 class="text-xl font-bold mb-4">Mevcut Duyurular</h3>
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead class="bg-gray-50 dark:bg-gray-700">

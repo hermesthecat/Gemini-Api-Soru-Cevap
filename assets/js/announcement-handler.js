@@ -33,7 +33,7 @@ const announcementHandler = (() => {
         if (idsToMark.length === 0) return;
 
         await api.call('mark_announcements_as_read', { ids: idsToMark });
-        
+
         unreadAnnouncements = [];
         ui.updateAnnouncementsBadge(0);
         ui.showAnnouncementsModal(false);
@@ -52,7 +52,7 @@ const announcementHandler = (() => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
-        
+
         const result = await api.call('admin_create_announcement', data);
         ui.showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
@@ -81,12 +81,12 @@ const announcementHandler = (() => {
         dom.createAnnouncementForm?.addEventListener('submit', handleCreateAnnouncement);
         dom.announcementsListBody?.addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('.delete-announcement-btn');
-            if(deleteBtn) {
+            if (deleteBtn) {
                 handleDeleteAnnouncement(deleteBtn.dataset.id);
             }
         });
     };
-    
+
     return {
         init,
         checkForAnnouncements,

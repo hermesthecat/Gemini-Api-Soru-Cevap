@@ -34,11 +34,11 @@ const shopHandler = (() => {
                 // Refresh shop to show new stock
                 loadShop();
                 // Refresh game lifelines in case game is in background
-                 const sessionResult = await api.call('check_session', {}, 'POST', false);
-                 if (sessionResult.success) {
+                const sessionResult = await api.call('check_session', {}, 'POST', false);
+                if (sessionResult.success) {
                     appState.set('lifelines', sessionResult.data.lifelines);
                     game.updateLifelineUI();
-                 }
+                }
             }
         }
     };
