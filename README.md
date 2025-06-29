@@ -9,6 +9,8 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 - **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
 - **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
 - **Dinamik Liderlik Tablosu:** Kullanıcıların aldıkları puanlara göre sıralandığı ve periyodik olarak güncellenen bir liderlik tablosu bulunur.
+- **Joker Sistemi:** Oyunculara stratejik avantaj sağlayan "%50 Eleme" ve "Ekstra Süre" jokerleri.
+- **Gelişmiş Başarım Sistemi:** "Seri Galibi", "Hız Tutkunu", "Gece Kuşu", "Kategori Uzmanı" gibi çeşitli oyun tarzlarını ödüllendiren 20'den fazla rozet.
 - **Dinamik Soru Üretimi:** Google Gemini API'si ile her seferinde özgün sorular oluşturulur.
 - **Tek Sayfa Uygulaması (SPA):** `fetch` API'si ve AJAX sayesinde sayfa yenilenmeden akıcı bir kullanıcı deneyimi sunar.
 - **Çoklu Soru Tipi:** Çoktan seçmeli ve Doğru/Yanlış formatlarında rastgele sorular sunarak yarışmayı dinamik tutar.
@@ -53,7 +55,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 3. **Veritabanını ve Tabloları Kurun:**
     - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `leaderboard`, `user_stats`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
+    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `leaderboard`, `user_stats`, `user_achievements`, `user_difficulty_stats`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
 
 4. **Uygulamayı Başlatın:**
     - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.
