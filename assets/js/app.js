@@ -77,6 +77,30 @@ document.addEventListener('DOMContentLoaded', () => {
         duelCategorySelect: document.getElementById('duel-category-select'),
         duelDifficultySelect: document.getElementById('duel-difficulty-select'),
         duelSendChallengeBtn: document.getElementById('duel-send-challenge-btn'),
+        // Düello Listesi
+        duelsList: document.getElementById('duels-list'),
+        noDuels: document.getElementById('no-duels'),
+        // Düello Oyun Ekranı
+        duelGameView: document.getElementById('duel-game-view'),
+        duelGameOpponentName: document.getElementById('duel-game-opponent-name'),
+        duelGameProgress: document.getElementById('duel-game-progress'),
+        duelMyUsername: document.getElementById('duel-my-username'),
+        duelMyScore: document.getElementById('duel-my-score'),
+        duelQuestionContainer: document.getElementById('duel-question-container'),
+        duelQuestionText: document.getElementById('duel-question-text'),
+        duelOptionsContainer: document.getElementById('duel-options-container'),
+        duelExplanationContainer: document.getElementById('duel-explanation-container'),
+        duelExplanationText: document.getElementById('duel-explanation-text'),
+        duelNextQuestionBtn: document.getElementById('duel-next-question-btn'),
+        duelSummaryContainer: document.getElementById('duel-summary-container'),
+        duelSummaryTitle: document.getElementById('duel-summary-title'),
+        duelSummaryIcon: document.getElementById('duel-summary-icon'),
+        duelSummaryText: document.getElementById('duel-summary-text'),
+        duelSummaryMyName: document.getElementById('duel-summary-my-name'),
+        duelSummaryMyScore: document.getElementById('duel-summary-my-score'),
+        duelSummaryOpponentName: document.getElementById('duel-summary-opponent-name'),
+        duelSummaryOpponentScore: document.getElementById('duel-summary-opponent-score'),
+        duelBackToFriendsBtn: document.getElementById('duel-back-to-friends-btn'),
         // Sesler
         correctSound: document.getElementById('correct-sound'),
         incorrectSound: document.getElementById('incorrect-sound'),
@@ -98,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminHandler.init(dom);
             settingsHandler.init(dom);
             friendsHandler.init(dom);
+            duelHandler.init(dom);
 
             // Özel olayları dinle
             this.addEventListeners();

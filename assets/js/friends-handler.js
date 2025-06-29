@@ -12,6 +12,7 @@ const friendsHandler = (() => {
     const updateAll = () => {
         updatePendingRequests();
         updateFriendsList();
+        updateDuelsList();
     };
 
     const searchUsers = async (username) => {
@@ -22,6 +23,7 @@ const friendsHandler = (() => {
         const result = await api.call('friends_search_users', { username }, 'POST', false);
         if (result.success) {
             ui.renderFriendSearchResults(result.data);
+            updateAll();
         }
     };
 
@@ -93,6 +95,22 @@ const friendsHandler = (() => {
         }
     };
 
+    const updateDuelsList = async () => {
+        const result = await api.call('duel_get_duels', {}, 'POST', false);
+        if (result.success) {
+            const currentUser = appState.get('currentUser');
+            ui.renderDuelsList(result.data, currentUser.id);
+        }
+    };
+
+    const respondToDuel = async (duelId, response) => {
+        const result = await api.call('duel_respond', { duel_id: duelId, response: response });
+        ui.showToast(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            updateDuelsList();
+        }
+    };
+
     const addEventListeners = () => {
         // Kullanıcı Arama
         dom.friendSearchInput?.addEventListener('keyup', (e) => {
@@ -149,6 +167,21 @@ const friendsHandler = (() => {
 
         // Düello Gönderme
         dom.duelSendChallengeBtn?.addEventListener('click', sendChallenge);
+
+        // Düello Yanıtlama
+        dom.duelsList?.addEventListener('click', (e) => {
+            const button = e.target.closest('.duel-action-btn');
+            if(button) {
+                const duelId = button.dataset.duelId;
+                const action = button.dataset.action;
+                if (action === 'accept' || action === 'decline') {
+                    respondToDuel(duelId, action);
+                } else if (action === 'play') {
+                    // Oynama eylemini duelHandler'a devret
+                    duelHandler.startDuel(duelId);
+                }
+            }
+        });
     };
 
     return {

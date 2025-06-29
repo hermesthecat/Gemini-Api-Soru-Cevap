@@ -62,9 +62,9 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
   - [x] `duels` veritabanı tablosu oluşturuldu.
   - [x] Arkadaş listesinden meydan okuma göndermek için arayüz (modal) eklendi.
   - [x] `DuelController` oluşturuldu ve `createDuel` metodu ile meydan okuma oluşturma backend mantığı eklendi.
-  - [ ] Gelen meydan okumaları listeleme ve yanıtlama (kabul/red).
-  - [ ] Düello oyun ekranını oluşturma (5 soruluk özel yarışma).
-  - [ ] Düello sonuçlarını kaydetme ve gösterme.
+  - [x] Gelen meydan okumaları listeleme ve yanıtlama (kabul/red).
+  - [x] Düello oyun ekranını oluşturma (5 soruluk özel yarışma).
+  - [x] Düello sonuçlarını kaydetme ve gösterme.
 
 ### 6. Gelecek Fikirleri
 

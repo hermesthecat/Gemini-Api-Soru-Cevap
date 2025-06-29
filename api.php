@@ -89,6 +89,10 @@ try {
 
         // Duel Routes
         'duel_create' => [$duelController, 'createDuel', true, true],
+        'duel_get_duels' => [$duelController, 'getDuels', false, true],
+        'duel_respond' => [$duelController, 'respondToDuel', true, true],
+        'duel_start_game' => [$duelController, 'startDuelGame', true, true],
+        'duel_submit_answer' => [$duelController, 'submitDuelAnswer', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---

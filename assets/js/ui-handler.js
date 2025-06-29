@@ -9,6 +9,7 @@ const ui = (() => {
         dom.authView?.classList.add('hidden');
         dom.mainView?.classList.add('hidden');
         dom.adminView?.classList.add('hidden');
+        dom.duelGameView?.classList.add('hidden');
 
         const viewToShow = document.getElementById(viewId);
         if (viewToShow) {
@@ -398,6 +399,201 @@ const ui = (() => {
         }
     };
 
+    const renderDuelsList = (duels, currentUserId) => {
+        if (!dom.duelsList || !dom.noDuels) return;
+
+        dom.duelsList.innerHTML = '';
+        dom.noDuels.classList.toggle('hidden', duels.length > 0);
+
+        duels.forEach(duel => {
+            const isChallenger = duel.challenger_id === currentUserId;
+            const opponentName = isChallenger ? duel.opponent_name : duel.challenger_name;
+            let statusText = '';
+            let buttons = '';
+
+            switch (duel.status) {
+                case 'pending':
+                    if (isChallenger) {
+                        statusText = `<span class="text-yellow-500">Rakibin onayı bekleniyor.</span>`;
+                    } else {
+                        statusText = `<strong class="text-green-500">${opponentName} sana meydan okudu!</strong>`;
+                        buttons = `
+                            <button data-duel-id="${duel.id}" data-action="accept" class="duel-action-btn text-sm bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded-lg transition-colors" title="Kabul Et">
+                                <i class="fas fa-check"></i> Kabul Et
+                            </button>
+                            <button data-duel-id="${duel.id}" data-action="decline" class="duel-action-btn text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg transition-colors" title="Reddet">
+                                <i class="fas fa-times"></i> Reddet
+                            </button>
+                        `;
+                    }
+                    break;
+                case 'active':
+                    statusText = `<span class="text-blue-500">Düello aktif!</span>`;
+                     buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Oyna!</button>`;
+                    break;
+                case 'challenger_completed':
+                case 'opponent_completed':
+                     statusText = `<span class="text-purple-500">Rakibin bitirmesi bekleniyor...</span>`;
+                     // Eğer sırası gelen bizsek Oyna butonu göster
+                     const userHasPlayed = (isChallenger && duel.status === 'challenger_completed') || (!isChallenger && duel.status === 'opponent_completed');
+                     if (!userHasPlayed) {
+                         buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Sıra Sende!</button>`;
+                     }
+                    break;
+                case 'completed':
+                    if (duel.winner_id === null) {
+                        statusText = `<strong class="text-gray-500">Berabere!</strong> (${duel.challenger_score} - ${duel.opponent_score})`;
+                    } else if (duel.winner_id === currentUserId) {
+                        statusText = `<strong class="text-green-500">Kazandın!</strong> (${duel.challenger_score} - ${duel.opponent_score})`;
+                    } else {
+                        statusText = `<strong class="text-red-500">Kaybettin.</strong> (${duel.challenger_score} - ${duel.opponent_score})`;
+                    }
+                    buttons = `<button data-duel-id="${duel.id}" data-action="details" class="duel-action-btn text-sm bg-gray-400 hover:bg-gray-500 text-white py-1 px-2 rounded-lg transition-colors">Detaylar</button>`;
+                    break;
+                case 'declined':
+                    statusText = `<span class="text-gray-400">Meydan okuma reddedildi.</span>`;
+                    break;
+                 case 'expired':
+                    statusText = `<span class="text-gray-400">Zaman aşımına uğradı.</span>`;
+                    break;
+            }
+
+            const duelEl = document.createElement('div');
+            duelEl.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
+            duelEl.innerHTML = `
+                <div class="mb-2 sm:mb-0">
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">
+                        Rakip: ${opponentName} 
+                        <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(${duel.category} - ${duel.difficulty})</span>
+                    </p>
+                    <p class="text-sm">${statusText}</p>
+                </div>
+                <div class="space-x-2 flex-shrink-0">
+                    ${buttons}
+                </div>
+            `;
+            dom.duelsList.appendChild(duelEl);
+        });
+    };
+
+    const renderDuelGame = (duelState) => {
+        const currentUser = appState.get('currentUser');
+        dom.duelGameOpponentName.textContent = duelState.opponent.username;
+        dom.duelMyUsername.textContent = currentUser.username;
+        dom.duelMyScore.textContent = '0';
+        
+        // Önceki oyunlardan kalanları temizle
+        dom.duelQuestionContainer.classList.remove('hidden');
+        dom.duelSummaryContainer.classList.add('hidden');
+        toggleDuelNextButton(false);
+    };
+
+    const renderDuelQuestion = (question, index, total) => {
+        dom.duelGameProgress.textContent = `Soru ${index + 1} / ${total}`;
+        dom.duelQuestionText.textContent = question.soru;
+        dom.duelOptionsContainer.innerHTML = '';
+        dom.duelExplanationContainer.classList.add('hidden');
+
+        const createButton = (text, answer) => {
+            const btn = document.createElement('button');
+            btn.className = 'duel-option-button p-4 text-left rounded-lg border dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors';
+            btn.dataset.answer = answer;
+            btn.innerHTML = text;
+            return btn;
+        };
+        
+        if (question.tip === 'dogru_yanlis') {
+            dom.duelOptionsContainer.className = 'grid grid-cols-1 gap-4 items-center';
+            dom.duelOptionsContainer.appendChild(createButton('Doğru', 'Doğru'));
+            dom.duelOptionsContainer.appendChild(createButton('Yanlış', 'Yanlış'));
+        } else {
+             dom.duelOptionsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 items-center';
+            Object.entries(question.siklar).forEach(([key, value]) => {
+                dom.duelOptionsContainer.appendChild(createButton(`<span class="font-semibold">${key}</span>) ${value}`, key));
+            });
+        }
+    };
+
+    const disableDuelOptions = () => {
+        dom.duelOptionsContainer.querySelectorAll('.duel-option-button').forEach(btn => {
+            btn.disabled = true;
+        });
+    };
+    
+    const showDuelAnswerResult = (userAnswer, correctAnswer, explanation, myScore) => {
+        dom.duelMyScore.textContent = myScore;
+        
+        dom.duelOptionsContainer.querySelectorAll('.duel-option-button').forEach(btn => {
+            if (btn.dataset.answer === correctAnswer) {
+                btn.classList.add('bg-green-200', 'dark:bg-green-500', 'font-semibold');
+            } else if (btn.dataset.answer === userAnswer) {
+                btn.classList.add('bg-red-200', 'dark:bg-red-500', 'font-semibold');
+            }
+        });
+
+        dom.duelExplanationText.textContent = explanation;
+        dom.duelExplanationContainer.classList.remove('hidden');
+    };
+
+    const toggleDuelNextButton = (show) => {
+        dom.duelNextQuestionBtn.classList.toggle('hidden', !show);
+    };
+
+    const renderDuelSummary = async (duelState, finalState) => {
+        // En güncel düello listesini almak için API'den veriyi çekelim.
+        const result = await api.call('duel_get_duels', {}, 'POST', false);
+        let finalDuelData = null;
+        if(result.success) {
+            finalDuelData = result.data.find(d => d.id === duelState.id);
+        }
+
+        if (!finalDuelData) {
+            showToast("Düello sonucu alınamadı.", "error");
+            return;
+        }
+
+        const currentUser = appState.get('currentUser');
+        const isChallenger = finalDuelData.challenger_id === currentUser.id;
+        const myFinalScore = isChallenger ? finalDuelData.challenger_score : finalDuelData.opponent_score;
+        const opponentFinalScore = isChallenger ? finalDuelData.opponent_score : finalDuelData.challenger_score;
+
+        dom.duelQuestionContainer.classList.add('hidden');
+        dom.duelSummaryContainer.classList.remove('hidden');
+
+        dom.duelSummaryMyName.textContent = currentUser.username;
+        dom.duelSummaryMyScore.textContent = myFinalScore;
+        dom.duelSummaryOpponentName.textContent = duelState.opponent.username;
+        dom.duelSummaryOpponentScore.textContent = opponentFinalScore;
+
+        if (finalDuelData.status !== 'completed') {
+            dom.duelSummaryTitle.textContent = "Sıra Rakibinde!";
+            dom.duelSummaryIcon.innerHTML = `<i class="fas fa-hourglass-half text-blue-500"></i>`;
+            dom.duelSummaryText.textContent = `Sıranı tamamladın. Rakibinin düelloyu bitirmesi bekleniyor.`;
+            dom.duelSummaryMyScore.className = "text-4xl text-blue-500";
+            dom.duelSummaryOpponentScore.className = "text-4xl text-gray-500";
+        } else {
+             if (finalDuelData.winner_id === currentUser.id) {
+                dom.duelSummaryTitle.textContent = "Kazandın!";
+                dom.duelSummaryIcon.innerHTML = `<i class="fas fa-trophy text-yellow-500"></i>`;
+                dom.duelSummaryText.textContent = `Tebrikler, bu düellonun galibi sensin!`;
+                dom.duelSummaryMyScore.className = "text-4xl text-green-500";
+                dom.duelSummaryOpponentScore.className = "text-4xl text-red-500";
+            } else if (finalDuelData.winner_id === 0) { // Berabere durumu
+                dom.duelSummaryTitle.textContent = "Berabere!";
+                dom.duelSummaryIcon.innerHTML = `<i class="fas fa-handshake text-gray-500"></i>`;
+                dom.duelSummaryText.textContent = `İkiniz de harikaydınız! Sonuç berabere.`;
+                 dom.duelSummaryMyScore.className = "text-4xl text-gray-500";
+                dom.duelSummaryOpponentScore.className = "text-4xl text-gray-500";
+            } else {
+                dom.duelSummaryTitle.textContent = "Kaybettin";
+                dom.duelSummaryIcon.innerHTML = `<i class="far fa-sad-tear text-red-500"></i>`;
+                dom.duelSummaryText.textContent = `Bu sefer olmadı. Bir dahaki sefere daha iyi olacağına eminiz!`;
+                dom.duelSummaryMyScore.className = "text-4xl text-red-500";
+                dom.duelSummaryOpponentScore.className = "text-4xl text-green-500";
+            }
+        }
+    };
+
     return {
         init,
         showView,
@@ -414,6 +610,14 @@ const ui = (() => {
         renderFriendSearchResults,
         renderPendingRequests,
         renderFriendsList,
-        showDuelModal
+        showDuelModal,
+        renderDuelsList,
+        // Duel Game UI
+        renderDuelGame,
+        renderDuelQuestion,
+        disableDuelOptions,
+        showDuelAnswerResult,
+        toggleDuelNextButton,
+        renderDuelSummary
     };
 })(); 

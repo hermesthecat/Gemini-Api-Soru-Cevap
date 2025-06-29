@@ -241,6 +241,15 @@
                             <p id="no-friends" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz arkadaşın yok.</p>
                         </div>
                     </div>
+
+                    <!-- Meydan Okumalar Bölümü (aynı sekmede, altta) -->
+                    <div id="duels-section" class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Düellolarım</h2>
+                        <div id="duels-list" class="space-y-4">
+                            <!-- Düello listesi buraya gelecek -->
+                        </div>
+                        <p id="no-duels" class="text-gray-500 dark:text-gray-400 text-center py-4 hidden">Gösterilecek düello yok.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -297,6 +306,63 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <!-- ===== DÜELLO OYUN EKRANI ===== -->
+        <div id="duel-game-view" class="hidden">
+            <header class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Düello Rakibi</p>
+                        <h2 id="duel-game-opponent-name" class="text-xl font-bold">Rakip Adı</h2>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">İlerleme</p>
+                        <p id="duel-game-progress" class="text-xl font-bold text-blue-500">Soru 1 / 5</p>
+                    </div>
+                </div>
+                 <div id="duel-game-scores" class="mt-4 pt-4 border-t dark:border-gray-700 flex justify-around text-center">
+                    <div>
+                        <p id="duel-my-username" class="font-semibold"></p>
+                        <p id="duel-my-score" class="text-2xl font-bold text-green-500">0</p>
+                    </div>
+                </div>
+            </header>
+
+            <main id="duel-question-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="text-gray-700 dark:text-gray-300 mb-4">
+                    <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
+                    <p id="duel-question-text"></p>
+                </div>
+                <div id="duel-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <!-- Düello soru şıkları buraya gelecek -->
+                </div>
+                <div id="duel-explanation-container" class="hidden mt-6 p-4 bg-blue-50 dark:bg-gray-700/50 border-l-4 border-blue-500">
+                    <h4 class="font-bold text-blue-800 dark:text-blue-300 mb-1">Açıklama</h4>
+                    <p id="duel-explanation-text" class="text-blue-700 dark:text-blue-400"></p>
+                </div>
+                <div class="mt-6 text-center">
+                    <button id="duel-next-question-btn" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-8 rounded-lg transition-colors">Sıradaki Soru</button>
+                </div>
+            </main>
+            
+            <div id="duel-summary-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mt-6 text-center">
+                <h2 id="duel-summary-title" class="text-3xl font-bold mb-4">Düello Bitti!</h2>
+                <div id="duel-summary-icon" class="text-6xl mb-4"></div>
+                <p id="duel-summary-text" class="text-lg text-gray-600 dark:text-gray-400 mb-6">Sonuçlar hesaplanıyor...</p>
+                <div class="flex justify-around items-center text-2xl font-bold mb-8">
+                    <div>
+                        <p id="duel-summary-my-name" class="text-lg font-normal mb-1"></p>
+                        <p id="duel-summary-my-score" class="text-4xl"></p>
+                    </div>
+                    <span class="text-gray-400">-vs-</span>
+                    <div>
+                        <p id="duel-summary-opponent-name" class="text-lg font-normal mb-1"></p>
+                        <p id="duel-summary-opponent-score" class="text-4xl"></p>
+                    </div>
+                </div>
+                <button id="duel-back-to-friends-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">Arkadaşlar Menüsüne Dön</button>
             </div>
         </div>
 
@@ -380,6 +446,7 @@
     <script src="assets/js/admin-handler.js"></script>
     <script src="assets/js/settings-handler.js"></script>
     <script src="assets/js/friends-handler.js"></script>
+    <script src="assets/js/duel-handler.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 
