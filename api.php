@@ -46,18 +46,33 @@ switch ($action) {
         $gemini = new GeminiAPI(GEMINI_API_KEY);
 
         try {
-            $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
-            {
-                \"soru\": \"(soru metni buraya)\",
-                \"siklar\": {
-                    \"A\": \"(A şıkkı buraya)\",
-                    \"B\": \"(B şıkkı buraya)\",
-                    \"C\": \"(C şıkkı buraya)\",
-                    \"D\": \"(D şıkkı buraya)\"
-                },
-                \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\",
-                \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"
-            }";
+            // Rastgele soru tipi seç (%75 çoktan seçmeli, %25 doğru/yanlış)
+            $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
+            $prompt = '';
+
+            if ($tip === 'coktan_secmeli') {
+                $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
+                {
+                    \"tip\": \"coktan_secmeli\",
+                    \"soru\": \"(soru metni buraya)\",
+                    \"siklar\": {
+                        \"A\": \"(A şıkkı buraya)\",
+                        \"B\": \"(B şıkkı buraya)\",
+                        \"C\": \"(C şıkkı buraya)\",
+                        \"D\": \"(D şıkkı buraya)\"
+                    },
+                    \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\",
+                    \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"
+                }";
+            } else { // dogru_yanlis
+                $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, doğru ya da yanlış olarak cevaplanabilecek bir önerme hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
+                {
+                    \"tip\": \"dogru_yanlis\",
+                    \"soru\": \"(Önerme cümlesi buraya)\",
+                    \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\",
+                    \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"
+                }";
+            }
 
             $yanit = $gemini->soruSor($prompt);
 
@@ -65,23 +80,36 @@ switch ($action) {
                 $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
                 $veri = json_decode($temiz_yanit, true);
 
-                if (json_last_error() === JSON_ERROR_NONE && isset($veri['soru'], $veri['siklar'], $veri['dogru_cevap'], $veri['aciklama'])) {
-                    // Doğru cevabı ve açıklamayı bir sonraki istek için session'da sakla
+                if (json_last_error() === JSON_ERROR_NONE && isset($veri['tip'], $veri['soru'], $veri['dogru_cevap'], $veri['aciklama'])) {
+                    // Tip çoktan seçmeli ise şıkların varlığını kontrol et
+                    if ($veri['tip'] === 'coktan_secmeli' && !isset($veri['siklar'])) {
+                        $response['message'] = 'API yanıtında çoktan seçmeli soru için şıklar bulunamadı.';
+                        break;
+                    }
+
+                    // Cevabı ve açıklamayı bir sonraki istek için session'da sakla
                     $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
-                    $_SESSION['current_question_explanation'] = $veri['aciklama'];
+                    $_SESSION['current_question_explanation'] = $veri['aciklama']; // Açıklamayı sakla
                     $_SESSION['start_time'] = time();
 
                     $response['success'] = true;
                     $response['message'] = 'Soru başarıyla oluşturuldu.';
-                    // Sadece soruyu ve şıkları gönder, cevabı GÖNDERME
-                    $response['data'] = [
+
+                    // Ön uca gönderilecek veriyi hazırla (cevabı ve açıklamayı GÖNDERME)
+                    $responseData = [
+                        'tip' => $veri['tip'],
                         'question' => $veri['soru'],
-                        'siklar' => $veri['siklar'],
                         'kategori' => $kategori,
-                        'difficulty' => $difficulty // Zorluğu yanıta ekle
+                        'difficulty' => $difficulty
                     ];
+
+                    if ($veri['tip'] === 'coktan_secmeli') {
+                        $responseData['siklar'] = $veri['siklar'];
+                    }
+
+                    $response['data'] = $responseData;
                 } else {
-                    $response['message'] = 'Soru formatı geçersiz.';
+                    $response['message'] = 'Soru formatı geçersiz veya eksik alanlar var.';
                 }
             } else {
                 $response['message'] = "API'den yanıt alınamadı.";

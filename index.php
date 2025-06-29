@@ -96,7 +96,7 @@
                         <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
                         <p id="question-text"></p>
                     </div>
-                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                         <!-- Şıklar buraya dinamik olarak eklenecek -->
                     </div>
                     <!-- Cevap Açıklaması Alanı -->

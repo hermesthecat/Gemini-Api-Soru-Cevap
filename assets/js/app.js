@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             correct_answers: 0
         },
         history: [],
-        currentQuestion: null, // Mevcut soru ve şıkları tutmak için
+        currentQuestion: null, // Mevcut soru, şıkları ve tipi tutmak için
         difficulty: 'orta', // Varsayılan zorluk seviyesi
         theme: 'light', // Varsayılan tema
     };
@@ -162,14 +162,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const isCorrectClass = item.is_correct ?
                 'bg-green-100 dark:bg-green-900/50 border-green-500 dark:border-green-700' :
                 'bg-red-100 dark:bg-red-900/50 border-red-500 dark:border-red-700';
-            const userAnswerText = item.siklar[item.user_answer] || 'Cevap bulunamadı';
+
+            let userAnswerText, correctAnswerText;
+            if (item.tip === 'dogru_yanlis') {
+                userAnswerText = item.user_answer;
+                correctAnswerText = item.correct_answer;
+            } else {
+                userAnswerText = item.siklar ? (item.siklar[item.user_answer] || 'Cevap Bulunamadı') : 'Cevap Bulunamadı';
+                correctAnswerText = item.siklar ? item.siklar[item.correct_answer] : 'Doğru Cevap Bulunamadı';
+            }
+
+            const userAnswerDisplay = item.user_answer ? (item.tip === 'coktan_secmeli' ? `${item.user_answer}) ` : '') + userAnswerText : 'Süre Doldu';
+
             let historyHtml = `
                 <div class="p-3 rounded-lg border-l-4 ${isCorrectClass}">
                     <p class="font-semibold mb-1">${item.question}</p>
-                    <p class="text-sm">Sizin Cevabınız: <span class="font-bold">${item.user_answer || 'Süre Doldu'}) ${userAnswerText}</span></p>`;
+                    <p class="text-sm">Sizin Cevabınız: <span class="font-bold">${userAnswerDisplay}</span></p>`;
             if (!item.is_correct) {
-                const correctAnswerText = item.siklar[item.correct_answer];
-                historyHtml += `<p class="text-sm">Doğru Cevap: <span class="font-bold">${item.correct_answer}) ${correctAnswerText}</span></p>`;
+                const correctAnswerDisplay = (item.tip === 'coktan_secmeli' ? `${item.correct_answer}) ` : '') + correctAnswerText;
+                historyHtml += `<p class="text-sm">Doğru Cevap: <span class="font-bold">${correctAnswerDisplay}</span></p>`;
             }
             historyHtml += '</div>';
             container.innerHTML += historyHtml;
@@ -184,15 +195,30 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCategory.innerHTML = `${kategoriText} <span class="font-normal text-gray-500">- ${zorlukText}</span>`;
         questionText.textContent = data.question;
         optionsContainer.innerHTML = '';
-        ['A', 'B', 'C', 'D'].forEach(opt => {
-            if (data.siklar[opt]) {
+        optionsContainer.classList.toggle('md:grid-cols-1', data.tip === 'dogru_yanlis');
+        optionsContainer.classList.toggle('md:grid-cols-2', data.tip !== 'dogru_yanlis');
+
+
+        if (data.tip === 'coktan_secmeli') {
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+                if (data.siklar[opt]) {
+                    const button = document.createElement('button');
+                    button.className = 'option-button p-4 text-left rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700';
+                    button.dataset.answer = opt;
+                    button.innerHTML = `<span class="font-semibold">${opt}</span>) ${data.siklar[opt]}`;
+                    optionsContainer.appendChild(button);
+                }
+            });
+        } else if (data.tip === 'dogru_yanlis') {
+            ['Doğru', 'Yanlış'].forEach(opt => {
                 const button = document.createElement('button');
-                button.className = 'option-button p-4 text-left rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700';
+                button.className = 'option-button p-4 text-center rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 md:col-span-1 md:w-1/2 md:mx-auto';
                 button.dataset.answer = opt;
-                button.innerHTML = `<span class="font-semibold">${opt}</span>) ${data.siklar[opt]}`;
+                button.textContent = opt;
                 optionsContainer.appendChild(button);
-            }
-        });
+            });
+        }
+
         showView('question');
         startTimer();
     };
@@ -302,8 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Geçmiş öğesini oluştur
             const historyItem = {
+                tip: state.currentQuestion.tip,
                 question: state.currentQuestion.question,
-                siklar: state.currentQuestion.siklar,
+                siklar: state.currentQuestion.siklar, // Çoktan seçmeli için
                 user_answer: answer === 'TIMEOUT' ? null : answer,
                 correct_answer: data.correct_answer,
                 is_correct: data.is_correct,
