@@ -1,0 +1,25 @@
+const appState = (() => {
+    const state = {
+        currentUser: null, // { id: 1, username: '...', role: '...' }
+        difficulty: 'orta',
+        currentCategory: null,
+        soundEnabled: true,
+        theme: 'light',
+        leaderboardInterval: null,
+        currentQuestionData: null,
+        timerInterval: null,
+        timeLeft: 30,
+        lifelines: {
+            fiftyFifty: 1,
+            extraTime: 1
+        }
+    };
+
+    return {
+        get: (key) => state[key],
+        set: (key, value) => {
+            state[key] = value;
+        },
+        getAll: () => ({ ...state }) // Salt okunur bir kopya döndür
+    };
+})(); 

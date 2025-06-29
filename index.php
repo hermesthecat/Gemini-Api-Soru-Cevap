@@ -253,9 +253,14 @@
     <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
 
     <script src="assets/js/api-handler.js"></script>
+    <script src="assets/js/app-data.js"></script>
+    <script src="assets/js/app-state.js"></script>
     <script src="assets/js/ui-handler.js"></script>
     <script src="assets/js/auth-handler.js"></script>
     <script src="assets/js/game-handler.js"></script>
+    <script src="assets/js/stats-handler.js"></script>
+    <script src="assets/js/admin-handler.js"></script>
+    <script src="assets/js/settings-handler.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 
