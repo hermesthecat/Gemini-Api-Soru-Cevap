@@ -1,6 +1,6 @@
 # Gelecek İçin Yeni İyileştirme Fikirleri
 
-Projenin mevcut SPA yapısı, üzerine yeni özellikler inşa etmek için sağlam bir temel oluşturmaktadır. İşte projeyi daha da ileriye taşıyabilecek bazı yeni fikirler:
+Projenin mevcut çok kullanıcılı SPA yapısı, üzerine yeni özellikler inşa etmek için sağlam bir temel oluşturmaktadır. İşte projeyi daha da ileriye taşıyabilecek bazı yeni fikirler:
 
 ## 1. Daha Fazla Soru Tipi
 
@@ -13,17 +13,21 @@ Projenin mevcut SPA yapısı, üzerine yeni özellikler inşa etmek için sağla
 
 **Fayda:** Tekrar oynanabilirliği artırır ve farklı bilgi türlerini test eder.
 
-## 2. Progressive Web App (PWA) Yetenekleri
+## 2. Admin Paneli
+
+**Fikir:** Veritabanındaki `users` tablosunda bulunan `role` ('admin', 'user') alanını işlevsel hale getirmek. Admin rolüne sahip kullanıcılar giriş yaptığında, normal kullanıcı arayüzünden farklı olarak basit bir yönetim paneli görebilir. Bu panelde:
+
+- Tüm kullanıcıları listeleme, silme veya rollerini değiştirme.
+- Genel site istatistiklerini (toplam soru, toplam kullanıcı vb.) görme.
+- Belki belirli bir kullanıcının puanını sıfırlama gibi özellikler olabilir.
+
+**Fayda:** Uygulamanın yönetimini kolaylaştırır ve yöneticiye tam kontrol sağlar.
+
+## 3. Progressive Web App (PWA) Yetenekleri
 
 **Fikir:** Projeye bir `manifest.json` dosyası ve bir `service worker` (`sw.js`) ekleyerek temel PWA yetenekleri kazandırmak. Bu sayede kullanıcılar uygulamayı telefonlarının veya bilgisayarlarının ana ekranına bir kısayol olarak ekleyebilir.
 
 **Fayda:** Uygulamaya daha "yerel" bir uygulama hissi verir ve erişilebilirliği artırır. Gelecekte çevrimdışı çalışma gibi özelliklerin de önünü açar.
-
-## 3. Liderlik Tablosu (Leaderboard)
-
-**Fikir:** Kullanıcıların puanlarını (örneğin doğru cevap başına +10 puan, kalan saniye başına +1 puan gibi) hesaplayarak anonim bir liderlik tablosu oluşturmak. Bu, basit bir veritabanı (örneğin SQLite) veya bir bulut veritabanı (Firebase) gerektirebilir.
-
-**Fayda:** Rekabetçi bir element ekleyerek kullanıcıların etkileşimini ve geri dönme oranını artırır.
 
 ## 4. Ses Efektleri ve Ayarları
 
