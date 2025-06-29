@@ -4,70 +4,57 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 
 ---
 
-## 1. Kod Yapısı ve Sürdürülebilirlik (✓ Tamamlandı)
+## 🚀 Kısa ve Orta Vadeli Planlar
 
-- **Backend'i Yeniden Yapılandırma:**
-  - [x] `api.php` dosyasını, gelen isteklere göre ilgili Controller sınıflarını çağıran bir yönlendiriciye (router) dönüştür.
-  - [x] `UserController` oluşturuldu: Kullanıcı `register`, `login`, `logout` ve `check_session` işlemlerini yönetir.
-  - [x] `GameController` oluşturuldu: Oyun mantığını (`get_question`, `submit_answer`) yönetir.
-  - [x] `AdminController` oluşturuldu: Admin paneli işlemlerini (`get_dashboard_data`, `get_all_users` vb.) yönetir.
-  - [x] `DataController` oluşturuldu: Genel veri çekme işlemlerini (`get_user_data`, `get_leaderboard` vb.) yönetir.
+Bu bölüm, gelecek geliştirme döngüleri için planlanan özellikleri ve iyileştirmeleri içerir.
 
-- **Frontend'i Modüler Hale Getirme:**
-  - [x] API çağrılarını `api-handler.js` içine taşı.
-  - [x] UI (arayüz) güncellemelerini (`showView`, `showToast` vb.) `ui-handler.js` içine taşı.
-  - [x] Kimlik doğrulama (Auth) işlemlerini (`login`, `register`, `logout`) `auth-handler.js` içine taşı.
-  - [x] Oyun mantığını (soru gösterme, cevaplama, zamanlayıcı) `game-handler.js` içine taşı.
-  - [x] **(Yeni)** `app.js`'i daha da sadeleştir:
-    - [x] Statik verileri (kategoriler, başarım bilgileri) `app-data.js`'e taşı.
-    - [x] Dinamik uygulama durumunu (state) `app-state.js`'e taşı.
-    - [x] İstatistik, liderlik tablosu ve başarım güncelleme mantığını `stats-handler.js`'e taşı.
-    - [x] Admin paneli mantığını `admin-handler.js`'e taşı.
-    - [x] Ayarlar (tema, ses) mantığını `settings-handler.js`'e taşı.
-    - [x] `app.js`'i sadece modülleri başlatan ve aralarındaki iletişimi yöneten bir orkestratöre dönüştür.
+### 1. Oyun Deneyimi ve Çeşitlilik
 
-- **Veritabanı Şemasını İyileştirme:**
-  - [x] `user_stats` tablosuna zorluk seviyesi ve harcanan zaman gibi daha detaylı istatistikler ekle.
-  - [x] Başarımlar için ayrı bir `achievements` tablosu oluşturarak başarım tanımlarını (isim, açıklama, ikon) veritabanında sakla.
+- [ ] **Farklı Soru Tipleri:** Resimli, sesli veya sıralama bazlı sorular gibi yeni formatlar ekleyerek oyun çeşitliliğini artır.
+- [ ] **Turnuva Modu:** Haftalık veya aylık periyotlarla düzenlenen, özel ödüllere sahip turnuvalar oluştur.
+- [ ] **Özelleştirilebilir Oyunlar:** Kullanıcıların soru sayısı, kategori, zorluk ve süre limiti gibi ayarları belirleyerek kendi özel oyunlarını oluşturup arkadaşlarıyla paylaşabilmesi.
+- [ ] **Soru Kalitesi Geribildirimi:** Kullanıcıların soruları (1-5 yıldız) oylayabilmesi veya hatalı/kalitesiz soruları raporlayabilmesi için bir mekanizma ekle.
 
-## 2. Hata Yönetimi ve Kullanıcı Geribildirimi
+### 2. Sosyal Özellikler ve Etkileşim
 
-- [x] **Frontend Hata Yönetimi:** `apiCall` fonksiyonunda `try-catch` bloklarını kullanarak API'den dönen hataları (örneğin, sunucu hatası, geçersiz istek) yakala ve `showToast` ile kullanıcıya anlamlı mesajlar göster.
-- [x] **Backend Hata Yönetimi:** PHP tarafında `try-catch` bloklarını daha etkin kullan. Veritabanı veya API hatalarında uygun HTTP durum kodları (örneğin, 400, 401, 500) ve açıklayıcı JSON mesajları döndür.
-- [x] **Yükleme Durumları:** Soru yüklenirken, cevap gönderilirken veya veri çekilirken tam ekran bir "yükleniyor" animasyonu göster.
+- [ ] **Gerçek Zamanlı Bildirimler:** Arkadaşlık isteği, düello daveti gibi olaylar için anlık bildirim sistemi (WebSocket veya Server-Sent Events ile).
+- [ ] **Gelişmiş Kullanıcı Profilleri:** Diğer kullanıcıların ziyaret edebileceği, daha detaylı istatistikler ve kazanılan başarımların sergilendiği herkese açık profil sayfaları.
+- [ ] **Takım/Klan Sistemi:** Kullanıcıların takımlar oluşturarak takım bazlı liderlik tablolarında ve turnuvalarda yarışabilmesi.
 
-## 3. Güvenlik İyileştirmeleri
+### 3. Yönetici Paneli Geliştirmeleri
 
-- [x] **SQL Injection'ı Önleme:** Tüm veritabanı sorgularında `prepared statements` kullanıldığından emin ol.
-- [x] **XSS (Cross-Site Scripting) Önleme:** Kullanıcıdan gelen ve ekrana basılan tüm verileri (örneğin, kullanıcı adı) `htmlspecialchars` gibi fonksiyonlarla temizle.
-- [x] **CSRF (Cross-Site Request Forgery) Koruması:** Form gönderimlerinde ve önemli API isteklerinde CSRF token'ları kullan.
-- [x] **Rate Limiting:** Özellikle giriş (login) ve kayıt (register) gibi işlemlere, kısa sürede çok sayıda denemeyi önlemek için hız sınırlaması (rate limiting) ekle.
+- [ ] **Detaylı İstatistikler:** Admin paneline grafikler ve daha ayrıntılı analizler (örn. en çok oynanan kategoriler, günlük aktif kullanıcı sayısı) ekle.
+- [ ] **Duyuru Sistemi:** Admin'in tüm kullanıcılara veya belirli gruplara uygulama içi duyurular gönderebilmesi.
+- [ ] **Soru Yönetimi:** Raporlanan soruları incelemek ve yönetmek için bir arayüz.
 
-## 4. Kullanıcı Deneyimi (UX) ve Arayüz (UI) Geliştirmeleri
+---
 
-- [x] **Cevap Sonrası Geri Bildirim:** Cevap doğru veya yanlış olduğunda şıkların renklerini (doğruyu yeşil, yanlışı kırmızı) anında değiştir.
-- [x] **Jokerler:** "Yarı yarıya", "Süreyi uzat" veya "Pas geç" gibi jokerler ekle.
-- [x] **Kategori ve Zorluk Seçimi:** Kategori seçme ekranını daha görsel ve çekici hale getir.
-- [x] **Başarımlar:** Kazanılan başarımlar için daha dikkat çekici bir bildirim (modal veya özel bir animasyon) göster. Başarımlar sayfasını daha detaylı hale getir.
-- [x] **Profil Sayfası:** Kullanıcıların kendi istatistiklerini ve başarımlarını daha detaylı görebileceği bir profil sayfası oluştur.
+## 💡 Uzun Vadeli Fikirler ve Teknik Geliştirmeler
 
-## 5. Sosyal Özellikler ve Rekabet
+Bu bölüm, projenin uzun vadeli sağlığı ve ölçeklenebilirliği için daha geniş fikirleri ve teknik iyileştirmeleri içerir.
 
-- **Arkadaşlık Sistemi:**
-  - [x] `friends` veritabanı tablosu oluşturuldu.
-  - [x] `FriendsController` ile arkadaşlık işlemleri (arama, istek, yanıtlama, silme) için backend mantığı eklendi.
-  - [x] Arayüze "Arkadaşlar" sekmesi eklendi.
-  - [x] Kullanıcı arama, arkadaş ekleme, istekleri yanıtlama ve arkadaş listeleme arayüzleri tamamlandı.
-- **Düello (Meydan Okuma) Modu:**
-  - [x] `duels` veritabanı tablosu oluşturuldu.
-  - [x] Arkadaş listesinden meydan okuma göndermek için arayüz (modal) eklendi.
-  - [x] `DuelController` oluşturuldu ve `createDuel` metodu ile meydan okuma oluşturma backend mantığı eklendi.
-  - [x] Gelen meydan okumaları listeleme ve yanıtlama (kabul/red).
-  - [x] Düello oyun ekranını oluşturma (5 soruluk özel yarışma).
-  - [x] Düello sonuçlarını kaydetme ve gösterme.
+### 1. Oyunlaştırma ve Ekonomi
 
-## 6. Gelecek Fikirleri
+- [ ] **Oyun İçi Para Birimi:** Doğru cevaplar, tamamlanan görevler ve kazanılan düellolar için "jeton" kazanma sistemi.
+- [ ] **Mağaza:** Kazanılan jetonlarla yeni avatarlar, profil çerçeveleri, tema renkleri veya ek jokerler gibi kozmetik veya işlevsel öğelerin satın alınabileceği bir mağaza.
+- [ ] **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden ödül sistemi.
 
-- [x] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
-- [ ] **Farklı Soru Tipleri:** Resimli sorular, sıralama soruları gibi yeni soru formatları ekle.
-- [x] **Avatar ve Özelleştirme:** Kullanıcıların profil fotoğrafı veya avatar seçebilmesi.
+### 2. Teknik İyileştirmeler
+
+- [ ] **Frontend Refactoring:** `ui-handler.js` gibi büyük dosyaları daha küçük, yönetilebilir bileşenlere ayır.
+- [ ] **API Dokümantasyonu:** Projenin API'si için Swagger/OpenAPI gibi standartlarda bir dokümantasyon oluştur.
+- [ ] **Test Altyapısı:** PHPUnit (backend) ve Jest (frontend) gibi araçlarla birim ve entegrasyon testleri ekle.
+- [ ] **Asenkron İşlemler:** E-posta gönderme veya karmaşık rapor oluşturma gibi uzun süren işlemler için bir "queue" (kuyruk) sistemi kur.
+
+---
+
+## ✅ Tamamlananlar
+
+Bu bölüm, daha önce tamamlanmış olan ana özellikleri ve yeniden yapılandırma çalışmalarını arşivlemektedir.
+
+- **Modüler Kod Mimarisi:** Backend Controller (`User`, `Game`, `Admin` vb.) ve Frontend Handler (`api`, `ui`, `auth` vb.) sınıfları ile kodun yeniden yapılandırılması.
+- **Güvenlik İyileştirmeleri:** SQL Injection, XSS ve CSRF'e karşı korumalar ve giriş denemeleri için hız sınırlaması (rate limiting) eklendi.
+- **Kullanıcı Deneyimi:** Jokerler, cevap sonrası anlık geribildirim, koyu/açık tema, ses ayarları ve başarım bildirimleri gibi özellikler eklendi.
+- **Sosyal Özellikler:** Arkadaşlık sistemi (arama, ekleme, çıkarma) ve arkadaşlarla düello (meydan okuma) modu tamamen entegre edildi.
+- **Oyunlaştırma:** Günlük görevler, 20'den fazla başarım ve dinamik liderlik tablosu eklendi.
+- **Özelleştirme:** Kullanıcıların 10 farklı avatar arasından seçim yapabilmesi sağlandı.
