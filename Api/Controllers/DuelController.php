@@ -7,10 +7,10 @@ class DuelController
     private $pdo;
     private $gemini;
 
-    public function __construct($pdo, $geminiApiKey)
+    public function __construct($pdo, GeminiAPI $gemini)
     {
         $this->pdo = $pdo;
-        $this->gemini = new GeminiAPI($geminiApiKey);
+        $this->gemini = $gemini;
     }
 
     /**
@@ -28,12 +28,8 @@ class DuelController
             return ['success' => false, 'message' => 'Geçersiz rakip seçimi.'];
         }
 
-        // 1. Gemini API'den 5 soru al
-        // GameController'daki prompt oluşturma mantığını kullanabiliriz.
-        $gameController = new GameController($this->pdo, ''); // API key'e burada gerek yok, sadece prompt için
-        $prompt_method = new ReflectionMethod('GameController', 'generatePrompt');
-        $prompt_method->setAccessible(true);
-        $prompt = $prompt_method->invoke($gameController, 'coktan_secmeli', $category, $difficulty, $question_count);
+        // 1. GameController'dan statik olarak prompt'u al
+        $prompt = GameController::generatePrompt('coktan_secmeli', $category, $difficulty, $question_count);
 
         $yanit = $this->gemini->soruSor($prompt);
         if (!$yanit) {

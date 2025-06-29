@@ -5,10 +5,10 @@ class GameController
     private $pdo;
     private $gemini;
 
-    public function __construct($pdo, $geminiApiKey)
+    public function __construct($pdo, GeminiAPI $gemini)
     {
         $this->pdo = $pdo;
-        $this->gemini = new GeminiAPI($geminiApiKey);
+        $this->gemini = $gemini;
     }
 
     public function getQuestion($data)
@@ -19,7 +19,7 @@ class GameController
         $difficulty = $data['difficulty'] ?? 'orta';
 
         $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
-        $prompt = $this->generatePrompt($tip, $kategori, $difficulty);
+        $prompt = self::generatePrompt($tip, $kategori, $difficulty);
         $yanit = $this->gemini->soruSor($prompt);
 
         if (!$yanit) {
@@ -197,7 +197,7 @@ class GameController
         return [];
     }
 
-    private function generatePrompt($tip, $kategori, $difficulty, $adet = 1)
+    public static function generatePrompt($tip, $kategori, $difficulty, $adet = 1)
     {
         $format_aciklama_coktan_secmeli = '{\"tip\": \"coktan_secmeli\", \"soru\": \"(soru metni buraya)\", \"siklar\": {\"A\": \"(A şıkkı buraya)\", \"B\": \"(B şıkkı buraya)\", \"C\": \"(C şıkkı buraya)\", \"D\": \"(D şıkkı buraya)\"}, \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\", \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"}';
         $format_aciklama_dogru_yanlis = '{\"tip\": \"dogru_yanlis\", \"soru\": \"(Önerme cümlesi buraya)\", \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\", \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"}';

@@ -47,12 +47,14 @@ if (!$action) {
 }
 
 // --- Controller'ları Başlat ---
+$geminiApi = new GeminiAPI(GEMINI_API_KEY);
+
 $userController = new UserController($pdo);
-$gameController = new GameController($pdo, GEMINI_API_KEY);
+$gameController = new GameController($pdo, $geminiApi);
 $adminController = new AdminController($pdo);
 $dataController = new DataController($pdo);
 $friendsController = new FriendsController($pdo);
-$duelController = new DuelController($pdo, GEMINI_API_KEY);
+$duelController = new DuelController($pdo, $geminiApi);
 $questController = new QuestController($pdo);
 
 // Genel Hata Yakalama
