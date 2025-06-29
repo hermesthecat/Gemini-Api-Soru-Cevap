@@ -13,23 +13,13 @@ Projenin mevcut çok kullanıcılı SPA yapısı, üzerine yeni özellikler inş
 
 **Fayda:** Tekrar oynanabilirliği artırır ve farklı bilgi türlerini test eder.
 
-## 2. Admin Paneli
-
-**Fikir:** Veritabanındaki `users` tablosunda bulunan `role` ('admin', 'user') alanını işlevsel hale getirmek. Admin rolüne sahip kullanıcılar giriş yaptığında, normal kullanıcı arayüzünden farklı olarak basit bir yönetim paneli görebilir. Bu panelde:
-
-- Tüm kullanıcıları listeleme, silme veya rollerini değiştirme.
-- Genel site istatistiklerini (toplam soru, toplam kullanıcı vb.) görme.
-- Belki belirli bir kullanıcının puanını sıfırlama gibi özellikler olabilir.
-
-**Fayda:** Uygulamanın yönetimini kolaylaştırır ve yöneticiye tam kontrol sağlar.
-
-## 3. Progressive Web App (PWA) Yetenekleri
+## 2. Progressive Web App (PWA) Yetenekleri
 
 **Fikir:** Projeye bir `manifest.json` dosyası ve bir `service worker` (`sw.js`) ekleyerek temel PWA yetenekleri kazandırmak. Bu sayede kullanıcılar uygulamayı telefonlarının veya bilgisayarlarının ana ekranına bir kısayol olarak ekleyebilir.
 
 **Fayda:** Uygulamaya daha "yerel" bir uygulama hissi verir ve erişilebilirliği artırır. Gelecekte çevrimdışı çalışma gibi özelliklerin de önünü açar.
 
-## 4. Ses Efektleri ve Ayarları
+## 3. Ses Efektleri ve Ayarları
 
 **Fikir:** Doğru/yanlış cevaplar, süre bitimi gibi olaylar için basit ses efektleri eklemek. Kullanıcıların bu sesleri açıp kapatabileceği bir ayar butonu da sunulmalıdır.
 

@@ -4,6 +4,7 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 
 ## Özellikler
 
+- **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için kullanıcıları (rol değiştirme, silme) ve genel site istatistiklerini yönetebilecekleri özel bir arayüz.
 - **Kullanıcı Kayıt ve Giriş Sistemi:** Güvenli `password_hash` ile şifreleme ve PHP session yönetimi sayesinde kullanıcılar kendi hesaplarını oluşturabilir.
 - **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
 - **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
@@ -52,24 +53,24 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 3. **Veritabanını ve Tabloları Kurun:**
     - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını ve gerekli tüm tabloları (`users`, `leaderboard`, `user_stats`) otomatik olarak oluşturacaktır.
+    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `leaderboard`, `user_stats`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
 
 4. **Uygulamayı Başlatın:**
     - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.
-    - Artık yeni bir kullanıcı kaydedebilir veya giriş yapabilirsiniz.
+    - Artık yeni bir kullanıcı kaydedebilir veya `admin` hesabıyla giriş yapabilirsiniz.
 
 ## Dosya Yapısı
 
 ```bash
 .
-├── api.php             # Backend: Kullanıcı, oyun ve veri işlemlerini yöneten API.
+├── api.php             # Backend: Kullanıcı, oyun, admin ve veri işlemlerini yöneten API.
 ├── assets/
 │   ├── css/style.css   # Özel CSS stilleri.
 │   └── js/app.js       # Frontend: Tüm uygulama mantığını yöneten ana JS dosyası.
 ├── config.php          # Veritabanı ve API anahtarı yapılandırması.
 ├── GeminiAPI.php       # Google Gemini API ile iletişimi yöneten sınıf.
-├── index.php           # Ana HTML iskeleti ve uygulamanın başlangıç noktası.
-├── install.php         # Veritabanını ve tabloları oluşturan kurulum betiği.
+├── index.php           # Ana HTML iskeleti, oyun ve admin paneli görünümlerini içerir.
+├── install.php         # Veritabanını, tabloları ve admin kullanıcısını oluşturan kurulum betiği.
 └── README.md           # Bu dosya.
 ```
 
@@ -79,15 +80,17 @@ Uygulama, modern bir SPA mimarisiyle çalışır:
 
 1. **Başlatma:** Kullanıcı `index.php`'yi açtığında, `app.js` çalışır ve `api.php`'ye bir `check_session` isteği göndererek aktif bir oturum olup olmadığını kontrol eder.
 2. **Oturum Yönetimi:**
-    - **Oturum Varsa:** `api.php` kullanıcı bilgilerini döndürür. Frontend, ana uygulama ekranını (`main-view`) gösterir, kullanıcıyı karşılar ve verileri (istatistikler, liderlik tablosu) yükler.
+    - **Oturum Varsa:** `api.php` kullanıcı bilgilerini (`id`, `username`, `role`) döndürür.
+        - **Kullanıcı 'admin' ise:** Frontend, Yönetim Panelini (`admin-view`) gösterir. Panel için gerekli veriler (kullanıcı listesi, genel istatistikler) API'den çekilir.
+        - **Kullanıcı 'user' ise:** Frontend, ana uygulama ekranını (`main-view`) gösterir, kullanıcıyı karşılar ve verileri (kişisel istatistikler, liderlik tablosu) yükler.
     - **Oturum Yoksa:** Frontend, giriş/kayıt formlarının olduğu `auth-view`'ı gösterir.
-3. **Kayıt/Giriş:** Kullanıcı formları doldurduğunda `app.js`, bilgileri `api.php`'ye gönderir. `api.php` veritabanında kullanıcıyı kontrol eder/oluşturur ve başarılı girişte bir `$_SESSION` başlatır.
-4. **Oyun Akışı:**
-    - Kullanıcı bir kategori seçer ve `api.php`'nin `get_question` endpoint'inden bir soru istenir. Bu endpoint artık oturum korumalıdır.
+3. **Admin İşlemleri:** Admin, panel üzerinden bir kullanıcının rolünü değiştirdiğinde veya bir kullanıcıyı sildiğinde, `app.js` ilgili `admin_*` endpoint'ini çağırır ve başarılı olursa arayüzü günceller.
+4. **Oyun Akışı:** (Normal kullanıcılar veya admin "Oyuncu Görünümü"ne geçtiğinde)
+    - Kullanıcı bir kategori seçer ve `api.php`'nin `get_question` endpoint'inden bir soru istenir.
     - `api.php`, Gemini'den soruyu alır, doğru cevabı ve açıklamayı sunucu tarafında `$_SESSION`'a kaydeder ve sadece soruyu/seçenekleri ön uca gönderir.
     - Kullanıcı cevabını `submit_answer` endpoint'ine gönderir.
     - `api.php`, cevabı `$_SESSION`'daki doğru cevapla karşılaştırır, puanı hesaplar ve kullanıcının `user_stats` ve `leaderboard` tablolarındaki verilerini günceller.
-5. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve `get_user_data`, `get_leaderboard` endpoint'lerini çağırarak en güncel istatistik ve liderlik tablosu verilerini ekrana yansıtır.
+5. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve en güncel istatistik/liderlik tablosu verilerini ekrana yansıtır.
 
 ## Ekran Görüntüleri
 
