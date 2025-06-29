@@ -12,12 +12,12 @@ const auth = {
                 username: e.target.elements['login-username'].value,
                 password: e.target.elements['login-password'].value
             });
-            
+
             if (result && result.success) {
                 this.ui.showToast('Giriş başarılı, hoş geldiniz!', 'success');
                 // Başarılı girişi ana uygulamaya bildir
                 document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result.data }));
-            } else if(result && result.message) {
+            } else if (result && result.message) {
                 // Sunucudan gelen özel hata mesajlarını göster (örn. "Şifre hatalı")
                 this.ui.showToast(result.message, 'error');
             }
@@ -29,7 +29,7 @@ const auth = {
                 username: e.target.elements['register-username'].value,
                 password: e.target.elements['register-password'].value
             });
-            
+
             if (result && result.success) {
                 this.ui.showToast(result.message, 'success');
                 this.dom.showLoginBtn.click(); // Kayıt sonrası giriş sekmesini göster
@@ -40,7 +40,7 @@ const auth = {
 
         this.dom.logoutBtn.addEventListener('click', async () => {
             const result = await api.call('logout');
-            if(result && result.success) {
+            if (result && result.success) {
                 // Başarılı çıkışı ana uygulamaya bildir
                 document.dispatchEvent(new Event('logoutSuccess'));
                 this.ui.showToast('Başarıyla çıkış yapıldı.', 'success');

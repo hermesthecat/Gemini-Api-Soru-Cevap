@@ -35,7 +35,7 @@ class FriendsController
             LIMIT 10
         ");
         $stmt->execute(["%$search_term%", $current_user_id, $current_user_id, $current_user_id]);
-        
+
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
@@ -171,4 +171,4 @@ class FriendsController
 
         return ['success' => false, 'message' => 'İşlem başarısız.'];
     }
-} 
+}

@@ -80,6 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Düello Listesi
         duelsList: document.getElementById('duels-list'),
         noDuels: document.getElementById('no-duels'),
+        // Günlük Görevler
+        dailyQuestsContainer: document.getElementById('daily-quests-container'),
+        dailyQuestsList: document.getElementById('daily-quests-list'),
+        dailyQuestsLoading: document.getElementById('daily-quests-loading'),
         // Düello Oyun Ekranı
         duelGameView: document.getElementById('duel-game-view'),
         duelGameOpponentName: document.getElementById('duel-game-opponent-name'),
@@ -116,13 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tüm modülleri DOM elementleriyle başlat
             // Modüller ihtiyaç duydukları diğer modüllere (örn: appState, ui) global olarak erişir.
             ui.init(dom);
-            auth.init(dom); 
+            auth.init(dom);
             game.init(dom);
             statsHandler.init(dom);
             adminHandler.init(dom);
             settingsHandler.init(dom);
             friendsHandler.init(dom);
             duelHandler.init(dom);
+            questHandler.init(dom);
 
             // Özel olayları dinle
             this.addEventListeners();
@@ -154,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
             appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', { fiftyFifty: 1, extraTime: 1, pass: 1 });
-            
+
             game.updateLifelineUI();
             ui.renderWelcomeMessage(userData.username);
             ui.toggleAdminButton(userData.role === 'admin');
@@ -164,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statsHandler.updateAll();
             statsHandler.startLeaderboardUpdates();
             friendsHandler.updateAll();
+            questHandler.updateQuests();
         },
 
         onLogout() {
@@ -182,10 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.showView('main-view');
             statsHandler.updateAll();
             friendsHandler.updateAll();
+            questHandler.updateQuests();
         },
 
         async onAnswerSubmitted(e) {
-            const { new_achievements } = e.detail;
+            const { new_achievements, completed_quests } = e.detail;
+
+            // Tamamlanan görevler için bildirim göster
+            questHandler.handleQuestCompletion(completed_quests);
 
             // Önce istatistikleri ve arkaplan listesini güncelle
             statsHandler.updateUserData();
@@ -193,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Eğer yeni bir başarım kazanıldıysa, modal ile göster
             if (new_achievements && new_achievements.length > 0) {
-                 // Diğer işlemlerin devam etmesi için modal gösterimini geciktir
+                // Diğer işlemlerin devam etmesi için modal gösterimini geciktir
                 setTimeout(async () => {
                     for (const achievement of new_achievements) {
                         this.onPlaySound({ detail: { sound: 'achievement' } });

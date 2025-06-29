@@ -6,7 +6,8 @@ Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk se
 
 - **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için kullanıcıları (rol değiştirme, silme) ve genel site istatistiklerini yönetebilecekleri özel bir arayüz.
 - **Arkadaşlık Sistemi:** Kullanıcılar birbirlerini arkadaş olarak ekleyebilir, istek gönderip alabilir ve arkadaşlarını listeleyebilir.
-- **Meydan Okuma (Düello) Modu (Geliştiriliyor):** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
+- **Meydan Okuma (Düello) Modu:** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
+- **Günlük Görevler:** Kullanıcıların her gün tamamlayarak ekstra puan kazanabileceği "5 tarih sorusu çöz" gibi dinamik olarak atanan görevler.
 - **Kullanıcı Kayıt ve Giriş Sistemi:** Güvenli `password_hash` ile şifreleme ve PHP session yönetimi sayesinde kullanıcılar kendi hesaplarını oluşturabilir.
 - **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
 - **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
@@ -57,7 +58,7 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
 
 3. **Veritabanını ve Tabloları Kurun:**
     - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
+    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`, `quests`, `user_quests`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
 
 4. **Uygulamayı Başlatın:**
     - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.

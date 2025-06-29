@@ -19,7 +19,7 @@ const duelHandler = (() => {
 
     const setupDuel = (duelData) => {
         const currentUser = appState.get('currentUser');
-        const opponent = duelData.challenger_id === currentUser.id 
+        const opponent = duelData.challenger_id === currentUser.id
             ? { id: duelData.opponent_id, username: duelData.opponent_name }
             : { id: duelData.challenger_id, username: duelData.challenger_name };
 
@@ -54,24 +54,24 @@ const duelHandler = (() => {
             answer: answer
         });
 
-        if(result.success) {
+        if (result.success) {
             const { is_correct, correct_answer, explanation, is_last_question, final_state } = result.data;
-            
-            if(is_correct) {
+
+            if (is_correct) {
                 duelState.myScore += 10;
             }
 
             ui.showDuelAnswerResult(answer, correct_answer, explanation, duelState.myScore);
-            
-            if(is_last_question){
-                 // Son soru ise, backend zaten durumu güncelledi.
-                 // Özet ekranını göstermek için kısa bir gecikme.
+
+            if (is_last_question) {
+                // Son soru ise, backend zaten durumu güncelledi.
+                // Özet ekranını göstermek için kısa bir gecikme.
                 setTimeout(() => {
                     endDuel(final_state);
                 }, 2000);
             } else {
                 // Son soru değilse, "Sıradaki Soru" butonunu göster
-                 ui.toggleDuelNextButton(true);
+                ui.toggleDuelNextButton(true);
             }
         } else {
             ui.showToast(result.message, 'error');
@@ -81,12 +81,12 @@ const duelHandler = (() => {
             }, 2000);
         }
     };
-    
+
     const nextQuestion = () => {
         duelState.currentQuestionIndex++;
         if (duelState.currentQuestionIndex < duelState.questions.length) {
             displayCurrentQuestion();
-             ui.toggleDuelNextButton(false);
+            ui.toggleDuelNextButton(false);
         }
     };
 
@@ -94,7 +94,7 @@ const duelHandler = (() => {
         // Düellonun en son halini sunucudan alıp göstermek daha güvenilir olabilir.
         // Ama şimdilik final_state'i kullanabiliriz.
         await friendsHandler.updateDuelsList(); // Arka planda listeyi güncelle
-        
+
         ui.renderDuelSummary(duelState, finalState);
     };
 
@@ -107,10 +107,10 @@ const duelHandler = (() => {
         });
 
         dom.duelNextQuestionBtn?.addEventListener('click', nextQuestion);
-        
+
         dom.duelBackToFriendsBtn?.addEventListener('click', () => {
-             document.dispatchEvent(new Event('showMainView'));
-             ui.showTab('arkadaslar');
+            document.dispatchEvent(new Event('showMainView'));
+            ui.showTab('arkadaslar');
         });
     };
 

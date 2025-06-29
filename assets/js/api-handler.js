@@ -26,7 +26,7 @@ const api = (() => {
         try {
             const url = `api.php${method === 'GET' ? '?action=' + action : ''}`;
             const response = await fetch(url, options);
-            
+
             // fetch API'si 4xx/5xx gibi HTTP hatalarında exception fırlatmaz.
             // Bu yüzden response.ok durumunu kontrol etmeliyiz.
             if (!response.ok) {

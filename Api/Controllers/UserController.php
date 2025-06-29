@@ -68,7 +68,7 @@ class UserController
             // Rate Limiting Kontrolü
             $lockout_time = 15 * 60; // 15 dakika
             $max_attempts = 5;
-            
+
             if ($user['failed_login_attempts'] >= $max_attempts) {
                 $time_since_last = time() - strtotime($user['last_login_attempt']);
                 if ($time_since_last < $lockout_time) {
@@ -95,8 +95,8 @@ class UserController
                 'success' => true,
                 'message' => 'Giriş başarılı!',
                 'data' => [
-                    'id' => $user['id'], 
-                    'username' => $user['username'], 
+                    'id' => $user['id'],
+                    'username' => $user['username'],
                     'role' => $user['role'],
                     'csrf_token' => $csrf_token
                 ]
@@ -127,8 +127,8 @@ class UserController
                 'success' => true,
                 'message' => 'Oturum aktif.',
                 'data' => [
-                    'id' => $_SESSION['user_id'], 
-                    'username' => $_SESSION['username'], 
+                    'id' => $_SESSION['user_id'],
+                    'username' => $_SESSION['username'],
                     'role' => $_SESSION['user_role'],
                     'csrf_token' => $csrf_token
                 ]

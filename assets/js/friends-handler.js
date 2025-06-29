@@ -43,7 +43,7 @@ const friendsHandler = (() => {
             ui.renderPendingRequests(result.data);
         }
     };
-    
+
     const respondToRequest = async (requestId, response) => {
         const result = await api.call('friends_respond_to_request', { request_id: requestId, response });
         ui.showToast(result.message, result.success ? 'success' : 'error');
@@ -171,7 +171,7 @@ const friendsHandler = (() => {
         // Düello Yanıtlama
         dom.duelsList?.addEventListener('click', (e) => {
             const button = e.target.closest('.duel-action-btn');
-            if(button) {
+            if (button) {
                 const duelId = button.dataset.duelId;
                 const action = button.dataset.action;
                 if (action === 'accept' || action === 'decline') {

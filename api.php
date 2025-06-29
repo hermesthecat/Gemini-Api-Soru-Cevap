@@ -19,6 +19,7 @@ require_once 'Api/Controllers/AdminController.php';
 require_once 'Api/Controllers/DataController.php';
 require_once 'Api/Controllers/FriendsController.php';
 require_once 'Api/Controllers/DuelController.php';
+require_once 'Api/Controllers/QuestController.php';
 
 session_start();
 header('Content-Type: application/json');
@@ -52,6 +53,7 @@ $adminController = new AdminController($pdo);
 $dataController = new DataController($pdo);
 $friendsController = new FriendsController($pdo);
 $duelController = new DuelController($pdo, GEMINI_API_KEY);
+$questController = new QuestController($pdo);
 
 // Genel Hata Yakalama
 try {
@@ -93,6 +95,9 @@ try {
         'duel_respond' => [$duelController, 'respondToDuel', true, true],
         'duel_start_game' => [$duelController, 'startDuelGame', true, true],
         'duel_submit_answer' => [$duelController, 'submitDuelAnswer', true, true],
+
+        // Quest Routes
+        'get_daily_quests' => [$questController, 'getDailyQuests', false, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---
@@ -124,7 +129,6 @@ try {
         http_response_code(404); // Not Found
         $response = ['success' => false, 'message' => "Belirtilen aksiyon ('$action') geçersiz."];
     }
-
 } catch (PDOException $e) {
     // Veritabanı ile ilgili kritik hatalar
     error_log("Veritabanı Hatası: " . $e->getMessage()); // Hataları log dosyasına yaz

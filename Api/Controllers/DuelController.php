@@ -34,10 +34,10 @@ class DuelController
         $prompt_method = new ReflectionMethod('GameController', 'generatePrompt');
         $prompt_method->setAccessible(true);
         $prompt = $prompt_method->invoke($gameController, 'coktan_secmeli', $category, $difficulty, $question_count);
-        
+
         $yanit = $this->gemini->soruSor($prompt);
         if (!$yanit) {
-             return ['success' => false, 'message' => "Düello soruları oluşturulamadı. API'den yanıt alınamadı."];
+            return ['success' => false, 'message' => "Düello soruları oluşturulamadı. API'den yanıt alınamadı."];
         }
 
         $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
@@ -55,9 +55,8 @@ class DuelController
                  VALUES (?, ?, ?, ?, 'pending', ?)"
             );
             $stmt->execute([$challenger_id, $opponent_id, $category, $difficulty, json_encode($sorular)]);
-            
-            return ['success' => true, 'message' => 'Meydan okuma gönderildi! Rakibinin kabul etmesi bekleniyor.'];
 
+            return ['success' => true, 'message' => 'Meydan okuma gönderildi! Rakibinin kabul etmesi bekleniyor.'];
         } catch (PDOException $e) {
             error_log("Duel creation DB error: " . $e->getMessage());
             return ['success' => false, 'message' => 'Meydan okuma oluşturulurken bir veritabanı hatası oluştu.'];
@@ -155,18 +154,18 @@ class DuelController
         if (!in_array($duel['status'], ['active', 'challenger_completed', 'opponent_completed'])) {
             return ['success' => false, 'message' => 'Bu düello şu anda oynanabilir durumda değil. (' . $duel['status'] . ')'];
         }
-        
+
         // Eğer rakip sırasını oynamışsa ve sıra bizdeyse
         if ($duel['status'] === 'challenger_completed' && !$is_opponent) {
-             return ['success' => false, 'message' => 'Sıra rakibinizde.'];
+            return ['success' => false, 'message' => 'Sıra rakibinizde.'];
         }
         if ($duel['status'] === 'opponent_completed' && !$is_challenger) {
-             return ['success' => false, 'message' => 'Sıra rakibinizde.'];
+            return ['success' => false, 'message' => 'Sıra rakibinizde.'];
         }
 
 
         $questions = json_decode($duel['questions'], true);
-        
+
         // Cevapları ve açıklamaları client'a göndermeden önce temizle
         $sanitized_questions = array_map(function ($q) {
             unset($q['dogru_cevap']);
@@ -201,7 +200,7 @@ class DuelController
             $duel = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$duel) {
-                 $this->pdo->rollBack();
+                $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'Düello bulunamadı.'];
             }
 
@@ -209,10 +208,10 @@ class DuelController
             $is_challenger = $duel['challenger_id'] == $user_id;
             $is_opponent = $duel['opponent_id'] == $user_id;
             if (!$is_challenger && !$is_opponent) {
-                 $this->pdo->rollBack();
+                $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'Bu düelloya erişim yetkiniz yok.'];
             }
-            
+
             $answers_column = $is_challenger ? 'challenger_answers' : 'opponent_answers';
             $user_has_submitted_this_question = false;
             if ($duel[$answers_column]) {
@@ -223,8 +222,8 @@ class DuelController
             } else {
                 $current_answers = [];
             }
-             
-            if($user_has_submitted_this_question){
+
+            if ($user_has_submitted_this_question) {
                 $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'Bu soruyu zaten cevapladınız.'];
             }
@@ -232,19 +231,19 @@ class DuelController
 
             $questions = json_decode($duel['questions'], true);
             if (!isset($questions[$question_index])) {
-                 $this->pdo->rollBack();
+                $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'Geçersiz soru indeksi.'];
             }
 
             $question = $questions[$question_index];
             $is_correct = ($user_answer === $question['dogru_cevap']);
-            
+
             // Kullanıcının cevabını kaydet
             $current_answers[$question_index] = [
                 'answer' => $user_answer,
                 'is_correct' => $is_correct
             ];
-            
+
             $stmt_update_answers = $this->pdo->prepare("UPDATE duels SET $answers_column = ? WHERE id = ?");
             $stmt_update_answers->execute([json_encode($current_answers), $duel_id]);
 
@@ -273,34 +272,35 @@ class DuelController
             return ['success' => false, 'message' => 'Cevap işlenirken bir veritabanı hatası oluştu.'];
         }
     }
-    
+
     /**
      * Bir oyuncu 5 soruyu da cevapladığında sırasını tamamlar, skoru ve durumu günceller.
      * Bu fonksiyon bir transaction içinde çağrılmalıdır.
      */
-    private function finalizeTurn($duel_id, $user_id) {
+    private function finalizeTurn($duel_id, $user_id)
+    {
         // En güncel durumu almak için düelloyu tekrar çek.
         $stmt = $this->pdo->prepare("SELECT * FROM duels WHERE id = ? FOR UPDATE");
         $stmt->execute([$duel_id]);
         $duel = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         $is_challenger = $duel['challenger_id'] == $user_id;
 
         $answers_column = $is_challenger ? 'challenger_answers' : 'opponent_answers';
         $score_column = $is_challenger ? 'challenger_score' : 'opponent_score';
-        
+
         $answers = json_decode($duel[$answers_column], true);
         $score = 0;
-        foreach($answers as $ans) {
+        foreach ($answers as $ans) {
             if ($ans['is_correct']) {
                 $score += 10;
             }
         }
-        
+
         // Yeni durumu belirle
         $new_status = $duel['status'];
         $opponent_answers_column = $is_challenger ? 'opponent_answers' : 'challenger_answers';
-        
+
         if ($duel[$opponent_answers_column] !== null) {
             // Rakip zaten bitirmiş, bu son hamle.
             $new_status = 'completed';
@@ -314,7 +314,7 @@ class DuelController
         if ($new_status === 'completed') {
             $opponent_score_column = $is_challenger ? 'opponent_score' : 'challenger_score';
             $opponent_score = $duel[$opponent_score_column];
-            
+
             if ($score > $opponent_score) {
                 $winner_id = $user_id;
             } else if ($opponent_score > $score) {
@@ -323,7 +323,7 @@ class DuelController
                 $winner_id = 0; // 0 ID'sini berabere olarak kullanalım. NULL da olabilir.
             }
         }
-        
+
         // Skoru, durumu ve kazananı güncelle
         $sql = "UPDATE duels SET $score_column = ?, status = ?, winner_id = ? WHERE id = ?";
         $stmt_update = $this->pdo->prepare($sql);
@@ -331,4 +331,4 @@ class DuelController
 
         return ['new_status' => $new_status, 'my_score' => $score];
     }
-} 
+}

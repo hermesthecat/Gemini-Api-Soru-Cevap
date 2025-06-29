@@ -119,6 +119,16 @@
                                 <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
                                 <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Zor</button>
                             </div>
+
+                            <!-- Günlük Görevler -->
+                            <div id="daily-quests-container" class="mt-6 pt-6 border-t dark:border-gray-700">
+                                <h3 class="text-lg font-semibold mb-3 text-center dark:text-white">Günlük Görevler</h3>
+                                <div id="daily-quests-list" class="space-y-3">
+                                    <!-- Görevler JS ile doldurulacak -->
+                                    <p id="daily-quests-loading" class="text-gray-500 dark:text-gray-400 text-center">Görevler yükleniyor...</p>
+                                </div>
+                            </div>
+
                             <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center dark:text-white dark:border-gray-700">Kategori Seçin</h2>
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
                                 <!-- Kategori butonları JS ile doldurulacak -->
@@ -187,7 +197,7 @@
                                     <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz veri yok.</p>
                                 </div>
                             </div>
-                             <div id="leaderboard-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                            <div id="leaderboard-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                                 <h2 class="text-xl font-semibold mb-4 dark:text-white">Liderlik Tablosu</h2>
                                 <ol id="leaderboard-list" class="space-y-3">
                                     <!-- JS ile doldurulacak -->
@@ -322,7 +332,7 @@
                         <p id="duel-game-progress" class="text-xl font-bold text-blue-500">Soru 1 / 5</p>
                     </div>
                 </div>
-                 <div id="duel-game-scores" class="mt-4 pt-4 border-t dark:border-gray-700 flex justify-around text-center">
+                <div id="duel-game-scores" class="mt-4 pt-4 border-t dark:border-gray-700 flex justify-around text-center">
                     <div>
                         <p id="duel-my-username" class="font-semibold"></p>
                         <p id="duel-my-score" class="text-2xl font-bold text-green-500">0</p>
@@ -346,7 +356,7 @@
                     <button id="duel-next-question-btn" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-8 rounded-lg transition-colors">Sıradaki Soru</button>
                 </div>
             </main>
-            
+
             <div id="duel-summary-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mt-6 text-center">
                 <h2 id="duel-summary-title" class="text-3xl font-bold mb-4">Düello Bitti!</h2>
                 <div id="duel-summary-icon" class="text-6xl mb-4"></div>
@@ -404,7 +414,7 @@
             <p class="mb-6 text-gray-600 dark:text-gray-400">
                 <strong id="duel-opponent-name" class="text-blue-500"></strong> adlı arkadaşına meydan okumak için bir kategori ve zorluk seç.
             </p>
-            
+
             <div class="space-y-4">
                 <div>
                     <label for="duel-category-select" class="block mb-2 text-sm font-medium dark:text-gray-300">Kategori</label>
@@ -447,6 +457,7 @@
     <script src="assets/js/settings-handler.js"></script>
     <script src="assets/js/friends-handler.js"></script>
     <script src="assets/js/duel-handler.js"></script>
+    <script src="assets/js/quest-handler.js"></script>
     <script src="assets/js/app.js"></script>
 </body>
 

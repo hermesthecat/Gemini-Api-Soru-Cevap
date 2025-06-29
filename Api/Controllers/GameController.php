@@ -67,10 +67,19 @@ class GameController
         if (!$is_correct) {
             $_SESSION['consecutive_correct'] = 0;
         }
-        
+
         $this->updateStatsAndScore($kategori, $difficulty, $gecen_sure, $is_correct);
 
         $yeni_basarimlar = $is_correct ? $this->checkAchievements($kategori, $difficulty) : [];
+
+        // Görev ilerlemesini kontrol et (sadece doğru cevapta)
+        $yeni_gorevler = [];
+        if ($is_correct) {
+            require_once 'QuestController.php'; // Statik metot için dahil et
+            $yeni_gorevler = QuestController::checkAndUpdateQuestProgress($this->pdo, $_SESSION['user_id'], 'solve_category', $kategori);
+            $yeni_gorevler_zorluk = QuestController::checkAndUpdateQuestProgress($this->pdo, $_SESSION['user_id'], 'solve_difficulty', $difficulty);
+            $yeni_gorevler = array_merge($yeni_gorevler, $yeni_gorevler_zorluk);
+        }
 
         $response = [
             'success' => true,
@@ -78,7 +87,8 @@ class GameController
                 'is_correct' => $is_correct,
                 'correct_answer' => $_SESSION['current_question_answer'],
                 'explanation' => $_SESSION['current_question_explanation'],
-                'new_achievements' => $yeni_basarimlar
+                'new_achievements' => $yeni_basarimlar,
+                'completed_quests' => $yeni_gorevler
             ]
         ];
 
@@ -193,7 +203,7 @@ class GameController
         $format_aciklama_dogru_yanlis = '{\"tip\": \"dogru_yanlis\", \"soru\": \"(Önerme cümlesi buraya)\", \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\", \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"}';
 
         if ($adet > 1) {
-             return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, birbirinden farklı {$adet} adet soru hazırla. Soruların yarısı çoktan seçmeli, diğer yarısı doğru/yanlış formatında olabilir. Yanıtı yalnızca geçerli bir JSON dizisi formatında, başka hiçbir metin olmadan ver. Örnek format: [{$format_aciklama_coktan_secmeli}, {$format_aciklama_dogru_yanlis}]";
+            return "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, birbirinden farklı {$adet} adet soru hazırla. Soruların yarısı çoktan seçmeli, diğer yarısı doğru/yanlış formatında olabilir. Yanıtı yalnızca geçerli bir JSON dizisi formatında, başka hiçbir metin olmadan ver. Örnek format: [{$format_aciklama_coktan_secmeli}, {$format_aciklama_dogru_yanlis}]";
         }
 
         if ($tip === 'coktan_secmeli') {

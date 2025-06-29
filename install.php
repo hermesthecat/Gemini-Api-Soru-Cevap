@@ -30,7 +30,7 @@ try {
 
   // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
   echo "Mevcut tablolar temizleniyor...\n";
-  $pdo->exec("DROP TABLE IF EXISTS `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
+  $pdo->exec("DROP TABLE IF EXISTS `user_quests`, `quests`, `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
   echo "Eski tablolar başarıyla silindi.\n\n";
 
   echo "Yeni tablolar oluşturuluyor...\n";
@@ -92,6 +92,40 @@ try {
   ";
   $pdo->exec($sql_duels);
   echo "Tablo 'duels' başarıyla oluşturuldu.\n";
+
+  // `quests` tablosu
+  $sql_quests = "
+    CREATE TABLE `quests` (
+        `quest_key` VARCHAR(50) PRIMARY KEY,
+        `name` VARCHAR(100) NOT NULL,
+        `description_template` VARCHAR(255) NOT NULL COMMENT 'e.g., ''{goal} {target} sorusu çöz''',
+        `type` ENUM('solve_category', 'solve_difficulty', 'consecutive_days', 'win_duels') NOT NULL,
+        `target` VARCHAR(50) DEFAULT NULL COMMENT 'e.g., ''tarih'' or ''zor''',
+        `default_goal` INT NOT NULL,
+        `reward_points` INT NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  ";
+  $pdo->exec($sql_quests);
+  echo "Tablo 'quests' başarıyla oluşturuldu.\n";
+
+  // `user_quests` tablosu
+  $sql_user_quests = "
+    CREATE TABLE `user_quests` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `quest_key` VARCHAR(50) NOT NULL,
+        `progress` INT NOT NULL DEFAULT 0,
+        `goal` INT NOT NULL,
+        `is_completed` BOOLEAN NOT NULL DEFAULT FALSE,
+        `assigned_date` DATE NOT NULL,
+        `completed_at` TIMESTAMP NULL DEFAULT NULL,
+        UNIQUE KEY `user_quest_date` (`user_id`, `quest_key`, `assigned_date`),
+        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+        FOREIGN KEY (`quest_key`) REFERENCES `quests`(`quest_key`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  ";
+  $pdo->exec($sql_user_quests);
+  echo "Tablo 'user_quests' başarıyla oluşturuldu.\n";
 
   // `leaderboard` tablosu (users tablosuna bağlı)
   $sql_leaderboard = "
@@ -156,34 +190,50 @@ try {
   // --- Başarım Verilerini Veritabanına Ekle ---
   echo "\nBaşarım verileri veritabanına ekleniyor...\n";
   $achievements_data = [
-      ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
-      ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
-      ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
-      ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
-      ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
-      ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
-      ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
-      ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
-      ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
-      ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
-      ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
-      ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
-      ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
-      ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
-      ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
-      ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
-      ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
-      ['uzman_coğrafya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
-      ['kusursuz_coğrafya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
-      ['uzman_genel kültür', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
-      ['kusursuz_genel kültür', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
+    ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
+    ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
+    ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
+    ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
+    ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
+    ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
+    ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
+    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
+    ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
+    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
+    ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
+    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
+    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
+    ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
+    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
+    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
+    ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
+    ['uzman_coğrafya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
+    ['kusursuz_coğrafya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
+    ['uzman_genel kültür', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
+    ['kusursuz_genel kültür', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
   ];
 
   $stmt_ach_insert = $pdo->prepare("INSERT INTO achievements (achievement_key, name, description, icon, color) VALUES (?, ?, ?, ?, ?)");
   foreach ($achievements_data as $ach) {
-      $stmt_ach_insert->execute($ach);
+    $stmt_ach_insert->execute($ach);
   }
   echo count($achievements_data) . " adet başarım veritabanına eklendi.\n";
+
+  // --- Görev Verilerini Veritabanına Ekle ---
+  echo "\nGörev verileri veritabanına ekleniyor...\n";
+  $quests_data = [
+    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25],
+    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25],
+    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50],
+    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30]
+  ];
+
+  $stmt_quest_insert = $pdo->prepare("INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  foreach ($quests_data as $quest) {
+    $stmt_quest_insert->execute($quest);
+  }
+  echo count($quests_data) . " adet görev veritabanına eklendi.\n";
 
   // --- Varsayılan Admin Kullanıcısını Oluştur ---
   echo "\nVarsayılan admin kullanıcısı oluşturuluyor...\n";

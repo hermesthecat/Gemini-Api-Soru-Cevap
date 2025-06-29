@@ -39,5 +39,5 @@
 
 .category-button:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }

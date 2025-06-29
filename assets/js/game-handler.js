@@ -96,14 +96,14 @@ const game = {
         clearInterval(appState.get('timerInterval'));
         this.dom.timerContainer.classList.add('hidden');
         this.dom.lifelineContainer.classList.add('hidden');
-        
+
         const result = await api.call('submit_answer', {
             answer: answer,
             kategori: appState.get('currentQuestionData').kategori
         });
 
         if (result && result.success) {
-            const { is_correct, correct_answer, explanation, new_achievements } = result.data;
+            const { is_correct, correct_answer, explanation, new_achievements, completed_quests } = result.data;
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: is_correct ? 'correct' : 'incorrect' } }));
 
             this.dom.optionsContainer.querySelectorAll('.option-button').forEach(btn => {
@@ -118,7 +118,7 @@ const game = {
             this.dom.explanationText.textContent = explanation;
             this.dom.explanationContainer.classList.remove('hidden');
 
-            document.dispatchEvent(new CustomEvent('answerSubmitted', { detail: { new_achievements } }));
+            document.dispatchEvent(new CustomEvent('answerSubmitted', { detail: { new_achievements, completed_quests } }));
 
             setTimeout(() => {
                 this.dom.questionContainer.classList.add('hidden');
@@ -126,7 +126,7 @@ const game = {
             }, 3000);
         } else {
             if (result && result.message) {
-                 this.ui.showToast(result.message, 'error');
+                this.ui.showToast(result.message, 'error');
             }
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
@@ -191,7 +191,7 @@ const game = {
             if (this.dom.lifelineFiftyFifty.disabled) return;
 
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-            
+
             const lifelines = appState.get('lifelines');
             lifelines.fiftyFifty--;
             appState.set('lifelines', lifelines);
@@ -213,7 +213,7 @@ const game = {
             if (this.dom.lifelineExtraTime.disabled) return;
 
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
-            
+
             const lifelines = appState.get('lifelines');
             lifelines.extraTime--;
             appState.set('lifelines', lifelines);

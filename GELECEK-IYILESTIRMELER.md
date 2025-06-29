@@ -68,6 +68,6 @@ Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve pot
 
 ### 6. Gelecek Fikirleri
 
-- [ ] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
+- [x] **Günlük Görevler:** "Bugün 5 tarih sorusu çöz" gibi günlük görevler ve ödüller.
 - [ ] **Farklı Soru Tipleri:** Resimli sorular, sıralama soruları gibi yeni soru formatları ekle.
 - [ ] **Avatar ve Özelleştirme:** Kullanıcıların profil fotoğrafı veya avatar seçebilmesi.

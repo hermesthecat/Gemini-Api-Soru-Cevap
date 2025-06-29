@@ -59,21 +59,21 @@ const ui = (() => {
         iconContainer.innerHTML = `<i class="fas ${achievement.icon} fa-5x text-${achievement.color}-500"></i>`;
         nameEl.textContent = achievement.name;
         descriptionEl.textContent = achievement.description;
-        
+
         // Modalı göster
         dom.achievementModal.classList.remove('hidden');
         setTimeout(() => { // Tarayıcının 'hidden' sınıfının kaldırılmasını işlemesi için kısa bir gecikme
-             dom.achievementModal.classList.remove('opacity-0');
-             dom.achievementModal.querySelector('#achievement-modal-content').classList.remove('scale-95');
+            dom.achievementModal.classList.remove('opacity-0');
+            dom.achievementModal.querySelector('#achievement-modal-content').classList.remove('scale-95');
         }, 10);
-       
+
         // Kapatma butonu
         const closeHandler = () => {
             dom.achievementModal.classList.add('opacity-0');
             dom.achievementModal.querySelector('#achievement-modal-content').classList.add('scale-95');
             setTimeout(() => {
-                 dom.achievementModal.classList.add('hidden');
-                 closeBtn.removeEventListener('click', closeHandler);
+                dom.achievementModal.classList.add('hidden');
+                closeBtn.removeEventListener('click', closeHandler);
             }, 300); // animasyon süresiyle eşleşmeli
         };
         closeBtn.addEventListener('click', closeHandler);
@@ -127,20 +127,20 @@ const ui = (() => {
             achievements.forEach(ach => {
                 const isAchieved = ach.achieved_at !== null;
                 const achElement = document.createElement('div');
-                
+
                 achElement.className = `w-full flex items-start p-4 rounded-lg transition-colors duration-200 ${isAchieved ? 'bg-yellow-50 dark:bg-yellow-900/50' : 'bg-gray-100 dark:bg-gray-800/60'}`;
-                
+
                 const iconContainer = document.createElement('div');
                 iconContainer.className = `flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full mr-4 ${isAchieved ? `bg-${ach.color}-100 dark:bg-${ach.color}-900` : 'bg-gray-200 dark:bg-gray-700'}`;
-                
+
                 const icon = document.createElement('i');
                 icon.className = `fas ${isAchieved ? ach.icon : 'fa-lock'} fa-lg ${isAchieved ? `text-${ach.color}-500` : 'text-gray-400'}`;
-                
+
                 iconContainer.appendChild(icon);
 
                 const textContainer = document.createElement('div');
                 textContainer.className = 'flex-grow';
-                
+
                 const name = document.createElement('h4');
                 name.className = `font-bold ${isAchieved ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}`;
                 name.textContent = ach.name;
@@ -148,17 +148,17 @@ const ui = (() => {
                 const description = document.createElement('p');
                 description.className = `text-sm ${isAchieved ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`;
                 description.textContent = ach.description;
-                
+
                 const date = document.createElement('p');
-                if(isAchieved){
+                if (isAchieved) {
                     date.className = 'text-xs text-gray-500 dark:text-gray-500 mt-1';
                     date.textContent = `Kazanıldı: ${new Date(ach.achieved_at).toLocaleDateString()}`;
                 }
 
                 textContainer.appendChild(name);
                 textContainer.appendChild(description);
-                if(isAchieved) textContainer.appendChild(date);
-                
+                if (isAchieved) textContainer.appendChild(date);
+
                 achElement.appendChild(iconContainer);
                 achElement.appendChild(textContainer);
 
@@ -178,24 +178,24 @@ const ui = (() => {
         leaderboardData.forEach((player, index) => {
             const li = document.createElement('li');
             li.className = 'flex justify-between items-center text-sm p-2 rounded-md';
-            
+
             const playerDiv = document.createElement('div');
             playerDiv.className = 'flex items-center';
-            
+
             const rankSpan = document.createElement('span');
             rankSpan.className = 'font-bold w-6';
             rankSpan.textContent = `${index + 1}.`;
-            
+
             const nameSpan = document.createElement('span');
             nameSpan.textContent = player.username;
-            
+
             playerDiv.appendChild(rankSpan);
             playerDiv.appendChild(nameSpan);
-            
+
             const scoreSpan = document.createElement('span');
             scoreSpan.className = 'font-semibold text-blue-500';
             scoreSpan.textContent = player.score;
-            
+
             li.appendChild(playerDiv);
             li.appendChild(scoreSpan);
 
@@ -288,7 +288,7 @@ const ui = (() => {
             tr.appendChild(roleCell);
             tr.appendChild(dateCell);
             tr.appendChild(actionsCell);
-            
+
             dom.adminUserListBody.appendChild(tr);
         });
     };
@@ -315,7 +315,7 @@ const ui = (() => {
 
     const renderPendingRequests = (requests) => {
         if (!dom.pendingRequestsList || !dom.noPendingRequests) return;
-        
+
         dom.pendingRequestsList.innerHTML = '';
         dom.noPendingRequests.classList.toggle('hidden', requests.length > 0);
 
@@ -382,7 +382,7 @@ const ui = (() => {
             dom.duelOpponentName.textContent = opponent.name || '';
             // Butona ileride data-* attribute eklemek için saklayalım
             dom.duelSendChallengeBtn.dataset.opponentId = opponent.id || '';
-            
+
             populateDuelCategories();
 
             dom.duelModal.classList.remove('hidden');
@@ -429,16 +429,16 @@ const ui = (() => {
                     break;
                 case 'active':
                     statusText = `<span class="text-blue-500">Düello aktif!</span>`;
-                     buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Oyna!</button>`;
+                    buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Oyna!</button>`;
                     break;
                 case 'challenger_completed':
                 case 'opponent_completed':
-                     statusText = `<span class="text-purple-500">Rakibin bitirmesi bekleniyor...</span>`;
-                     // Eğer sırası gelen bizsek Oyna butonu göster
-                     const userHasPlayed = (isChallenger && duel.status === 'challenger_completed') || (!isChallenger && duel.status === 'opponent_completed');
-                     if (!userHasPlayed) {
-                         buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Sıra Sende!</button>`;
-                     }
+                    statusText = `<span class="text-purple-500">Rakibin bitirmesi bekleniyor...</span>`;
+                    // Eğer sırası gelen bizsek Oyna butonu göster
+                    const userHasPlayed = (isChallenger && duel.status === 'challenger_completed') || (!isChallenger && duel.status === 'opponent_completed');
+                    if (!userHasPlayed) {
+                        buttons = `<button data-duel-id="${duel.id}" data-action="play" class="duel-action-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg transition-colors">Sıra Sende!</button>`;
+                    }
                     break;
                 case 'completed':
                     if (duel.winner_id === null) {
@@ -453,7 +453,7 @@ const ui = (() => {
                 case 'declined':
                     statusText = `<span class="text-gray-400">Meydan okuma reddedildi.</span>`;
                     break;
-                 case 'expired':
+                case 'expired':
                     statusText = `<span class="text-gray-400">Zaman aşımına uğradı.</span>`;
                     break;
             }
@@ -481,7 +481,7 @@ const ui = (() => {
         dom.duelGameOpponentName.textContent = duelState.opponent.username;
         dom.duelMyUsername.textContent = currentUser.username;
         dom.duelMyScore.textContent = '0';
-        
+
         // Önceki oyunlardan kalanları temizle
         dom.duelQuestionContainer.classList.remove('hidden');
         dom.duelSummaryContainer.classList.add('hidden');
@@ -501,13 +501,13 @@ const ui = (() => {
             btn.innerHTML = text;
             return btn;
         };
-        
+
         if (question.tip === 'dogru_yanlis') {
             dom.duelOptionsContainer.className = 'grid grid-cols-1 gap-4 items-center';
             dom.duelOptionsContainer.appendChild(createButton('Doğru', 'Doğru'));
             dom.duelOptionsContainer.appendChild(createButton('Yanlış', 'Yanlış'));
         } else {
-             dom.duelOptionsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 items-center';
+            dom.duelOptionsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 items-center';
             Object.entries(question.siklar).forEach(([key, value]) => {
                 dom.duelOptionsContainer.appendChild(createButton(`<span class="font-semibold">${key}</span>) ${value}`, key));
             });
@@ -519,10 +519,10 @@ const ui = (() => {
             btn.disabled = true;
         });
     };
-    
+
     const showDuelAnswerResult = (userAnswer, correctAnswer, explanation, myScore) => {
         dom.duelMyScore.textContent = myScore;
-        
+
         dom.duelOptionsContainer.querySelectorAll('.duel-option-button').forEach(btn => {
             if (btn.dataset.answer === correctAnswer) {
                 btn.classList.add('bg-green-200', 'dark:bg-green-500', 'font-semibold');
@@ -543,7 +543,7 @@ const ui = (() => {
         // En güncel düello listesini almak için API'den veriyi çekelim.
         const result = await api.call('duel_get_duels', {}, 'POST', false);
         let finalDuelData = null;
-        if(result.success) {
+        if (result.success) {
             finalDuelData = result.data.find(d => d.id === duelState.id);
         }
 
@@ -572,7 +572,7 @@ const ui = (() => {
             dom.duelSummaryMyScore.className = "text-4xl text-blue-500";
             dom.duelSummaryOpponentScore.className = "text-4xl text-gray-500";
         } else {
-             if (finalDuelData.winner_id === currentUser.id) {
+            if (finalDuelData.winner_id === currentUser.id) {
                 dom.duelSummaryTitle.textContent = "Kazandın!";
                 dom.duelSummaryIcon.innerHTML = `<i class="fas fa-trophy text-yellow-500"></i>`;
                 dom.duelSummaryText.textContent = `Tebrikler, bu düellonun galibi sensin!`;
@@ -582,7 +582,7 @@ const ui = (() => {
                 dom.duelSummaryTitle.textContent = "Berabere!";
                 dom.duelSummaryIcon.innerHTML = `<i class="fas fa-handshake text-gray-500"></i>`;
                 dom.duelSummaryText.textContent = `İkiniz de harikaydınız! Sonuç berabere.`;
-                 dom.duelSummaryMyScore.className = "text-4xl text-gray-500";
+                dom.duelSummaryMyScore.className = "text-4xl text-gray-500";
                 dom.duelSummaryOpponentScore.className = "text-4xl text-gray-500";
             } else {
                 dom.duelSummaryTitle.textContent = "Kaybettin";
@@ -592,6 +592,41 @@ const ui = (() => {
                 dom.duelSummaryOpponentScore.className = "text-4xl text-green-500";
             }
         }
+    };
+
+    const renderQuests = (quests) => {
+        if (!dom.dailyQuestsList || !dom.dailyQuestsLoading) return;
+
+        dom.dailyQuestsLoading.classList.add('hidden');
+        dom.dailyQuestsList.innerHTML = '';
+
+        if (!quests || quests.length === 0) {
+            dom.dailyQuestsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Bugün için görev bulunmuyor.</p>';
+            return;
+        }
+
+        quests.forEach(quest => {
+            const progressPercent = quest.goal > 0 ? (quest.progress / quest.goal) * 100 : 0;
+            const isCompleted = quest.is_completed;
+
+            const questEl = document.createElement('div');
+            questEl.className = `p-3 rounded-lg ${isCompleted ? 'bg-green-50 dark:bg-green-900/40' : 'bg-gray-100 dark:bg-gray-800/60'}`;
+
+            questEl.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-sm text-gray-700 dark:text-gray-200">${quest.name}</span>
+                    ${isCompleted
+                    ? `<span class="text-green-500 font-bold flex items-center text-sm"><i class="fas fa-check-circle mr-1"></i> Tamamlandı!</span>`
+                    : `<span class="text-xs font-medium text-gray-500 dark:text-gray-400">${quest.progress} / ${quest.goal}</span>`
+                }
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">${quest.description}</p>
+                <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                </div>
+            `;
+            dom.dailyQuestsList.appendChild(questEl);
+        });
     };
 
     return {
@@ -618,6 +653,8 @@ const ui = (() => {
         disableDuelOptions,
         showDuelAnswerResult,
         toggleDuelNextButton,
-        renderDuelSummary
+        renderDuelSummary,
+        // Quests
+        renderQuests
     };
 })(); 
