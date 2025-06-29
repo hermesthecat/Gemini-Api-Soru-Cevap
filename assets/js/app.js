@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mainTabs: document.getElementById('main-tabs'),
         yarışmaTab: document.getElementById('yarışma-tab'),
         profilTab: document.getElementById('profil-tab'),
+        arkadaslarTab: document.getElementById('arkadaslar-tab'),
         // Game
         gameContainer: document.getElementById('game-container'),
         categorySelectionContainer: document.getElementById('category-selection-container'),
@@ -62,6 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
         notificationText: document.getElementById('notification-text'),
         // Başarım Modalı
         achievementModal: document.getElementById('achievement-modal'),
+        // Arkadaşlar Sekmesi
+        friendSearchInput: document.getElementById('friend-search-input'),
+        friendSearchResults: document.getElementById('friend-search-results'),
+        pendingRequestsList: document.getElementById('pending-requests-list'),
+        noPendingRequests: document.getElementById('no-pending-requests'),
+        friendsList: document.getElementById('friends-list'),
+        noFriends: document.getElementById('no-friends'),
         // Sesler
         correctSound: document.getElementById('correct-sound'),
         incorrectSound: document.getElementById('incorrect-sound'),
@@ -82,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statsHandler.init(dom);
             adminHandler.init(dom);
             settingsHandler.init(dom);
+            friendsHandler.init(dom);
 
             // Özel olayları dinle
             this.addEventListeners();
@@ -98,6 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('showMainView', this.onShowMainView);
             document.addEventListener('answerSubmitted', this.onAnswerSubmitted);
             document.addEventListener('playSound', this.onPlaySound);
+            document.addEventListener('tabChanged', this.onTabChanged);
+
+            dom.mainTabs?.addEventListener('click', (e) => {
+                const tabButton = e.target.closest('.main-tab-button');
+                if (tabButton && tabButton.dataset.tab) {
+                    ui.showTab(tabButton.dataset.tab);
+                }
+            });
         },
 
         onLoginSuccess(e) {
@@ -110,9 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.renderWelcomeMessage(userData.username);
             ui.toggleAdminButton(userData.role === 'admin');
             ui.showView('main-view');
+            ui.showTab('yarışma');
 
             statsHandler.updateAll();
             statsHandler.startLeaderboardUpdates();
+            friendsHandler.updateAll();
         },
 
         onLogout() {
@@ -130,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         onShowMainView() {
             ui.showView('main-view');
             statsHandler.updateAll();
+            friendsHandler.updateAll();
         },
 
         async onAnswerSubmitted(e) {
@@ -158,6 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 sound.currentTime = 0;
                 sound.play();
             }
+        },
+
+        onTabChanged(e) {
+            const tabId = e.detail.tabId;
+            if (tabId === 'arkadaslar') {
+                friendsHandler.updateAll();
+            } else if (tabId === 'profil') {
+                statsHandler.updateAll();
+            }
+            // Diğer sekmeler için de güncellemeler buraya eklenebilir
         }
     };
 

@@ -82,6 +82,7 @@ const ui = (() => {
         // Tüm sekme içeriklerini gizle
         dom.yarışmaTab?.classList.add('hidden');
         dom.profilTab?.classList.add('hidden');
+        dom.arkadaslarTab?.classList.add('hidden');
 
         // İlgili sekme içeriğini göster
         const tabToShow = document.getElementById(`${tabId}-tab`);
@@ -101,6 +102,9 @@ const ui = (() => {
             activeButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-500', 'dark:border-blue-500');
             activeButton.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300');
         }
+
+        // Sekme değişimi olayını tetikle
+        document.dispatchEvent(new CustomEvent('tabChanged', { detail: { tabId } }));
     };
 
     const renderWelcomeMessage = (username) => {
@@ -288,6 +292,77 @@ const ui = (() => {
         });
     };
 
+    const renderFriendSearchResults = (users) => {
+        if (!dom.friendSearchResults) return;
+        dom.friendSearchResults.innerHTML = '';
+        if (users.length === 0) {
+            dom.friendSearchResults.innerHTML = '<p class="text-sm text-gray-500">Kullanıcı bulunamadı.</p>';
+            return;
+        }
+        users.forEach(user => {
+            const userEl = document.createElement('div');
+            userEl.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
+            userEl.innerHTML = `
+                <span class="font-semibold text-gray-700 dark:text-gray-300">${user.username}</span>
+                <button data-user-id="${user.id}" class="add-friend-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-1"></i> Ekle
+                </button>
+            `;
+            dom.friendSearchResults.appendChild(userEl);
+        });
+    };
+
+    const renderPendingRequests = (requests) => {
+        if (!dom.pendingRequestsList || !dom.noPendingRequests) return;
+        
+        dom.pendingRequestsList.innerHTML = '';
+        dom.noPendingRequests.classList.toggle('hidden', requests.length > 0);
+
+        requests.forEach(req => {
+            const reqEl = document.createElement('div');
+            reqEl.className = 'flex items-center justify-between p-2';
+            reqEl.innerHTML = `
+                <span class="font-semibold text-gray-700 dark:text-gray-300">${req.username}</span>
+                <div class="space-x-2">
+                    <button data-request-id="${req.request_id}" data-action="accept" class="request-action-btn text-sm bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded-lg transition-colors" title="Kabul Et">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button data-request-id="${req.request_id}" data-action="decline" class="request-action-btn text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg transition-colors" title="Reddet">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            dom.pendingRequestsList.appendChild(reqEl);
+        });
+    };
+
+    const renderFriendsList = (friends) => {
+        if (!dom.friendsList || !dom.noFriends) return;
+
+        dom.friendsList.innerHTML = '';
+        dom.noFriends.classList.toggle('hidden', friends.length > 0);
+
+        friends.forEach(friend => {
+            const friendEl = document.createElement('div');
+            friendEl.className = 'flex items-center justify-between p-2 even:bg-gray-50 dark:even:bg-gray-700/50 rounded-lg';
+            friendEl.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-semibold text-gray-800 dark:text-gray-200">${friend.username}</span>
+                    <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
+                </div>
+                <div class="space-x-2">
+                     <button disabled class="text-sm bg-gray-400 text-white py-1 px-3 rounded-lg cursor-not-allowed" title="Meydan Oku (Yakında)">
+                        <i class="fas fa-fist-raised"></i>
+                    </button>
+                    <button data-friendship-id="${friend.friendship_id}" data-username="${friend.username}" class="remove-friend-btn text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg transition-colors" title="Arkadaşlıktan Çıkar">
+                        <i class="fas fa-user-minus"></i>
+                    </button>
+                </div>
+            `;
+            dom.friendsList.appendChild(friendEl);
+        });
+    };
+
     return {
         init,
         showView,
@@ -300,6 +375,9 @@ const ui = (() => {
         renderLeaderboard,
         renderUserData,
         renderAdminDashboard,
-        renderAdminUserList
+        renderAdminUserList,
+        renderFriendSearchResults,
+        renderPendingRequests,
+        renderFriendsList
     };
 })(); 

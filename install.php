@@ -30,7 +30,7 @@ try {
 
   // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
   echo "Mevcut tablolar temizleniyor...\n";
-  $pdo->exec("DROP TABLE IF EXISTS `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
+  $pdo->exec("DROP TABLE IF EXISTS `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`;");
   echo "Eski tablolar başarıyla silindi.\n\n";
 
   echo "Yeni tablolar oluşturuluyor...\n";
@@ -49,6 +49,24 @@ try {
     ";
   $pdo->exec($sql_users);
   echo "Tablo 'users' (rate limiting sütunları ile) başarıyla oluşturuldu.\n";
+
+  // `friends` tablosu
+  $sql_friends = "
+    CREATE TABLE `friends` (
+      `id` INT AUTO_INCREMENT PRIMARY KEY,
+      `user_one_id` INT NOT NULL,
+      `user_two_id` INT NOT NULL,
+      `status` ENUM('pending', 'accepted', 'declined', 'blocked') NOT NULL,
+      `action_user_id` INT NOT NULL COMMENT 'Son aksiyonu yapan kullanıcının IDsi',
+      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (`user_one_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      FOREIGN KEY (`user_two_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+      UNIQUE KEY `unique_friendship` (`user_one_id`, `user_two_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  ";
+  $pdo->exec($sql_friends);
+  echo "Tablo 'friends' başarıyla oluşturuldu.\n";
 
   // `leaderboard` tablosu (users tablosuna bağlı)
   $sql_leaderboard = "

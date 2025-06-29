@@ -17,6 +17,7 @@ require_once 'Api/Controllers/UserController.php';
 require_once 'Api/Controllers/GameController.php';
 require_once 'Api/Controllers/AdminController.php';
 require_once 'Api/Controllers/DataController.php';
+require_once 'Api/Controllers/FriendsController.php';
 
 session_start();
 header('Content-Type: application/json');
@@ -48,6 +49,7 @@ $userController = new UserController($pdo);
 $gameController = new GameController($pdo, GEMINI_API_KEY);
 $adminController = new AdminController($pdo);
 $dataController = new DataController($pdo);
+$friendsController = new FriendsController($pdo);
 
 // Genel Hata Yakalama
 try {
@@ -74,6 +76,14 @@ try {
         'admin_get_all_users' => [$adminController, 'getAllUsers', false, true],
         'admin_delete_user' => [$adminController, 'deleteUser', true, true],
         'admin_update_user_role' => [$adminController, 'updateUserRole', true, true],
+
+        // Friends Routes
+        'friends_search_users' => [$friendsController, 'searchUsers', true, true],
+        'friends_send_request' => [$friendsController, 'sendRequest', true, true],
+        'friends_get_pending_requests' => [$friendsController, 'getPendingRequests', false, true],
+        'friends_respond_to_request' => [$friendsController, 'respondToRequest', true, true],
+        'friends_get_list' => [$friendsController, 'getFriendsList', false, true],
+        'friends_remove' => [$friendsController, 'removeFriend', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---
