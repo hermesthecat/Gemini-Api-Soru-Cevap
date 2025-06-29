@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Bilgi Yarışması (AJAX)</title>
+    <title>AI Bilgi Yarışması</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <script>
-        // Sayfa yanıp sönmesini (FOUC) önlemek için temayı en başta uygula
-        if (localStorage.quizAppState && JSON.parse(localStorage.quizAppState).theme === 'dark' || (!('theme' in JSON.parse(localStorage.quizAppState || '{}')) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // Tema yönetimi için FOUC önleyici betik
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark')
         } else {
             document.documentElement.classList.remove('dark')
@@ -18,153 +18,157 @@
     </script>
 </head>
 
-<body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200 font-sans">
 
-    <!-- Loading Overlay -->
+    <!-- Ana Konteyner -->
+    <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
+
+        <!-- ===== GİRİŞ VE KAYIT EKRANI (Başlangıçta görünebilir) ===== -->
+        <div id="auth-view" class="hidden">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">AI Bilgi Yarışması</h1>
+                <p class="text-gray-600 dark:text-gray-400">Bilginizi konuşturmak için giriş yapın veya kayıt olun.</p>
+            </div>
+            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
+                <!-- Form Geçiş Butonları -->
+                <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                    <button id="show-login-btn" class="flex-1 py-2 font-semibold border-b-2 border-blue-500 text-blue-500">Giriş Yap</button>
+                    <button id="show-register-btn" class="flex-1 py-2 font-semibold text-gray-500">Kayıt Ol</button>
+                </div>
+
+                <!-- Giriş Formu -->
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
+                        <input type="text" id="login-username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre</label>
+                        <input type="password" id="login-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Giriş Yap</button>
+                </form>
+
+                <!-- Kayıt Formu -->
+                <form id="register-form" class="hidden">
+                    <div class="mb-4">
+                        <label for="register-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
+                        <input type="text" id="register-username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="register-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre (min. 6 karakter)</label>
+                        <input type="password" id="register-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Kayıt Ol</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== ANA UYGULAMA EKRANI (Giriş yapıldığında görünür) ===== -->
+        <div id="main-view" class="hidden">
+            <!-- Üst Bar -->
+            <header class="flex justify-between items-center mb-6">
+                <div id="user-info" class="font-semibold">
+                    <span id="welcome-message"></span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
+                        <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
+                        <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
+                    </button>
+                    <button id="sound-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
+                        <i id="sound-on-icon" class="fas fa-volume-up hidden"></i>
+                        <i id="sound-off-icon" class="fas fa-volume-mute hidden"></i>
+                    </button>
+                    <button id="logout-btn" class="text-sm bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-lg transition-colors">Çıkış Yap</button>
+                </div>
+            </header>
+
+            <!-- İçerik Alanı (Yarışma, İstatistikler, Liderlik Tablosu) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Sol Taraf (Yarışma) -->
+                <main id="game-container" class="lg:col-span-2 space-y-8">
+                    <!-- Kategori Seçim Alanı -->
+                    <div id="category-selection-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-center dark:text-white">Zorluk Seçin</h2>
+                        <div class="flex justify-center mb-6 space-x-2" id="difficulty-buttons">
+                            <button data-zorluk="kolay" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Kolay</button>
+                            <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
+                            <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Zor</button>
+                        </div>
+                        <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center dark:text-white dark:border-gray-700">Kategori Seçin</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
+                            <!-- Kategori butonları JS ile doldurulacak -->
+                        </div>
+                    </div>
+
+                    <!-- Soru Alanı -->
+                    <div id="question-container" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span id="question-category" class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm"></span>
+                            <div id="timer-container" class="text-lg font-bold">Kalan Süre: <span id="countdown" class="text-blue-600">30</span></div>
+                        </div>
+                        <div class="text-gray-700 dark:text-gray-300 mb-4">
+                            <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
+                            <p id="question-text"></p>
+                        </div>
+                        <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center"></div>
+                        <div id="explanation-container" class="hidden mt-6 p-4 bg-blue-50 dark:bg-gray-700/50 border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-800 dark:text-blue-300 mb-1">Açıklama</h4>
+                            <p id="explanation-text" class="text-blue-700 dark:text-blue-400"></p>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- Sağ Taraf (İstatistik ve Liderlik) -->
+                <aside class="space-y-8">
+                    <!-- İstatistikler -->
+                    <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Kişisel İstatistikler</h2>
+                        <div class="text-center mb-4 border-b dark:border-gray-700 pb-4">
+                            <p class="text-gray-500 dark:text-gray-400">Toplam Puan</p>
+                            <p id="user-total-score" class="text-3xl font-bold text-blue-600">0</p>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-3 dark:text-white">Kategori Detayları</h3>
+                        <div id="category-stats-container" class="max-h-60 overflow-y-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                                    <tr>
+                                        <th class="py-2 px-2">Kategori</th>
+                                        <th class="py-2 px-2 text-center">Soru</th>
+                                        <th class="py-2 px-2 text-center">Doğru</th>
+                                        <th class="py-2 px-2 text-center">%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="category-stats-body">
+                                    <!-- JS ile doldurulacak -->
+                                </tbody>
+                            </table>
+                            <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz veri yok.</p>
+                        </div>
+                    </div>
+                    <!-- Liderlik Tablosu -->
+                    <div id="leaderboard-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h2 class="text-xl font-semibold mb-4 dark:text-white">Liderlik Tablosu</h2>
+                        <ol id="leaderboard-list" class="space-y-3">
+                            <!-- JS ile doldurulacak -->
+                        </ol>
+                        <p id="leaderboard-loading" class="text-gray-500 dark:text-gray-400 text-center py-4">Yükleniyor...</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- Genel Yükleme ve Bildirim Alanları -->
     <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50">
         <div class="flex items-center text-white">
             <i class="fas fa-spinner fa-spin text-4xl mr-4"></i>
             <span class="text-2xl font-semibold" id="loading-text">Yükleniyor...</span>
         </div>
     </div>
-
-    <!-- Answer Feedback Overlay -->
-    <div id="answer-feedback-overlay" class="hidden fixed inset-0 flex items-center justify-center z-40">
-        <div id="answer-feedback-box" class="p-8 rounded-lg text-white text-3xl font-bold"></div>
-    </div>
-
-
-    <div class="container mx-auto px-4 py-8 max-w-4xl relative">
-        <!-- Ayarlar Bölümü -->
-        <div class="absolute top-4 right-4 z-10 flex space-x-2">
-            <!-- Theme Switcher -->
-            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
-                <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
-                <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
-            </button>
-            <!-- Sound Switcher -->
-            <button id="sound-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
-                <i id="sound-on-icon" class="fas fa-volume-up hidden"></i>
-                <i id="sound-off-icon" class="fas fa-volume-mute hidden"></i>
-            </button>
-        </div>
-
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">AI Bilgi Yarışması (AJAX)</h1>
-            <p class="text-gray-600 dark:text-gray-400">Bilginizi test edin! Sayfa yenilenmeden...</p>
-        </div>
-
-        <!-- Hata Mesajı Alanı -->
-        <div id="error-container" class="hidden bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4 mb-6" role="alert">
-            <p class="font-bold">Bir Sorun Oluştu</p>
-            <p id="error-message"></p>
-        </div>
-
-        <!-- Timer -->
-        <div id="timer-container" class="hidden fixed top-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 text-center">
-            <div class="text-xl font-bold">Kalan Süre</div>
-            <div id="countdown" class="text-2xl text-blue-600">30</div>
-        </div>
-
-        <!-- Ana İçerik Alanı -->
-        <main id="main-content">
-            <!-- Kategori Seçim Alanı -->
-            <div id="category-selection-container">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-                    <h2 class="text-xl font-semibold mb-4 text-center dark:text-white">Zorluk Seçin</h2>
-                    <div class="flex justify-center mb-6 space-x-2" id="difficulty-buttons">
-                        <button data-zorluk="kolay" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Kolay</button>
-                        <button data-zorluk="orta" class="difficulty-button px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold transition-colors">Orta</button>
-                        <button data-zorluk="zor" class="difficulty-button px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Zor</button>
-                    </div>
-
-                    <h2 class="text-xl font-semibold mb-4 border-t pt-6 text-center dark:text-white dark:border-gray-700">Kategori Seçin</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="category-buttons">
-                        <button data-kategori="tarih" class="category-button bg-blue-100 hover:bg-blue-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-history mb-2"></i><span class="block">Tarih</span></button>
-                        <button data-kategori="spor" class="category-button bg-green-100 hover:bg-green-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-futbol mb-2"></i><span class="block">Spor</span></button>
-                        <button data-kategori="bilim" class="category-button bg-purple-100 hover:bg-purple-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-atom mb-2"></i><span class="block">Bilim</span></button>
-                        <button data-kategori="sanat" class="category-button bg-yellow-100 hover:bg-yellow-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-palette mb-2"></i><span class="block">Sanat</span></button>
-                        <button data-kategori="coğrafya" class="category-button bg-red-100 hover:bg-red-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-globe-americas mb-2"></i><span class="block">Coğrafya</span></button>
-                        <button data-kategori="genel kültür" class="category-button bg-indigo-100 hover:bg-indigo-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg"><i class="fas fa-brain mb-2"></i><span class="block">Genel Kültür</span></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Soru Alanı -->
-            <div id="question-container" class="hidden">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-                    <div class="flex justify-between items-center mb-4">
-                        <span id="question-category" class="inline-block bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded-full text-sm"></span>
-                        <button id="change-category-button" class="text-sm text-blue-600 hover:underline">Kategori Değiştir</button>
-                    </div>
-                    <div class="text-gray-700 dark:text-gray-300 mb-4">
-                        <h3 class="text-xl font-semibold mb-2 dark:text-white">Soru:</h3>
-                        <p id="question-text"></p>
-                    </div>
-                    <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                        <!-- Şıklar buraya dinamik olarak eklenecek -->
-                    </div>
-                    <!-- Cevap Açıklaması Alanı -->
-                    <div id="explanation-container" class="hidden mt-6 p-4 bg-blue-50 dark:bg-gray-700/50 border-l-4 border-blue-400 dark:border-blue-500">
-                        <h4 class="font-bold text-blue-800 dark:text-blue-300 mb-1">Açıklama</h4>
-                        <p id="explanation-text" class="text-blue-700 dark:text-blue-400"></p>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- İstatistikler ve Geçmiş -->
-        <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-8">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold dark:text-white">İstatistikleriniz</h2>
-                <button id="reset-stats-button" class="text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg transition-colors">Sıfırla</button>
-            </div>
-            <!-- Genel İstatistikler -->
-            <div class="grid grid-cols-3 gap-4 text-center mb-6 border-b dark:border-gray-700 pb-6">
-                <div>
-                    <p id="total-questions" class="text-2xl font-bold">0</p>
-                    <p class="text-gray-500 dark:text-gray-400">Toplam Soru</p>
-                </div>
-                <div>
-                    <p id="correct-answers" class="text-2xl font-bold text-green-600">0</p>
-                    <p class="text-gray-500 dark:text-gray-400">Doğru Cevap</p>
-                </div>
-                <div>
-                    <p id="success-rate" class="text-2xl font-bold text-blue-600">0%</p>
-                    <p class="text-gray-500 dark:text-gray-400">Başarı Oranı</p>
-                </div>
-            </div>
-
-            <!-- Kategori Bazlı İstatistikler -->
-            <div id="category-stats-container">
-                <h3 class="text-lg font-semibold mb-3 dark:text-white">Kategori Detayları</h3>
-                <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>
-                <table id="stats-table" class="w-full text-left hidden">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="py-3 px-4">Kategori</th>
-                            <th scope="col" class="py-3 px-4 text-center">Toplam</th>
-                            <th scope="col" class="py-3 px-4 text-center">Doğru</th>
-                            <th scope="col" class="py-3 px-4 text-center">Başarı</th>
-                        </tr>
-                    </thead>
-                    <tbody id="category-stats-body">
-                        <!-- Kategori istatistikleri buraya dinamik olarak eklenecek -->
-                    </tbody>
-                </table>
-            </div>
-
-            <h3 class="text-lg font-semibold mb-3 border-t pt-4 dark:text-white dark:border-gray-700 mt-6">Son Cevaplananlar</h3>
-            <div id="history-container" class="space-y-4">
-                <p class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer class="text-center text-gray-500 dark:text-gray-400 text-sm mt-8">
-            <p>© 2024 AI Bilgi Yarışması (AJAX). Tüm hakları saklıdır.</p>
-        </footer>
+    <div id="notification-toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg text-sm">
+        <p id="notification-text"></p>
     </div>
 
     <!-- Ses Efektleri -->

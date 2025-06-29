@@ -1,489 +1,407 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM Elementleri ---
-    const rootHtml = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-    const soundToggle = document.getElementById('sound-toggle');
-    const soundOnIcon = document.getElementById('sound-on-icon');
-    const soundOffIcon = document.getElementById('sound-off-icon');
-    const correctSound = document.getElementById('correct-sound');
-    const incorrectSound = document.getElementById('incorrect-sound');
-    const timeoutSound = document.getElementById('timeout-sound');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingText = document.getElementById('loading-text');
-    const errorContainer = document.getElementById('error-container');
-    const errorMessage = document.getElementById('error-message');
-    const categorySelectionContainer = document.getElementById('category-selection-container');
-    const questionContainer = document.getElementById('question-container');
-    const statsContainer = document.getElementById('stats-container');
-    const categoryButtons = document.getElementById('category-buttons');
-    const difficultyButtons = document.getElementById('difficulty-buttons');
-    const questionCategory = document.getElementById('question-category');
-    const changeCategoryButton = document.getElementById('change-category-button');
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const timerContainer = document.getElementById('timer-container');
-    const countdownEl = document.getElementById('countdown');
-    const resetStatsButton = document.getElementById('reset-stats-button');
-    const answerFeedbackOverlay = document.getElementById('answer-feedback-overlay');
-    const answerFeedbackBox = document.getElementById('answer-feedback-box');
-    const explanationContainer = document.getElementById('explanation-container');
-    const explanationText = document.getElementById('explanation-text');
 
-
-    // --- Uygulama Durumu (State) ---
-    let state = {
-        stats: {}, // { tarih: { total_questions: 5, correct_answers: 3 }, spor: { ... } }
-        history: [],
-        currentQuestion: null, // Mevcut soru, şıkları ve tipi tutmak için
-        difficulty: 'orta', // Varsayılan zorluk seviyesi
-        theme: 'light', // Varsayılan tema
-        soundEnabled: true // Sesler varsayılan olarak açık
+    // --- UYGULAMA DURUMU (STATE) ---
+    const state = {
+        currentUser: null, // { username: '...', role: '...' }
+        difficulty: 'orta',
+        currentCategory: null,
+        soundEnabled: true,
+        theme: 'light',
+        leaderboardInterval: null,
+        currentQuestionData: null
     };
-    let timer;
 
-    // --- Ses Fonksiyonları ---
-    const playSound = (soundElement) => {
-        if (state.soundEnabled && soundElement) {
-            soundElement.currentTime = 0;
-            soundElement.play().catch(error => console.error("Ses çalınamadı:", error));
+    // --- KATEGORİLER ---
+    const categories = {
+        'tarih': { icon: 'fa-history', color: 'blue' },
+        'spor': { icon: 'fa-futbol', color: 'green' },
+        'bilim': { icon: 'fa-atom', color: 'purple' },
+        'sanat': { icon: 'fa-palette', color: 'yellow' },
+        'coğrafya': { icon: 'fa-globe-americas', color: 'red' },
+        'genel kültür': { icon: 'fa-brain', color: 'indigo' }
+    };
+
+    // --- DOM ELEMENTLERİ ---
+    const dom = {
+        appContainer: document.getElementById('app-container'),
+        authView: document.getElementById('auth-view'),
+        mainView: document.getElementById('main-view'),
+        // Auth
+        loginForm: document.getElementById('login-form'),
+        registerForm: document.getElementById('register-form'),
+        showLoginBtn: document.getElementById('show-login-btn'),
+        showRegisterBtn: document.getElementById('show-register-btn'),
+        // Main View Header
+        welcomeMessage: document.getElementById('welcome-message'),
+        logoutBtn: document.getElementById('logout-btn'),
+        // Game
+        gameContainer: document.getElementById('game-container'),
+        categorySelectionContainer: document.getElementById('category-selection-container'),
+        questionContainer: document.getElementById('question-container'),
+        categoryButtons: document.getElementById('category-buttons'),
+        difficultyButtons: document.getElementById('difficulty-buttons'),
+        questionCategory: document.getElementById('question-category'),
+        questionText: document.getElementById('question-text'),
+        optionsContainer: document.getElementById('options-container'),
+        explanationContainer: document.getElementById('explanation-container'),
+        explanationText: document.getElementById('explanation-text'),
+        timerContainer: document.getElementById('timer-container'),
+        countdown: document.getElementById('countdown'),
+        // Stats & Leaderboard
+        userTotalScore: document.getElementById('user-total-score'),
+        categoryStatsBody: document.getElementById('category-stats-body'),
+        noStatsMessage: document.getElementById('no-stats-message'),
+        leaderboardList: document.getElementById('leaderboard-list'),
+        leaderboardLoading: document.getElementById('leaderboard-loading'),
+        // Ayarlar
+        themeToggle: document.getElementById('theme-toggle'),
+        themeToggleDarkIcon: document.getElementById('theme-toggle-dark-icon'),
+        themeToggleLightIcon: document.getElementById('theme-toggle-light-icon'),
+        soundToggle: document.getElementById('sound-toggle'),
+        soundOnIcon: document.getElementById('sound-on-icon'),
+        soundOffIcon: document.getElementById('sound-off-icon'),
+        // Genel UI
+        loadingOverlay: document.getElementById('loading-overlay'),
+        notificationToast: document.getElementById('notification-toast'),
+        notificationText: document.getElementById('notification-text'),
+        // Sesler
+        correctSound: document.getElementById('correct-sound'),
+        incorrectSound: document.getElementById('incorrect-sound'),
+        timeoutSound: document.getElementById('timeout-sound'),
+    };
+
+    // --- API İLETİŞİMİ ---
+    const apiCall = async (action, data = {}, method = 'POST') => {
+        const options = {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (method === 'POST') {
+            options.body = JSON.stringify({ action, ...data });
+        }
+        try {
+            const url = `api.php${method === 'GET' ? '?action=' + action : ''}`;
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                showToast(`Sunucu hatası: ${response.status}`, 'error');
+                return null;
+            }
+            return await response.json();
+        } catch (error) {
+            showToast('Ağ hatası, sunucuya ulaşılamıyor.', 'error');
+            console.error('API Call Error:', error);
+            return null;
         }
     };
 
-    const applySoundSetting = (enabled, isInitial = false) => {
-        state.soundEnabled = enabled;
-        if (enabled) {
-            soundOnIcon.classList.remove('hidden');
-            soundOffIcon.classList.add('hidden');
-        } else {
-            soundOffIcon.classList.remove('hidden');
-            soundOnIcon.classList.add('hidden');
-        }
-        if (!isInitial) {
-            saveStateToLocalStorage();
+    // --- UI GÜNCELLEME FONKSİYONLARI ---
+    const showView = (viewName) => {
+        dom.authView.classList.add('hidden');
+        dom.mainView.classList.add('hidden');
+        if (viewName === 'auth') dom.authView.classList.remove('hidden');
+        else if (viewName === 'main') dom.mainView.classList.remove('hidden');
+    };
+
+    const showLoading = (isLoading, text = 'Yükleniyor...') => {
+        dom.loadingOverlay.classList.toggle('hidden', !isLoading);
+        if (isLoading) dom.loadingOverlay.querySelector('#loading-text').textContent = text;
+    };
+
+    const showToast = (message, type = 'success', duration = 3000) => {
+        dom.notificationText.textContent = message;
+        dom.notificationToast.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg text-sm ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        dom.notificationToast.classList.remove('hidden');
+        setTimeout(() => dom.notificationToast.classList.add('hidden'), duration);
+    };
+
+    const updateLeaderboard = async () => {
+        const result = await apiCall('get_leaderboard', {}, 'GET');
+        if (result && result.success) {
+            dom.leaderboardLoading.classList.add('hidden');
+            dom.leaderboardList.innerHTML = '';
+            result.data.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center text-sm p-2 rounded-md';
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-bold w-6">${index + 1}.</span>
+                        <span>${player.username}</span>
+                    </div>
+                    <span class="font-semibold text-blue-500">${player.score}</span>`;
+                if (index === 0) li.classList.add('bg-yellow-100', 'dark:bg-yellow-800/50');
+                if (index === 1) li.classList.add('bg-gray-200', 'dark:bg-gray-700/50');
+                if (index === 2) li.classList.add('bg-yellow-50', 'dark:bg-yellow-900/50');
+                dom.leaderboardList.appendChild(li);
+            });
         }
     };
 
-    const handleSoundToggle = () => {
-        applySoundSetting(!state.soundEnabled);
+    const updateUserData = async () => {
+        const result = await apiCall('get_user_data', {}, 'GET');
+        if (result && result.success) {
+            const { score, stats } = result.data;
+            dom.userTotalScore.textContent = score;
+
+            dom.categoryStatsBody.innerHTML = '';
+            if (stats && stats.length > 0) {
+                dom.noStatsMessage.classList.add('hidden');
+                stats.forEach(cat => {
+                    const rate = cat.total_questions > 0 ? Math.round((cat.correct_answers / cat.total_questions) * 100) : 0;
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b dark:border-gray-700';
+                    tr.innerHTML = `
+                        <td class="py-2 px-2">${cat.category.charAt(0).toUpperCase() + cat.category.slice(1)}</td>
+                        <td class="py-2 px-2 text-center">${cat.total_questions}</td>
+                        <td class="py-2 px-2 text-center">${cat.correct_answers}</td>
+                        <td class="py-2 px-2 text-center font-bold ${rate > 60 ? 'text-green-500' : 'text-yellow-500'}">${rate}%</td>`;
+                    dom.categoryStatsBody.appendChild(tr);
+                });
+            } else {
+                dom.noStatsMessage.classList.remove('hidden');
+            }
+        }
     };
 
-
-    // --- Tema Fonksiyonları ---
+    // --- SES ve TEMA ---
+    const playSound = (sound) => state.soundEnabled && sound.play().catch(e => console.error(e));
     const applyTheme = (theme, isInitial = false) => {
         state.theme = theme;
-        if (theme === 'dark') {
-            rootHtml.classList.add('dark');
-            themeToggleLightIcon.classList.remove('hidden');
-            themeToggleDarkIcon.classList.add('hidden');
-        } else {
-            rootHtml.classList.remove('dark');
-            themeToggleDarkIcon.classList.remove('hidden');
-            themeToggleLightIcon.classList.add('hidden');
-        }
-        // Başlangıç yüklemesi değilse (yani kullanıcı butona tıkladıysa) ayarı kaydet
-        if (!isInitial) {
-            saveStateToLocalStorage();
-        }
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        dom.themeToggleLightIcon.classList.toggle('hidden', theme !== 'dark');
+        dom.themeToggleDarkIcon.classList.toggle('hidden', theme === 'dark');
+        if (!isInitial) localStorage.setItem('theme', theme);
+    };
+    const applySoundSetting = (enabled, isInitial = false) => {
+        state.soundEnabled = enabled;
+        dom.soundOnIcon.classList.toggle('hidden', !enabled);
+        dom.soundOffIcon.classList.toggle('hidden', enabled);
+        if (!isInitial) localStorage.setItem('soundEnabled', JSON.stringify(enabled));
     };
 
-    const handleThemeToggle = () => {
-        const newTheme = state.theme === 'light' ? 'dark' : 'light';
-        applyTheme(newTheme);
-    };
-
-
-    // --- LocalStorage Fonksiyonları ---
-    const saveStateToLocalStorage = () => {
-        // Sadece kalıcı olması gereken verileri kaydet
-        const persistentState = {
-            stats: state.stats,
-            history: state.history,
-            theme: state.theme,
-            soundEnabled: state.soundEnabled
-        };
-        localStorage.setItem('quizAppState', JSON.stringify(persistentState));
-    };
-
-    const loadStateFromLocalStorage = () => {
-        const savedStateJSON = localStorage.getItem('quizAppState');
-        if (savedStateJSON) {
-            const savedState = JSON.parse(savedStateJSON);
-            state.stats = savedState.stats || {};
-            state.history = savedState.history || [];
-            // Tema ve ses ayarlarını state'e yükle
-            state.theme = savedState.theme;
-            if (typeof savedState.soundEnabled === 'boolean') {
-                state.soundEnabled = savedState.soundEnabled;
-            }
-        }
-    };
-
-
-    // --- API Fonksiyonları ---
-    const apiCall = async (action, data = {}) => {
-        showLoading(true);
-        try {
-            const response = await fetch('api.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    action,
-                    ...data
-                })
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result = await response.json();
-            if (!result.success) {
-                throw new Error(result.message || 'API\'den beklenen yanıt alınamadı.');
-            }
-            return result.data;
-        } catch (error) {
-            showError(error.message);
-            console.error('API Hatası:', error);
-            return null;
-        } finally {
-            showLoading(false);
-        }
-    };
-
-    // --- UI Güncelleme Fonksiyonları ---
-    const showLoading = (isLoading, text = 'Yükleniyor...') => {
-        loadingText.textContent = text;
-        loadingOverlay.classList.toggle('hidden', !isLoading);
-    };
-
-    const showError = (message) => {
-        errorMessage.textContent = message;
-        errorContainer.classList.remove('hidden');
-    };
-
-    const clearError = () => {
-        errorContainer.classList.add('hidden');
-    };
-
-    const showView = (viewName) => {
-        categorySelectionContainer.classList.add('hidden');
-        questionContainer.classList.add('hidden');
-        if (viewName === 'categories') categorySelectionContainer.classList.remove('hidden');
-        if (viewName === 'question') questionContainer.classList.remove('hidden');
-    };
-
-    const updateStatsUI = (stats) => {
-        // Genel istatistikleri hesapla
-        let overallTotal = 0;
-        let overallCorrect = 0;
-        const categoryStatsBody = document.getElementById('category-stats-body');
-        const noStatsMessage = document.getElementById('no-stats-message');
-        const statsTable = document.getElementById('stats-table');
-
-        categoryStatsBody.innerHTML = ''; // Önceki verileri temizle
-
-        const categories = Object.keys(stats);
-
-        if (categories.length === 0) {
-            noStatsMessage.classList.remove('hidden');
-            statsTable.classList.add('hidden');
-        } else {
-            noStatsMessage.classList.add('hidden');
-            statsTable.classList.remove('hidden');
-
-            categories.sort().forEach(category => {
-                const categoryData = stats[category];
-                overallTotal += categoryData.total_questions;
-                overallCorrect += categoryData.correct_answers;
-                const rate = categoryData.total_questions > 0 ? Math.round((categoryData.correct_answers / categoryData.total_questions) * 100) : 0;
-                const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-
-                const row = `
-                    <tr class="border-b dark:border-gray-700">
-                        <td class="py-2 px-4 font-semibold">${categoryName}</td>
-                        <td class="py-2 px-4 text-center">${categoryData.total_questions}</td>
-                        <td class="py-2 px-4 text-center">${categoryData.correct_answers}</td>
-                        <td class="py-2 px-4 text-center font-bold ${rate > 60 ? 'text-green-600' : 'text-yellow-600'}">${rate}%</td>
-                    </tr>
-                `;
-                categoryStatsBody.innerHTML += row;
-            });
-        }
-
-        // Genel istatistikleri arayüzde güncelle
-        const overallRate = overallTotal > 0 ? Math.round((overallCorrect / overallTotal) * 100) : 0;
-        document.getElementById('total-questions').textContent = overallTotal;
-        document.getElementById('correct-answers').textContent = overallCorrect;
-        document.getElementById('success-rate').textContent = `${overallRate}%`;
-    };
-
-    const updateHistoryUI = (history) => {
-        const container = document.getElementById('history-container');
-        container.innerHTML = '';
-        if (!history || history.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Henüz hiç soru cevaplamadınız.</p>';
-            return;
-        }
-        history.forEach(item => {
-            const isCorrectClass = item.is_correct ?
-                'bg-green-100 dark:bg-green-900/50 border-green-500 dark:border-green-700' :
-                'bg-red-100 dark:bg-red-900/50 border-red-500 dark:border-red-700';
-
-            let userAnswerText, correctAnswerText;
-            if (item.tip === 'dogru_yanlis') {
-                userAnswerText = item.user_answer;
-                correctAnswerText = item.correct_answer;
-            } else {
-                userAnswerText = item.siklar ? (item.siklar[item.user_answer] || 'Cevap Bulunamadı') : 'Cevap Bulunamadı';
-                correctAnswerText = item.siklar ? item.siklar[item.correct_answer] : 'Doğru Cevap Bulunamadı';
-            }
-
-            const userAnswerDisplay = item.user_answer ? (item.tip === 'coktan_secmeli' ? `${item.user_answer}) ` : '') + userAnswerText : 'Süre Doldu';
-
-            let historyHtml = `
-                <div class="p-3 rounded-lg border-l-4 ${isCorrectClass}">
-                    <p class="font-semibold mb-1">${item.question}</p>
-                    <p class="text-sm">Sizin Cevabınız: <span class="font-bold">${userAnswerDisplay}</span></p>`;
-            if (!item.is_correct) {
-                const correctAnswerDisplay = (item.tip === 'coktan_secmeli' ? `${item.correct_answer}) ` : '') + correctAnswerText;
-                historyHtml += `<p class="text-sm">Doğru Cevap: <span class="font-bold">${correctAnswerDisplay}</span></p>`;
-            }
-            historyHtml += '</div>';
-            container.innerHTML += historyHtml;
-        });
-    };
-
+    // --- OYUN MANTIĞI ---
     const displayQuestion = (data) => {
-        state.currentQuestion = data; // Mevcut soruyu state'e kaydet
-        explanationContainer.classList.add('hidden'); // Yeni soruda açıklamayı gizle
-        const kategoriText = data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1);
-        const zorlukText = data.difficulty.charAt(0).toUpperCase() + data.difficulty.slice(1);
-        questionCategory.innerHTML = `${kategoriText} <span class="font-normal text-gray-500">- ${zorlukText}</span>`;
-        questionText.textContent = data.question;
-        optionsContainer.innerHTML = '';
-        optionsContainer.classList.toggle('md:grid-cols-1', data.tip === 'dogru_yanlis');
-        optionsContainer.classList.toggle('md:grid-cols-2', data.tip !== 'dogru_yanlis');
+        state.currentQuestionData = data;
+        dom.questionContainer.classList.remove('hidden');
+        dom.categorySelectionContainer.classList.add('hidden');
+        dom.explanationContainer.classList.add('hidden');
 
+        dom.questionCategory.textContent = `${data.kategori.charAt(0).toUpperCase() + data.kategori.slice(1)} - ${data.difficulty}`;
+        dom.questionText.textContent = data.question;
+        dom.optionsContainer.innerHTML = '';
 
-        if (data.tip === 'coktan_secmeli') {
-            ['A', 'B', 'C', 'D'].forEach(opt => {
-                if (data.siklar[opt]) {
-                    const button = document.createElement('button');
-                    button.className = 'option-button p-4 text-left rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700';
-                    button.dataset.answer = opt;
-                    button.innerHTML = `<span class="font-semibold">${opt}</span>) ${data.siklar[opt]}`;
-                    optionsContainer.appendChild(button);
-                }
-            });
-        } else if (data.tip === 'dogru_yanlis') {
+        if (data.tip === 'dogru_yanlis') {
+            dom.optionsContainer.className = 'grid grid-cols-1 gap-4 items-center';
             ['Doğru', 'Yanlış'].forEach(opt => {
-                const button = document.createElement('button');
-                button.className = 'option-button p-4 text-center rounded-lg border border-gray-300 hover:bg-blue-50 transition-colors dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 md:col-span-1 md:w-1/2 md:mx-auto';
-                button.dataset.answer = opt;
-                button.textContent = opt;
-                optionsContainer.appendChild(button);
+                const btn = document.createElement('button');
+                btn.className = 'option-button p-4 text-center rounded-lg border dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700 w-full md:w-1/2 mx-auto';
+                btn.dataset.answer = opt;
+                btn.textContent = opt;
+                dom.optionsContainer.appendChild(btn);
+            });
+        } else {
+            dom.optionsContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 items-center';
+            Object.entries(data.siklar).forEach(([key, value]) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-button p-4 text-left rounded-lg border dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-gray-700';
+                btn.dataset.answer = key;
+                btn.innerHTML = `<span class="font-semibold">${key}</span>) ${value}`;
+                dom.optionsContainer.appendChild(btn);
             });
         }
-
-        showView('question');
         startTimer();
     };
 
-    const showAnswerFeedback = (isCorrect) => {
-        answerFeedbackOverlay.classList.remove('hidden');
-        answerFeedbackBox.textContent = isCorrect ? 'Doğru!' : 'Yanlış!';
-        answerFeedbackBox.className = `p-8 rounded-lg text-white text-3xl font-bold answer-feedback ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`;
-        setTimeout(() => {
-            answerFeedbackOverlay.classList.add('hidden');
-        }, 2000);
-    };
-
-    // --- Zamanlayıcı Fonksiyonları ---
     const startTimer = () => {
-        clearInterval(timer);
         let timeLeft = 30;
-        countdownEl.textContent = timeLeft;
-        countdownEl.classList.remove('text-red-600');
-        timerContainer.classList.remove('hidden');
-
-        timer = setInterval(async () => {
+        dom.countdown.textContent = timeLeft;
+        dom.timerContainer.classList.remove('hidden');
+        clearInterval(state.timerInterval);
+        state.timerInterval = setInterval(async () => {
             timeLeft--;
-            countdownEl.textContent = timeLeft;
-            if (timeLeft <= 10) countdownEl.classList.add('text-red-600');
+            dom.countdown.textContent = timeLeft;
             if (timeLeft <= 0) {
-                clearInterval(timer);
-                timerContainer.classList.add('hidden');
-                showLoading(true, 'Süre Doldu!');
-                playSound(timeoutSound); // Süre bitme sesi
-                await handleAnswerSubmission('TIMEOUT'); // Süre dolduğunu belirtmek için özel bir değer
-                showLoading(false);
-                showView('categories');
+                clearInterval(state.timerInterval);
+                playSound(dom.timeoutSound);
+                await handleAnswerSubmission('TIMEOUT');
             }
         }, 1000);
     };
 
-    const stopTimer = () => {
-        clearInterval(timer);
-        timerContainer.classList.add('hidden');
-    };
-
-    // --- Olay İşleyici (Event Handler) Fonksiyonları ---
-    const handleCategorySelection = async (e) => {
-        const button = e.target.closest('.category-button');
-        if (!button) return;
-        clearError();
-        const kategori = button.dataset.kategori;
-        const data = await apiCall('get_question', {
-            kategori: kategori,
-            difficulty: state.difficulty
-        });
-        if (data) {
-            displayQuestion(data);
-        }
-    };
-
-    const handleDifficultySelection = (e) => {
-        const button = e.target.closest('.difficulty-button');
-        if (!button) return;
-
-        // State'i güncelle
-        state.difficulty = button.dataset.zorluk;
-
-        // Arayüzü güncelle
-        document.querySelectorAll('.difficulty-button').forEach(btn => {
-            btn.classList.remove('bg-blue-500', 'text-white', 'font-semibold');
-            btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
-        });
-        button.classList.add('bg-blue-500', 'text-white', 'font-semibold');
-        button.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'hover:bg-gray-300', 'dark:hover:bg-gray-600');
-    };
-
     const handleAnswerSubmission = async (answer) => {
-        stopTimer();
-        const data = await apiCall('submit_answer', {
-            answer
+        clearInterval(state.timerInterval);
+        dom.timerContainer.classList.add('hidden');
+        showLoading(true, 'Cevap kontrol ediliyor...');
+
+        const result = await apiCall('submit_answer', {
+            answer: answer,
+            kategori: state.currentQuestionData.kategori
         });
-        if (data) {
-            // --- YENİ: Gelişmiş Geri Bildirim ---
-            // Tüm butonların tıklanabilirliğini kaldır ve hover efektini sıfırla.
+        showLoading(false);
+
+        if (result && result.success) {
+            const { is_correct, correct_answer, explanation } = result.data;
+            playSound(is_correct ? dom.correctSound : dom.incorrectSound);
+
+            // Butonları renklendir
             document.querySelectorAll('.option-button').forEach(btn => {
                 btn.disabled = true;
-                btn.classList.remove('hover:bg-blue-50', 'dark:hover:bg-gray-700');
-
-                // Doğru cevabı her zaman yeşil yap
-                if (btn.dataset.answer === data.correct_answer) {
-                    btn.classList.add('bg-green-200', 'dark:bg-green-500', 'border-green-500', 'dark:border-green-400', 'font-semibold', 'dark:text-white');
-                }
-                // Kullanıcının cevabı yanlışsa, onu kırmızı yap
-                else if (btn.dataset.answer === answer && !data.is_correct) {
-                    btn.classList.add('bg-red-200', 'dark:bg-red-500', 'border-red-500', 'dark:border-red-400', 'font-semibold', 'dark:text-white');
+                if (btn.dataset.answer === correct_answer) {
+                    btn.classList.add('bg-green-200', 'dark:bg-green-500', 'font-semibold');
+                } else if (btn.dataset.answer === answer && !is_correct) {
+                    btn.classList.add('bg-red-200', 'dark:bg-red-500', 'font-semibold');
                 }
             });
 
-            // Açıklamayı göster
-            if (data.explanation) {
-                explanationText.textContent = data.explanation;
-                explanationContainer.classList.remove('hidden');
-            }
-            // --- BİTTİ: Gelişmiş Geri Bildirim ---
+            dom.explanationText.textContent = explanation;
+            dom.explanationContainer.classList.remove('hidden');
 
-            // Kategoriye özel istatistikleri güncelle
-            const category = state.currentQuestion.kategori;
-            if (!state.stats[category]) {
-                state.stats[category] = {
-                    total_questions: 0,
-                    correct_answers: 0
-                };
-            }
-            state.stats[category].total_questions++;
-            if (data.is_correct) {
-                state.stats[category].correct_answers++;
-                playSound(correctSound); // Doğru cevap sesi
-            } else {
-                playSound(incorrectSound); // Yanlış cevap sesi
-            }
-
-            // Geçmiş öğesini oluştur
-            const historyItem = {
-                tip: state.currentQuestion.tip,
-                question: state.currentQuestion.question,
-                siklar: state.currentQuestion.siklar, // Çoktan seçmeli için
-                user_answer: answer === 'TIMEOUT' ? null : answer,
-                correct_answer: data.correct_answer,
-                is_correct: data.is_correct,
-            };
-            state.history.unshift(historyItem);
-            if (state.history.length > 5) {
-                state.history.pop();
-            }
-
-            // Yeni durumu kaydet ve UI'ı güncelle
-            saveStateToLocalStorage();
-            updateStatsUI(state.stats);
-            updateHistoryUI(state.history);
-
-            showAnswerFeedback(data.is_correct);
-            setTimeout(() => showView('categories'), 2000); // 2 saniye sonra kategori seçimine dön
+            // Verileri yenile ve 3 saniye sonra yeni soruya geç
+            await updateUserData();
+            await updateLeaderboard();
+            setTimeout(() => {
+                dom.questionContainer.classList.add('hidden');
+                dom.categorySelectionContainer.classList.remove('hidden');
+            }, 3000);
         } else {
-            showView('categories'); // Hata olursa direk kategori seçimine dön
+            showToast(result.message || 'Cevap gönderilirken bir hata oluştu.', 'error');
+            dom.questionContainer.classList.add('hidden');
+            dom.categorySelectionContainer.classList.remove('hidden');
         }
-        return data; // for timeout
     };
 
-    const handleOptionClick = async (e) => {
-        const button = e.target.closest('.option-button');
-        if (!button) return;
+    // --- OLAY DİNLEYİCİLERİ (EVENT LISTENERS) ---
+    const addEventListeners = () => {
+        // Auth
+        dom.showLoginBtn.addEventListener('click', () => {
+            dom.loginForm.classList.remove('hidden');
+            dom.registerForm.classList.add('hidden');
+            dom.showLoginBtn.classList.add('border-blue-500', 'text-blue-500');
+            dom.showRegisterBtn.classList.remove('border-blue-500', 'text-blue-500');
+        });
+        dom.showRegisterBtn.addEventListener('click', () => {
+            dom.loginForm.classList.add('hidden');
+            dom.registerForm.classList.remove('hidden');
+            dom.showLoginBtn.classList.remove('border-blue-500', 'text-blue-500');
+            dom.showRegisterBtn.classList.add('border-blue-500', 'text-blue-500');
+        });
+        dom.loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(true, 'Giriş yapılıyor...');
+            const result = await apiCall('login', {
+                username: e.target.elements['login-username'].value,
+                password: e.target.elements['login-password'].value
+            });
+            showLoading(false);
+            if (result && result.success) {
+                showToast('Giriş başarılı, hoş geldiniz!', 'success');
+                initializeUserSession(result.data);
+            } else {
+                showToast(result.message || 'Giriş başarısız.', 'error');
+            }
+        });
+        dom.registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(true, 'Kayıt oluşturuluyor...');
+            const result = await apiCall('register', {
+                username: e.target.elements['register-username'].value,
+                password: e.target.elements['register-password'].value
+            });
+            showLoading(false);
+            if (result && result.success) {
+                showToast(result.message, 'success');
+                dom.showLoginBtn.click(); // Kayıt sonrası giriş sekmesine yönlendir
+            } else {
+                showToast(result.message || 'Kayıt başarısız.', 'error');
+            }
+        });
+        dom.logoutBtn.addEventListener('click', async () => {
+            await apiCall('logout');
+            state.currentUser = null;
+            clearInterval(state.leaderboardInterval);
+            showView('auth');
+            showToast('Başarıyla çıkış yapıldı.', 'success');
+        });
 
-        // Butonları pasif yap
-        document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
+        // Ayarlar
+        dom.themeToggle.addEventListener('click', () => applyTheme(state.theme === 'light' ? 'dark' : 'light'));
+        dom.soundToggle.addEventListener('click', () => applySoundSetting(!state.soundEnabled));
 
-        const answer = button.dataset.answer;
-
-        await handleAnswerSubmission(answer);
+        // Oyun
+        dom.difficultyButtons.addEventListener('click', (e) => {
+            const btn = e.target.closest('.difficulty-button');
+            if (btn) {
+                state.difficulty = btn.dataset.zorluk;
+                document.querySelectorAll('.difficulty-button').forEach(b => b.classList.remove('bg-blue-500', 'text-white'));
+                btn.classList.add('bg-blue-500', 'text-white');
+            }
+        });
+        dom.categoryButtons.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.category-button');
+            if (btn) {
+                showLoading(true, 'Soru hazırlanıyor...');
+                const result = await apiCall('get_question', {
+                    kategori: btn.dataset.kategori,
+                    difficulty: state.difficulty
+                });
+                showLoading(false);
+                if (result && result.success) {
+                    displayQuestion(result.data);
+                } else {
+                    showToast(result.message || 'Soru alınamadı.', 'error');
+                }
+            }
+        });
+        dom.optionsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.option-button');
+            if (btn) handleAnswerSubmission(btn.dataset.answer);
+        });
     };
 
-    const handleResetStats = async () => {
-        // State'i sıfırla
-        state.stats = {};
-        state.history = [];
-        // LocalStorage'ı temizle ve UI'ı güncelle
-        saveStateToLocalStorage();
-        updateStatsUI(state.stats);
-        updateHistoryUI(state.history);
+    // --- BAŞLANGIÇ FONKSİYONLARI ---
+    const initializeUserSession = (userData) => {
+        state.currentUser = userData;
+        dom.welcomeMessage.textContent = `Hoş geldin, ${userData.username}!`;
+        showView('main');
+
+        // Verileri ve liderlik tablosunu ilk kez yükle
+        updateUserData();
+        updateLeaderboard();
+
+        // Liderlik tablosunu periyodik olarak güncelle
+        state.leaderboardInterval = setInterval(updateLeaderboard, 30000); // 30 saniyede bir
     };
 
-    // --- Başlangıç Fonksiyonu ---
-    const initialize = async () => {
-        loadStateFromLocalStorage();
-
-        // Kayıtlı tema veya sistem tercihine göre temayı uygula
-        const savedTheme = state.theme;
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-        applyTheme(initialTheme, true); // `true` ile başlangıç ayarı olduğunu belirt
-
-        // Kayıtlı ses ayarını uygula
-        applySoundSetting(state.soundEnabled, true);
-
-        updateStatsUI(state.stats);
-        updateHistoryUI(state.history);
-        showView('categories');
+    const populateCategories = () => {
+        dom.categoryButtons.innerHTML = '';
+        for (const [key, value] of Object.entries(categories)) {
+            const btn = document.createElement('button');
+            btn.className = `category-button bg-${value.color}-100 hover:bg-${value.color}-200 dark:bg-gray-700 dark:hover:bg-gray-600 p-4 rounded-lg`;
+            btn.dataset.kategori = key;
+            btn.innerHTML = `<i class="fas ${value.icon} mb-2"></i><span class="block">${key.charAt(0).toUpperCase() + key.slice(1)}</span>`;
+            dom.categoryButtons.appendChild(btn);
+        }
     };
 
-    // --- Olay Dinleyicileri (Event Listeners) ---
-    themeToggle.addEventListener('click', handleThemeToggle);
-    soundToggle.addEventListener('click', handleSoundToggle);
-    difficultyButtons.addEventListener('click', handleDifficultySelection);
-    categoryButtons.addEventListener('click', handleCategorySelection);
-    optionsContainer.addEventListener('click', handleOptionClick);
-    resetStatsButton.addEventListener('click', handleResetStats);
-    changeCategoryButton.addEventListener('click', () => {
-        stopTimer();
-        showView('categories');
-    });
+    const initializeApp = async () => {
+        // Ayarları yükle
+        applyTheme(localStorage.getItem('theme') || 'light', true);
+        applySoundSetting(JSON.parse(localStorage.getItem('soundEnabled') ?? 'true'), true);
 
-    // Uygulamayı başlat
-    initialize();
+        addEventListeners();
+        populateCategories();
+
+        // Oturum kontrolü yap
+        showLoading(true, 'Oturum kontrol ediliyor...');
+        const sessionResult = await apiCall('check_session', {}, 'GET');
+        showLoading(false);
+
+        if (sessionResult && sessionResult.success) {
+            initializeUserSession(sessionResult.data);
+        } else {
+            showView('auth');
+        }
+    };
+
+    // Uygulamayı Başlat
+    initializeApp();
 }); 

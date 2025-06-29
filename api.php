@@ -7,14 +7,14 @@
  * Artık istatistik veya geçmiş tutmaz, sadece soru üretir, cevapları kontrol eder ve skorları yönetir.
  */
 
-// Gerekli dosyaları ve başlangıç ayarlarını dahil et
+// --- Kurulum ve Başlangıç Ayarları ---
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once 'config.php';
 require_once 'GeminiAPI.php';
 
-// Oturumu başlat (sadece mevcut soru ve cevabı geçici olarak tutmak için)
 session_start();
-
-// Yanıt başlığını JSON olarak ayarla
 header('Content-Type: application/json');
 
 // --- Veritabanı Bağlantısı ---
@@ -23,203 +23,263 @@ try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    // Veritabanı bağlantı hatasını JSON olarak döndür ve çık
     http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Veritabanı bağlantı hatası. Lütfen install.php dosyasını çalıştırdığınızdan emin olun.',
-        'error' => $e->getMessage()
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Veritabanı bağlantı hatası. Lütfen install.php dosyasını çalıştırdığınızdan emin olun.']);
     exit();
 }
 
-// Gelen isteğin içeriğini al
+// --- Gelen Veri ve Yanıt Yapısı ---
 $request_data = json_decode(file_get_contents('php://input'), true);
-$action = $request_data['action'] ?? null;
+$action = $request_data['action'] ?? $_GET['action'] ?? null;
+$response = ['success' => false, 'message' => 'Geçersiz istek.', 'data' => null];
 
-// Yanıt için standart bir yapı oluştur
-$response = [
-    'success' => false,
-    'message' => 'Geçersiz istek',
-    'data' => null
-];
-
-// --- AKSİYON YÖNLENDİRİCİSİ ---
+// --- Ana Yönlendirici (Router) ---
 switch ($action) {
-    case 'get_question':
-        // Yeni bir soru oluşturur ve döndürür.
-        $kategori = $request_data['kategori'] ?? 'genel kültür';
-        $difficulty = $request_data['difficulty'] ?? 'orta'; // Zorluk seviyesini al, varsayılan 'orta'
-        if (empty($kategori)) {
-            $response['message'] = 'Kategori belirtilmedi.';
+    // KULLANICI İŞLEMLERİ
+    case 'register':
+        $username = $request_data['username'] ?? '';
+        $password = $request_data['password'] ?? '';
+
+        if (empty($username) || empty($password)) {
+            $response['message'] = 'Kullanıcı adı ve şifre boş olamaz.';
+            break;
+        }
+        if (strlen($password) < 6) {
+            $response['message'] = 'Şifre en az 6 karakter olmalıdır.';
             break;
         }
 
-        // Mevcut soru bilgilerini temizle
-        unset($_SESSION['current_question_answer']);
-        unset($_SESSION['start_time']);
-
-        $gemini = new GeminiAPI(GEMINI_API_KEY);
-
         try {
-            // Rastgele soru tipi seç (%75 çoktan seçmeli, %25 doğru/yanlış)
-            $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
-            $prompt = '';
-
-            if ($tip === 'coktan_secmeli') {
-                $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
-                {
-                    \"tip\": \"coktan_secmeli\",
-                    \"soru\": \"(soru metni buraya)\",
-                    \"siklar\": {
-                        \"A\": \"(A şıkkı buraya)\",
-                        \"B\": \"(B şıkkı buraya)\",
-                        \"C\": \"(C şıkkı buraya)\",
-                        \"D\": \"(D şıkkı buraya)\"
-                    },
-                    \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\",
-                    \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"
-                }";
-            } else { // dogru_yanlis
-                $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, doğru ya da yanlış olarak cevaplanabilecek bir önerme hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
-                {
-                    \"tip\": \"dogru_yanlis\",
-                    \"soru\": \"(Önerme cümlesi buraya)\",
-                    \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\",
-                    \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"
-                }";
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            if ($stmt->fetch()) {
+                $response['message'] = 'Bu kullanıcı adı zaten alınmış.';
+                break;
             }
 
-            $yanit = $gemini->soruSor($prompt);
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+            $stmt->execute([$username, $hashed_password]);
+            $user_id = $pdo->lastInsertId();
 
-            if ($yanit) {
-                $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
-                $veri = json_decode($temiz_yanit, true);
+            // Yeni kullanıcı için leaderboard'a 0 skorla ekle
+            $stmt = $pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)");
+            $stmt->execute([$user_id]);
 
-                if (json_last_error() === JSON_ERROR_NONE && isset($veri['tip'], $veri['soru'], $veri['dogru_cevap'], $veri['aciklama'])) {
-                    // Tip çoktan seçmeli ise şıkların varlığını kontrol et
-                    if ($veri['tip'] === 'coktan_secmeli' && !isset($veri['siklar'])) {
-                        $response['message'] = 'API yanıtında çoktan seçmeli soru için şıklar bulunamadı.';
-                        break;
-                    }
-
-                    // Cevabı ve açıklamayı bir sonraki istek için session'da sakla
-                    $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
-                    $_SESSION['current_question_explanation'] = $veri['aciklama']; // Açıklamayı sakla
-                    $_SESSION['start_time'] = time();
-
-                    $response['success'] = true;
-                    $response['message'] = 'Soru başarıyla oluşturuldu.';
-
-                    // Ön uca gönderilecek veriyi hazırla (cevabı ve açıklamayı GÖNDERME)
-                    $responseData = [
-                        'tip' => $veri['tip'],
-                        'question' => $veri['soru'],
-                        'kategori' => $kategori,
-                        'difficulty' => $difficulty
-                    ];
-
-                    if ($veri['tip'] === 'coktan_secmeli') {
-                        $responseData['siklar'] = $veri['siklar'];
-                    }
-
-                    $response['data'] = $responseData;
-                } else {
-                    $response['message'] = 'Soru formatı geçersiz veya eksik alanlar var.';
-                }
-            } else {
-                $response['message'] = "API'den yanıt alınamadı.";
-            }
-        } catch (Exception $e) {
-            $response['message'] = 'Soru alınırken sunucu hatası: ' . $e->getMessage();
+            $response['success'] = true;
+            $response['message'] = 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.';
+        } catch (PDOException $e) {
+            $response['message'] = 'Veritabanı hatası: ' . $e->getMessage();
         }
         break;
 
-    case 'submit_answer':
-        // Kullanıcının cevabını kontrol eder ve sonucu döndürür.
-        $user_answer = $request_data['answer'] ?? null;
-        if (!isset($_SESSION['current_question_answer'])) {
-            $response['message'] = 'Kontrol edilecek aktif bir soru bulunamadı.';
+    case 'login':
+        $username = $request_data['username'] ?? '';
+        $password = $request_data['password'] ?? '';
+
+        if (empty($username) || empty($password)) {
+            $response['message'] = 'Kullanıcı adı ve şifre boş olamaz.';
             break;
         }
 
-        $gecen_sure = time() - ($_SESSION['start_time'] ?? 0);
-        $is_correct = false;
-        $correct_answer = $_SESSION['current_question_answer'];
-        $explanation = $_SESSION['current_question_explanation'];
+        try {
+            $stmt = $pdo->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
+            $stmt->execute([$username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($gecen_sure > 30) {
-            $result_message = "Süre doldu!";
-        } else {
-            if ($user_answer === $correct_answer) {
-                $result_message = "Tebrikler! Doğru cevap.";
-                $is_correct = true;
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['user_role'] = $user['role'];
+                $response['success'] = true;
+                $response['message'] = 'Giriş başarılı!';
+                $response['data'] = ['username' => $user['username'], 'role' => $user['role']];
             } else {
-                $result_message = "Üzgünüm, yanlış cevap.";
+                $response['message'] = 'Kullanıcı adı veya şifre hatalı.';
             }
+        } catch (PDOException $e) {
+            $response['message'] = 'Veritabanı hatası: ' . $e->getMessage();
         }
+        break;
 
-        // Cevap kontrol edildikten sonra session'daki veriyi temizle
-        unset($_SESSION['current_question_answer'], $_SESSION['start_time'], $_SESSION['current_question_explanation']);
-
+    case 'logout':
+        session_destroy();
         $response['success'] = true;
-        $response['message'] = $result_message;
-        // Sonucu, doğru şıkkı ve açıklamayı döndür
-        $response['data'] = [
-            'is_correct' => $is_correct,
-            'correct_answer' => $correct_answer,
-            'explanation' => $explanation,
-            'time_left' => 30 - $gecen_sure > 0 ? 30 - $gecen_sure : 0
-        ];
+        $response['message'] = 'Çıkış yapıldı.';
         break;
 
-    case 'update_score':
-        // Kullanıcının skorunu veritabanında günceller veya yeni kayıt oluşturur.
-        $user_id = $request_data['user_id'] ?? null;
-        $username = $request_data['username'] ?? 'Anonim Oyuncu';
-        $score = $request_data['score'] ?? 0;
+    case 'check_session':
+        if (isset($_SESSION['user_id'])) {
+            $response['success'] = true;
+            $response['message'] = 'Oturum aktif.';
+            $response['data'] = ['username' => $_SESSION['username'], 'role' => $_SESSION['user_role']];
+        } else {
+            $response['message'] = 'Oturum bulunamadı.';
+        }
+        break;
 
-        if (!$user_id) {
-            $response['message'] = 'Kullanıcı ID\'si eksik.';
+    // OTURUM GEREKTİREN İŞLEMLER
+    case 'get_question':
+    case 'submit_answer':
+    case 'get_user_data':
+    case 'get_leaderboard':
+        if (!isset($_SESSION['user_id'])) {
+            $response['message'] = 'Bu işlem için giriş yapmalısınız.';
+            $response['data'] = ['auth_required' => true];
             break;
         }
 
-        try {
-            // INSERT ... ON DUPLICATE KEY UPDATE kullanarak hem ekleme hem güncelleme yap
-            $sql = "
-                INSERT INTO leaderboard (user_id, username, score) 
-                VALUES (:user_id, :username, :score) 
-                ON DUPLICATE KEY UPDATE score = :score, username = :username
-            ";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':user_id' => $user_id,
-                ':username' => $username,
-                ':score' => $score
-            ]);
+        // --- Oyun ve Veri İşlemleri Yönlendiricisi ---
+        switch ($action) {
+            case 'get_question':
+                // Mevcut soru bilgilerini temizle
+                unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
 
-            $response['success'] = true;
-            $response['message'] = 'Skor başarıyla güncellendi.';
-        } catch (PDOException $e) {
-            $response['message'] = 'Skor güncellenirken bir hata oluştu: ' . $e->getMessage();
+                $kategori = $request_data['kategori'] ?? 'genel kültür';
+                $difficulty = $request_data['difficulty'] ?? 'orta';
+                $gemini = new GeminiAPI(GEMINI_API_KEY);
+
+                try {
+                    // Rastgele soru tipi seç (%75 çoktan seçmeli, %25 doğru/yanlış)
+                    $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
+                    $prompt = '';
+
+                    if ($tip === 'coktan_secmeli') {
+                        $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta bir soru hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
+                        {
+                            \"tip\": \"coktan_secmeli\",
+                            \"soru\": \"(soru metni buraya)\",
+                            \"siklar\": {
+                                \"A\": \"(A şıkkı buraya)\",
+                                \"B\": \"(B şıkkı buraya)\",
+                                \"C\": \"(C şıkkı buraya)\",
+                                \"D\": \"(D şıkkı buraya)\"
+                            },
+                            \"dogru_cevap\": \"(Doğru şıkkın harfi buraya, örneğin: A)\",
+                            \"aciklama\": \"(Doğru cevabın neden doğru olduğuna dair 1-2 cümlelik açıklama)\"
+                        }";
+                    } else { // dogru_yanlis
+                        $prompt = "Lütfen {$kategori} kategorisinde {$difficulty} zorlukta, doğru ya da yanlış olarak cevaplanabilecek bir önerme hazırla. Yanıtı yalnızca şu JSON formatında, başka hiçbir metin olmadan ver:
+                        {
+                            \"tip\": \"dogru_yanlis\",
+                            \"soru\": \"(Önerme cümlesi buraya)\",
+                            \"dogru_cevap\": \"(Doğru ya da Yanlış kelimelerinden biri)\",
+                            \"aciklama\": \"(Önermenin neden doğru ya da yanlış olduğuna dair 1-2 cümlelik açıklama)\"
+                        }";
+                    }
+
+                    $yanit = $gemini->soruSor($prompt);
+
+                    if ($yanit) {
+                        $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
+                        $veri = json_decode($temiz_yanit, true);
+
+                        if (json_last_error() === JSON_ERROR_NONE && isset($veri['tip'], $veri['soru'], $veri['dogru_cevap'], $veri['aciklama'])) {
+                            if ($veri['tip'] === 'coktan_secmeli' && !isset($veri['siklar'])) {
+                                $response['message'] = 'API yanıtında çoktan seçmeli soru için şıklar bulunamadı.';
+                                break;
+                            }
+
+                            // Cevap ve açıklamayı session'a kaydet
+                            $_SESSION['current_question_answer'] = $veri['dogru_cevap'];
+                            $_SESSION['current_question_explanation'] = $veri['aciklama'];
+                            $_SESSION['start_time'] = time();
+
+                            // Kullanıcıya sadece güvenli verileri gönder
+                            $response['data'] = ['tip' => $veri['tip'], 'question' => $veri['soru'], 'siklar' => $veri['siklar'] ?? null, 'kategori' => $kategori, 'difficulty' => $difficulty];
+                            $response['success'] = true;
+                        } else {
+                            $response['message'] = 'API\'den gelen soru formatı geçersiz veya eksik alanlar var. Yanıt: ' . $temiz_yanit;
+                        }
+                    } else {
+                        $response['message'] = "Gemini API'sinden yanıt alınamadı.";
+                    }
+                } catch (Exception $e) {
+                    $response['message'] = 'Soru alınırken sunucu hatası: ' . $e->getMessage();
+                }
+                break;
+
+            case 'submit_answer':
+                if (!isset($_SESSION['current_question_answer'])) {
+                    $response['message'] = 'Aktif soru bulunamadı.';
+                    break;
+                }
+
+                $user_answer = $request_data['answer'] ?? null;
+                $kategori = $request_data['kategori'] ?? 'bilinmiyor';
+                $gecen_sure = time() - ($_SESSION['start_time'] ?? time());
+                $is_correct = ($user_answer === $_SESSION['current_question_answer']);
+                $puan = 0;
+
+                if ($is_correct) {
+                    $puan = 10 + max(0, 30 - $gecen_sure); // Doğru cevap için 10 puan + kalan süre kadar bonus
+                }
+
+                try {
+                    // 1. İstatistiği güncelle
+                    $sql_stat = "
+                        INSERT INTO user_stats (user_id, category, total_questions, correct_answers)
+                        VALUES (?, ?, 1, ?)
+                        ON DUPLICATE KEY UPDATE total_questions = total_questions + 1, correct_answers = correct_answers + ?";
+                    $stmt_stat = $pdo->prepare($sql_stat);
+                    $stmt_stat->execute([$_SESSION['user_id'], $kategori, $is_correct ? 1 : 0, $is_correct ? 1 : 0]);
+
+                    // 2. Skoru güncelle
+                    if ($is_correct) {
+                        $sql_score = "UPDATE leaderboard SET score = score + ? WHERE user_id = ?";
+                        $stmt_score = $pdo->prepare($sql_score);
+                        $stmt_score->execute([$puan, $_SESSION['user_id']]);
+                    }
+                } catch (PDOException $e) {
+                    // Hata olsa bile devam et, oyun akışı bozulmasın
+                }
+
+                $response['success'] = true;
+                $response['data'] = [
+                    'is_correct' => $is_correct,
+                    'correct_answer' => $_SESSION['current_question_answer'],
+                    'explanation' => $_SESSION['current_question_explanation']
+                ];
+                unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
+                break;
+
+            case 'get_user_data':
+                $user_id = $_SESSION['user_id'];
+                $user_data = [];
+                // Liderlik tablosundan skor al
+                $stmt_score = $pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+                $stmt_score->execute([$user_id]);
+                $user_data['score'] = $stmt_score->fetchColumn() ?: 0;
+
+                // İstatistikleri al
+                $stmt_stats = $pdo->prepare("SELECT category, total_questions, correct_answers FROM user_stats WHERE user_id = ?");
+                $stmt_stats->execute([$user_id]);
+                $user_data['stats'] = $stmt_stats->fetchAll(PDO::FETCH_ASSOC);
+
+                $response['success'] = true;
+                $response['data'] = $user_data;
+                break;
+
+            case 'get_leaderboard':
+                $stmt = $pdo->prepare("
+                    SELECT u.username, l.score 
+                    FROM leaderboard l
+                    JOIN users u ON l.user_id = u.id
+                    ORDER BY l.score DESC, l.last_updated ASC 
+                    LIMIT 10
+                ");
+                $stmt->execute();
+                $response['success'] = true;
+                $response['data'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                break;
         }
         break;
 
-    case 'get_leaderboard':
-        // Liderlik tablosundaki ilk 10 kişiyi getirir.
-        try {
-            $stmt = $pdo->query("SELECT username, score FROM leaderboard ORDER BY score DESC, last_updated ASC LIMIT 10");
-            $leaderboard = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $response['success'] = true;
-            $response['message'] = 'Liderlik tablosu başarıyla alındı.';
-            $response['data'] = $leaderboard;
-        } catch (PDOException $e) {
-            $response['message'] = 'Liderlik tablosu alınırken bir hata oluştu: ' . $e->getMessage();
-        }
+    default:
+        $response['message'] = "Belirtilen aksiyon ('$action') geçersiz.";
         break;
 }
 
-// Sonucu JSON olarak ekrana bas
+// --- Yanıtı Gönder ---
 echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 exit();
