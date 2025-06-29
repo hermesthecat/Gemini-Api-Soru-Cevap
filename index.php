@@ -5,6 +5,7 @@ require_once 'GeminiAPI.php';
 session_start();
 
 $gemini = new GeminiAPI(GEMINI_API_KEY);
+$error_message = null; // Hata mesajları için değişken
 
 // Debug için
 error_log("POST data: " . print_r($_POST, true));
@@ -60,10 +61,16 @@ if (isset($_POST['kategori'])) {
                     error_log("Soru yüklendi: " . $soru);
                     error_log("Şıklar: " . print_r($siklar, true));
                     error_log("Doğru cevap: " . $dogru_cevap);
+                } else {
+                    $error_message = "Soru işlenirken bir hata oluştu (geçersiz format). Lütfen tekrar deneyin.";
+                    error_log("JSON Decode/Structure Error. Response: " . $temiz_yanit);
                 }
+            } else {
+                $error_message = "API'den yanıt alınamadı. Lütfen API anahtarınızı kontrol edin veya daha sonra tekrar deneyin.";
             }
         } catch (Exception $e) {
             error_log("Hata: " . $e->getMessage());
+            $error_message = "Soru alınırken bir sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.";
         }
     }
 }
@@ -111,6 +118,14 @@ if (isset($_POST['kullanici_cevap'])) {
 
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Hata Mesajı Alanı -->
+        <?php if ($error_message): ?>
+            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+                <p class="font-bold">Bir Sorun Oluştu</p>
+                <p><?php echo htmlspecialchars($error_message); ?></p>
+            </div>
+        <?php endif; ?>
+
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-2">AI Bilgi Yarışması</h1>
