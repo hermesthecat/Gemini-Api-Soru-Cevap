@@ -1,43 +1,43 @@
 /* Sonuç gösteriminde animasyon için */
 .answer-feedback {
-    animation: fade-in-out 2s forwards;
+  animation: fade-in-out 2s forwards;
 }
 
 @keyframes fade-in-out {
-    0% {
-        opacity: 0;
-        transform: scale(0.9);
-    }
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
 
-    10% {
-        opacity: 1;
-        transform: scale(1);
-    }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
 
-    90% {
-        opacity: 1;
-        transform: scale(1);
-    }
+  90% {
+    opacity: 1;
+    transform: scale(1);
+  }
 
-    100% {
-        opacity: 0;
-        transform: scale(0.9);
-    }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
 }
 
 .lifeline-button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    background-color: #9ca3af;
-    /* gray-400 */
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #9ca3af;
+  /* gray-400 */
 }
 
 /* Yeni Kategori Butonları için Stiller */
 .category-button {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .category-button:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
