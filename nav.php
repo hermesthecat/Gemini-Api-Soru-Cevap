@@ -16,7 +16,16 @@
                 </div>
                 <div class="flex items-center space-x-2">
                     <?php if (isset($user_data) && $user_data['role'] === 'admin'): ?>
-                    <button id="admin-view-btn" class="text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>
+                    <div class="relative">
+                        <button id="admin-dropdown-btn" class="text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors flex items-center">
+                            Yönetim <i class="fas fa-chevron-down ml-1"></i>
+                        </button>
+                        <div id="admin-dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-10">
+                            <a href="admin-users.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">👥 Kullanıcı Yönetimi</a>
+                            <a href="admin-announcements.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📢 Duyuru Yönetimi</a>
+                            <a href="admin-stats.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📊 İstatistikler</a>
+                        </div>
+                    </div>
                     <?php endif; ?>
                     <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
                         <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
@@ -74,4 +83,27 @@
             window.USER_DATA = <?php echo json_encode($user_data); ?>;
             window.CSRF_TOKEN = '<?php echo htmlspecialchars($user_data['csrf_token']); ?>';
             <?php endif; ?>
+
+            // Admin dropdown menü işlevselliği
+            document.addEventListener('DOMContentLoaded', () => {
+                const adminDropdownBtn = document.getElementById('admin-dropdown-btn');
+                const adminDropdownMenu = document.getElementById('admin-dropdown-menu');
+
+                if (adminDropdownBtn && adminDropdownMenu) {
+                    adminDropdownBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        adminDropdownMenu.classList.toggle('hidden');
+                    });
+
+                    // Dropdown dışında tıklanınca kapat
+                    document.addEventListener('click', () => {
+                        adminDropdownMenu.classList.add('hidden');
+                    });
+
+                    // Dropdown içinde tıklanınca kapatma
+                    adminDropdownMenu.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            });
         </script>
