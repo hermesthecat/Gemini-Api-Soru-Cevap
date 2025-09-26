@@ -164,15 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const result = await auth.checkUserSession();
                 if (result && result.success) {
-                    // Kullanıcı giriş yapmış
+                    // Kullanıcı giriş yapmış - MPA'da sayfa redirecti PHP tarafından yapılır
                     this.onLoginSuccess({detail: result});
                 } else {
-                    // Kullanıcı giriş yapmamış, auth view göster
-                    ui.showView('auth-view');
+                    // Kullanıcı giriş yapmamış - MPA'da login sayfasına redirect PHP tarafından yapılır
+                    // No action needed for MPA
                 }
             } catch (error) {
                 console.error('Session check failed:', error);
-                ui.showView('auth-view');
+                // MPA'da hata durumunda da PHP redirect yapar
             }
         },
 
@@ -200,12 +200,13 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', userData.lifelines);
 
-            game.updateLifelineUI();
-            ui.renderWelcomeMessage(userData.username, userData.avatar);
-            ui.updateCoinBalance(userData.coins);
-            ui.toggleAdminButton(userData.role === 'admin');
-            ui.showView('main-view');
-            ui.showTab('yarışma');
+            // MPA'da her sayfa kendi UI'ını yönetir
+            if (typeof game !== 'undefined') game.updateLifelineUI();
+            if (typeof ui !== 'undefined') {
+                ui.renderWelcomeMessage(userData.username, userData.avatar);
+                ui.updateCoinBalance(userData.coins);
+                ui.toggleAdminButton(userData.role === 'admin');
+            }
 
             // Günlük giriş ödülü bildirimini işle
             if (daily_reward) {
@@ -237,22 +238,19 @@ document.addEventListener('DOMContentLoaded', () => {
         onLogout() {
             appState.set('currentUser', null);
             appState.set('csrfToken', null); // Oturum kapatılınca token'ı temizle
-            statsHandler.stopLeaderboardUpdates();
-            ui.showView('auth-view');
+            if (typeof statsHandler !== 'undefined') statsHandler.stopLeaderboardUpdates();
+            // MPA'da logout sonrası PHP login sayfasına redirect yapar
+            window.location.href = 'login.php';
         },
 
         onShowAdminView() {
-            ui.showView('admin-view');
-            adminHandler.updateAll();
-            announcementHandler.updateAnnouncementsList();
-            ui.showAdminTab('users');
+            // MPA'da admin sayfasına redirect
+            window.location.href = 'admin.php';
         },
 
         onShowMainView() {
-            ui.showView('main-view');
-            statsHandler.updateAll();
-            friendsHandler.updateAll();
-            questHandler.updateQuests();
+            // MPA'da ana sayfaya redirect
+            window.location.href = 'index.php';
         },
 
         async onAnswerSubmitted(e) {

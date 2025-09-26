@@ -8,7 +8,7 @@ include 'header.php';
 
         <?php include 'nav.php'; ?>
                 <!-- Profil Sekmesi İçeriği -->
-        <div id="profil-tab" class="main-tab-content block">
+        <div id="profil-tab" class="main-tab-content">
             <aside class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Sol Taraf (İstatistikler ve Liderlik) -->
                 <div class="space-y-8">
@@ -65,5 +65,24 @@ include 'header.php';
         </div>
 
     </div>
+
+<script>
+// Profile sayfası yüklendiğinde profil içeriğini yükle
+document.addEventListener('DOMContentLoaded', () => {
+    const profilTab = document.getElementById('profil-tab');
+    if (profilTab) {
+        profilTab.classList.remove('hidden');
+        profilTab.classList.add('block');
+    }
+
+    // Stats ve avatar'ları yükle
+    setTimeout(() => {
+        if (typeof statsHandler !== 'undefined') {
+            statsHandler.updateAll();
+            statsHandler.startLeaderboardUpdates();
+        }
+    }, 100);
+});
+</script>
 
 <?php include 'footer.php'; ?>

@@ -19,6 +19,10 @@ const auth = {
                 this.ui.showToast('Giriş başarılı, hoş geldiniz!', 'success');
                 // Başarılı girişi ana uygulamaya bildir
                 document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result }));
+                // MPA'da ana sayfaya redirect
+                setTimeout(() => {
+                    window.location.href = 'index.php';
+                }, 1000);
             } else if (result && result.message) {
                 // Sunucudan gelen özel hata mesajlarını göster (örn. "Şifre hatalı")
                 this.ui.showToast(result.message, 'error');
