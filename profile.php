@@ -10,7 +10,7 @@ include 'header.php';
                 <!-- Profil Sekmesi İçeriği -->
         <div id="profil-tab" class="main-tab-content">
             <div class="space-y-8">
-                <!-- Sol Taraf (Kişisel İstatistikler) -->
+                <!-- Kişisel İstatistikler -->
                 <div id="stats-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h2 class="text-xl font-semibold mb-4 dark:text-white">Kişisel İstatistikler</h2>
                     <div class="text-center mb-4 border-b dark:border-gray-700 pb-4">
@@ -34,10 +34,9 @@ include 'header.php';
                         </table>
                         <p id="no-stats-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz veri yok.</p>
                     </div>
-
                 </div>
 
-                <!-- Sağ Taraf (Başarımlar) -->
+                <!-- Kazanılan Rozetler -->
                 <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
                     <div id="achievements-list" class="space-y-4">
