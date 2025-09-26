@@ -17,9 +17,8 @@ include 'header.php';
 
         <!-- Admin İstatistik Grafikleri -->
         <div id="admin-stats-tab" class="admin-tab-content">
-            <div class="flex justify-between items-center mb-6">
+            <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-800 dark:text-white">İstatistik Grafikleri</h1>
-                <button onclick="window.location.href='index.php'" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Ana Sayfaya Dön</button>
             </div>
 
             <div class="space-y-8">

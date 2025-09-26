@@ -9,9 +9,8 @@ include 'header.php';
         <?php include 'nav.php'; ?>
                 <!-- Liderlik Tablosu Sayfası -->
         <div id="leaderboard-tab" class="main-tab-content">
-            <div class="flex justify-between items-center mb-6">
+            <div class="mb-6">
                 <h1 class="text-3xl font-bold text-gray-800 dark:text-white">🏆 Liderlik Tablosu</h1>
-                <button onclick="window.location.href='index.php'" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Ana Sayfaya Dön</button>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
