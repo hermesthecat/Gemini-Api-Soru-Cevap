@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.0.0'; // Current schema version
+$current_version = '1.1.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -352,6 +352,31 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
 
+  // Site Ayarları Tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS settings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      setting_key VARCHAR(100) NOT NULL UNIQUE,
+      setting_value TEXT NOT NULL,
+      description VARCHAR(255) DEFAULT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+
+  // Varsayılan ayarları ekle
+  $default_settings = [
+    ['gemini_api_key', '', 'Google Gemini API anahtarı'],
+    ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
+    ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
+    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)']
+  ];
+
+  $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
+  foreach ($default_settings as $setting) {
+    $stmt_setting->execute($setting);
+  }
+  echo "Site ayarları tablosu ve varsayılan değerler oluşturuldu.\n";
+
     // Fresh install tamamlandı, son versiyonu işaretle
     markMigrationComplete($pdo, $current_version, "Fresh install completed");
     echo "\n✅ Fresh install başarıyla tamamlandı!\n";
@@ -366,6 +391,10 @@ try {
       $migrations_to_run[] = '1.0.0';
     }
 
+    if (versionCompare($installed_version, '1.1.0') < 0) {
+      $migrations_to_run[] = '1.1.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -377,6 +406,9 @@ try {
         switch ($version) {
           case '1.0.0':
             migration_1_0_0($pdo);
+            break;
+          case '1.1.0':
+            migration_1_1_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -644,4 +676,34 @@ function insertDefaultData($pdo) {
   } catch (PDOException $e) {
     // Admin zaten mevcut, sorun değil
   }
+}
+
+function migration_1_1_0($pdo) {
+  echo "→ Migration 1.1.0: Site ayarları tablosu ekleniyor...\n";
+
+  // Site ayarları tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS settings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      setting_key VARCHAR(100) NOT NULL UNIQUE,
+      setting_value TEXT NOT NULL,
+      description VARCHAR(255) DEFAULT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+
+  // Varsayılan ayarları ekle
+  $default_settings = [
+    ['gemini_api_key', '', 'Google Gemini API anahtarı'],
+    ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
+    ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
+    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)']
+  ];
+
+  $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
+  foreach ($default_settings as $setting) {
+    $stmt_setting->execute($setting);
+  }
+
+  markMigrationComplete($pdo, '1.1.0', 'Settings table and default values added');
 }

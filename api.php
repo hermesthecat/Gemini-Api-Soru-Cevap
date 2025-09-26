@@ -21,6 +21,7 @@ require_once 'Api/Controllers/FriendsController.php';
 require_once 'Api/Controllers/DuelController.php';
 require_once 'Api/Controllers/QuestController.php';
 require_once 'Api/Controllers/ShopController.php';
+require_once 'Api/Controllers/SettingsController.php';
 
 session_start();
 header('Content-Type: application/json');
@@ -58,6 +59,7 @@ $friendsController = new FriendsController($pdo);
 $duelController = new DuelController($pdo, $geminiApi);
 $questController = new QuestController($pdo);
 $shopController = new ShopController($pdo);
+$settingsController = new SettingsController($pdo);
 
 // Genel Hata Yakalama
 try {
@@ -114,6 +116,10 @@ try {
         // Shop Routes
         'get_shop_items' => [$shopController, 'getShopItems', false, true],
         'purchase_lifeline' => [$shopController, 'purchaseLifeline', true, true],
+
+        // Settings Routes
+        'get_settings' => [$settingsController, 'getSettings', false, true],
+        'update_settings' => [$settingsController, 'updateSettings', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---

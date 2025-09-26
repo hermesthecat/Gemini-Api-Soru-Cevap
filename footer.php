@@ -215,6 +215,7 @@
     <script src="assets/js/game-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/stats-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/admin-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-settings-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/settings-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/friends-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/duel-handler.js?v=<?php echo $v; ?>"></script>

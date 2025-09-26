@@ -41,6 +41,7 @@ $v = getVersion();
         <a href="admin-users.php" class="underline hover:text-purple-200">Kullanıcılar</a> |
         <a href="admin-announcements.php" class="underline hover:text-purple-200">Duyurular</a> |
         <a href="admin-stats.php" class="underline hover:text-purple-200">İstatistikler</a> |
+        <a href="admin-settings.php" class="underline hover:text-purple-200">Ayarlar</a> |
         <a href="index.php" class="underline hover:text-purple-200">Ana Sayfa</a>
     </div>
     <?php endif; ?>
