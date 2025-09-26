@@ -78,6 +78,7 @@ try {
         // Data Routes
         'get_user_data' => [$dataController, 'getUserData', false, true],
         'get_leaderboard' => [$dataController, 'getLeaderboard', false, true],
+        'get_user_rank' => [$dataController, 'getUserRank', false, true],
         'get_user_achievements' => [$dataController, 'getUserAchievements', false, true],
         'get_active_announcements' => [$dataController, 'getActiveAnnouncements', false, true],
         'mark_announcements_as_read' => [$dataController, 'markAnnouncementsAsRead', true, true],

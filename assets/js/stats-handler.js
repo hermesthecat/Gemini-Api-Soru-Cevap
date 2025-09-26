@@ -20,9 +20,15 @@ const statsHandler = (() => {
     };
 
     const updateLeaderboard = async () => {
-        const result = await api.call('get_leaderboard', {}, 'POST', false);
-        if (result && result.success) {
-            ui.renderLeaderboard(result.data);
+        // Get leaderboard data
+        const leaderboardResult = await api.call('get_leaderboard', {}, 'POST', false);
+
+        // Get user's rank
+        const userRankResult = await api.call('get_user_rank', {}, 'POST', false);
+
+        if (leaderboardResult && leaderboardResult.success) {
+            const userRank = userRankResult && userRankResult.success ? userRankResult.data : null;
+            ui.renderLeaderboard(leaderboardResult.data, userRank);
         }
     };
 

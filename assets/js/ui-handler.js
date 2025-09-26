@@ -248,45 +248,200 @@ const ui = (() => {
         }
     };
 
-    const renderLeaderboard = (leaderboardData) => {
+    const renderLeaderboard = (leaderboardData, userRank = null) => {
         if (!dom.leaderboardList || !dom.leaderboardLoading) return;
 
         dom.leaderboardLoading.classList.add('hidden');
         dom.leaderboardList.innerHTML = '';
-        leaderboardData.forEach((player, index) => {
-            const li = document.createElement('li');
-            li.className = 'flex justify-between items-center text-sm p-2 rounded-md';
 
-            const playerDiv = document.createElement('div');
-            playerDiv.className = 'flex items-center space-x-2';
+        // Top 3 Podium
+        if (leaderboardData.length > 0) {
+            const podiumContainer = document.createElement('div');
+            podiumContainer.className = 'mb-8';
 
-            const rankSpan = document.createElement('span');
-            rankSpan.className = 'font-bold w-6 text-center';
-            rankSpan.textContent = `${index + 1}.`;
+            const podiumTitle = document.createElement('h3');
+            podiumTitle.className = 'text-xl font-bold text-center mb-6 dark:text-white';
+            podiumTitle.textContent = '🏆 İlk 3';
+            podiumContainer.appendChild(podiumTitle);
 
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm';
-            avatarDiv.textContent = player.username.charAt(0).toUpperCase();
+            const podium = document.createElement('div');
+            podium.className = 'flex justify-center items-end space-x-4';
 
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = player.username;
+            // 2nd place (left)
+            if (leaderboardData[1]) {
+                const secondPlace = createPodiumPlace(leaderboardData[1], 2, 'h-24 bg-gray-300 dark:bg-gray-600', '🥈');
+                podium.appendChild(secondPlace);
+            }
 
-            playerDiv.appendChild(rankSpan);
-            playerDiv.appendChild(avatarDiv);
-            playerDiv.appendChild(nameSpan);
+            // 1st place (center, tallest)
+            if (leaderboardData[0]) {
+                const firstPlace = createPodiumPlace(leaderboardData[0], 1, 'h-32 bg-yellow-400 dark:bg-yellow-500', '👑');
+                podium.appendChild(firstPlace);
+            }
 
-            const scoreSpan = document.createElement('span');
-            scoreSpan.className = 'font-semibold text-blue-500';
-            scoreSpan.textContent = player.score;
+            // 3rd place (right)
+            if (leaderboardData[2]) {
+                const thirdPlace = createPodiumPlace(leaderboardData[2], 3, 'h-20 bg-orange-300 dark:bg-orange-500', '🥉');
+                podium.appendChild(thirdPlace);
+            }
 
-            li.appendChild(playerDiv);
-            li.appendChild(scoreSpan);
+            podiumContainer.appendChild(podium);
+            dom.leaderboardList.appendChild(podiumContainer);
+        }
 
-            if (index === 0) li.classList.add('bg-yellow-100', 'dark:bg-yellow-800/50');
-            if (index === 1) li.classList.add('bg-gray-200', 'dark:bg-gray-700/50');
-            if (index === 2) li.classList.add('bg-yellow-50', 'dark:bg-yellow-900/50');
-            dom.leaderboardList.appendChild(li);
-        });
+        // Next 7 players in table format
+        if (leaderboardData.length > 3) {
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'mb-8';
+
+            const tableTitle = document.createElement('h3');
+            tableTitle.className = 'text-lg font-bold mb-4 dark:text-white';
+            tableTitle.textContent = '📊 Sıralama';
+            tableContainer.appendChild(tableTitle);
+
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm';
+
+            const thead = document.createElement('thead');
+            thead.className = 'bg-gray-50 dark:bg-gray-700';
+            thead.innerHTML = `
+                <tr>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sıra</th>
+                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Oyuncu</th>
+                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Puan</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700';
+
+            const playersToShow = leaderboardData.slice(3, 10);
+            playersToShow.forEach((player, index) => {
+                const row = createTableRow(player, index + 4);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            dom.leaderboardList.appendChild(tableContainer);
+        }
+
+        // User's own position (if provided and not in top 10)
+        if (userRank && userRank.position > 10) {
+            const userPositionContainer = document.createElement('div');
+            userPositionContainer.className = 'mt-8 pt-6 border-t dark:border-gray-700';
+
+            const userTitle = document.createElement('h3');
+            userTitle.className = 'text-lg font-bold mb-4 dark:text-white';
+            userTitle.textContent = '👤 Senin Sıran';
+            userPositionContainer.appendChild(userTitle);
+
+            const userCard = document.createElement('div');
+            userCard.className = 'bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 flex justify-between items-center';
+
+            const userInfo = document.createElement('div');
+            userInfo.className = 'flex items-center space-x-3';
+
+            const userRankSpan = document.createElement('span');
+            userRankSpan.className = 'bg-blue-500 text-white font-bold px-3 py-1 rounded-full text-sm';
+            userRankSpan.textContent = `#${userRank.position}`;
+
+            const userAvatar = document.createElement('div');
+            userAvatar.className = 'w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold';
+            userAvatar.textContent = userRank.username.charAt(0).toUpperCase();
+
+            const userName = document.createElement('span');
+            userName.className = 'font-semibold dark:text-white';
+            userName.textContent = userRank.username;
+
+            userInfo.appendChild(userRankSpan);
+            userInfo.appendChild(userAvatar);
+            userInfo.appendChild(userName);
+
+            const userScore = document.createElement('span');
+            userScore.className = 'font-bold text-blue-600 dark:text-blue-400 text-lg';
+            userScore.textContent = userRank.score;
+
+            userCard.appendChild(userInfo);
+            userCard.appendChild(userScore);
+            userPositionContainer.appendChild(userCard);
+            dom.leaderboardList.appendChild(userPositionContainer);
+        }
+    };
+
+    const createPodiumPlace = (player, rank, heightClass, icon) => {
+        const place = document.createElement('div');
+        place.className = 'flex flex-col items-center';
+
+        const playerCard = document.createElement('div');
+        playerCard.className = 'bg-white dark:bg-gray-800 rounded-lg p-3 mb-2 shadow-lg text-center min-w-[100px]';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg mx-auto mb-2';
+        avatar.textContent = player.username.charAt(0).toUpperCase();
+
+        const name = document.createElement('div');
+        name.className = 'font-semibold text-sm dark:text-white truncate';
+        name.textContent = player.username;
+
+        const score = document.createElement('div');
+        score.className = 'text-blue-600 dark:text-blue-400 font-bold text-lg';
+        score.textContent = player.score;
+
+        playerCard.appendChild(avatar);
+        playerCard.appendChild(name);
+        playerCard.appendChild(score);
+
+        const pedestal = document.createElement('div');
+        pedestal.className = `${heightClass} w-20 rounded-t-lg flex items-end justify-center pb-2`;
+
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'text-2xl';
+        iconSpan.textContent = icon;
+        pedestal.appendChild(iconSpan);
+
+        place.appendChild(playerCard);
+        place.appendChild(pedestal);
+
+        return place;
+    };
+
+    const createTableRow = (player, rank) => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700/50';
+
+        const rankCell = document.createElement('td');
+        rankCell.className = 'px-3 py-3 font-semibold';
+        rankCell.textContent = `#${rank}`;
+
+        const playerCell = document.createElement('td');
+        playerCell.className = 'px-3 py-3';
+
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'flex items-center space-x-3';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm';
+        avatar.textContent = player.username.charAt(0).toUpperCase();
+
+        const name = document.createElement('span');
+        name.className = 'font-medium dark:text-white';
+        name.textContent = player.username;
+
+        playerDiv.appendChild(avatar);
+        playerDiv.appendChild(name);
+        playerCell.appendChild(playerDiv);
+
+        const scoreCell = document.createElement('td');
+        scoreCell.className = 'px-3 py-3 text-right font-semibold text-blue-600 dark:text-blue-400';
+        scoreCell.textContent = player.score;
+
+        row.appendChild(rankCell);
+        row.appendChild(playerCell);
+        row.appendChild(scoreCell);
+
+        return row;
     };
 
     const renderUserData = (userData) => {

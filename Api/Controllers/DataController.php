@@ -51,6 +51,34 @@ class DataController
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
+    public function getUserRank()
+    {
+        $user_id = $_SESSION['user_id'];
+
+        // Get user's rank and info
+        $stmt = $this->pdo->prepare("
+            SELECT
+                u.username,
+                l.score,
+                (SELECT COUNT(*) + 1
+                 FROM leaderboard l2
+                 WHERE l2.score > l.score
+                    OR (l2.score = l.score AND l2.last_updated < l.last_updated)
+                ) as position
+            FROM leaderboard l
+            JOIN users u ON l.user_id = u.id
+            WHERE u.id = ?
+        ");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$result) {
+            return ['success' => false, 'message' => 'Kullanıcı sıralaması bulunamadı'];
+        }
+
+        return ['success' => true, 'data' => $result];
+    }
+
     public function getUserAchievements()
     {
         $stmt = $this->pdo->prepare("
