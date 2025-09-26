@@ -3,7 +3,8 @@
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
-        <!-- Arkadaşlar Sekmesi İçeriği -->
+        <?php include 'nav.php'; ?>
+                <!-- Arkadaşlar Sekmesi İçeriği -->
         <div id="arkadaslar-tab" class="main-tab-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Sol Taraf: Arkadaş Arama ve İstekler -->

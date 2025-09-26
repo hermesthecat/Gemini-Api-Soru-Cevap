@@ -3,7 +3,8 @@
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
-        <!-- Mağaza Tab -->
+        <?php include 'nav.php'; ?>
+                <!-- Mağaza Tab -->
         <div id="magaza-tab" class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
             <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Joker Mağazası</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">Jetonlarını kullanarak joker satın alabilir ve yarışmada avantaj elde edebilirsin.</p>

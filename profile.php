@@ -3,7 +3,8 @@
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
-        <!-- Profil Sekmesi İçeriği -->
+        <?php include 'nav.php'; ?>
+                <!-- Profil Sekmesi İçeriği -->
         <div id="profil-tab" class="main-tab-content">
             <aside class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Sol Taraf (İstatistikler ve Liderlik) -->
