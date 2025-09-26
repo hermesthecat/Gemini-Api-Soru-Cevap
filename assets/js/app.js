@@ -168,11 +168,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     this.onLoginSuccess({detail: result});
                 } else {
                     // Kullanıcı giriş yapmamış, auth view göster
-                    ui.showView('auth');
+                    ui.showView('auth-view');
                 }
             } catch (error) {
                 console.error('Session check failed:', error);
-                ui.showView('auth');
+                ui.showView('auth-view');
             }
         },
 

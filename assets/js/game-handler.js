@@ -29,14 +29,23 @@ const game = {
         const lifelines = appState.get('lifelines');
         const isTrueFalse = appState.get('currentQuestionData')?.tip === 'dogru_yanlis';
 
-        this.dom.lifelineFiftyFifty.disabled = lifelines.fiftyFifty <= 0 || isTrueFalse;
-        this.dom.lifelineFiftyFifty.title = isTrueFalse ? "Bu soru tipinde kullanılamaz." : "50/50 Joker Hakkı";
+        if (this.dom.lifelineFiftyFifty) {
+            this.dom.lifelineFiftyFifty.disabled = lifelines.fiftyFifty <= 0 || isTrueFalse;
+            this.dom.lifelineFiftyFifty.title = isTrueFalse ? "Bu soru tipinde kullanılamaz." : "50/50 Joker Hakkı";
+        }
 
-        this.dom.lifelineExtraTime.disabled = lifelines.extraTime <= 0;
-        this.dom.lifelinePass.disabled = lifelines.pass <= 0;
+        if (this.dom.lifelineExtraTime) {
+            this.dom.lifelineExtraTime.disabled = lifelines.extraTime <= 0;
+        }
 
-        const allUsed = lifelines.fiftyFifty <= 0 && lifelines.extraTime <= 0 && lifelines.pass <= 0;
-        this.dom.lifelineContainer.classList.toggle('hidden', allUsed);
+        if (this.dom.lifelinePass) {
+            this.dom.lifelinePass.disabled = lifelines.pass <= 0;
+        }
+
+        if (this.dom.lifelineContainer) {
+            const allUsed = lifelines.fiftyFifty <= 0 && lifelines.extraTime <= 0 && lifelines.pass <= 0;
+            this.dom.lifelineContainer.classList.toggle('hidden', allUsed);
+        }
     },
 
     displayQuestion(data) {
@@ -153,7 +162,8 @@ const game = {
     },
 
     addEventListeners() {
-        this.dom.difficultyButtons.addEventListener('click', (e) => {
+        if (this.dom.difficultyButtons) {
+            this.dom.difficultyButtons.addEventListener('click', (e) => {
             const btn = e.target.closest('.difficulty-button');
             if (btn) {
                 appState.set('difficulty', btn.dataset.zorluk);
@@ -164,9 +174,11 @@ const game = {
                 btn.classList.add('bg-blue-500', 'text-white', 'font-semibold');
                 btn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
             }
-        });
+            });
+        }
 
-        this.dom.categoryButtons.addEventListener('click', async (e) => {
+        if (this.dom.categoryButtons) {
+            this.dom.categoryButtons.addEventListener('click', async (e) => {
             const btn = e.target.closest('.category-button');
             if (btn) {
                 const result = await api.call('get_question', {
@@ -180,14 +192,18 @@ const game = {
                     this.ui.showToast(result.message, 'error');
                 }
             }
-        });
+            });
+        }
 
-        this.dom.optionsContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.option-button');
-            if (btn) this.handleAnswerSubmission(btn.dataset.answer);
-        });
+        if (this.dom.optionsContainer) {
+            this.dom.optionsContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.option-button');
+                if (btn) this.handleAnswerSubmission(btn.dataset.answer);
+            });
+        }
 
-        this.dom.lifelineFiftyFifty.addEventListener('click', async () => {
+        if (this.dom.lifelineFiftyFifty) {
+            this.dom.lifelineFiftyFifty.addEventListener('click', async () => {
             if (this.dom.lifelineFiftyFifty.disabled) return;
 
             const result = await api.call('use_lifeline', { type: 'fiftyFifty' });
@@ -204,12 +220,14 @@ const game = {
             wrongOptions.sort(() => 0.5 - Math.random());
 
             wrongOptions[0].classList.add('opacity-20', 'pointer-events-none');
-            wrongOptions[0].disabled = true;
-            wrongOptions[1].classList.add('opacity-20', 'pointer-events-none');
-            wrongOptions[1].disabled = true;
-        });
+                wrongOptions[0].disabled = true;
+                wrongOptions[1].classList.add('opacity-20', 'pointer-events-none');
+                wrongOptions[1].disabled = true;
+            });
+        }
 
-        this.dom.lifelineExtraTime.addEventListener('click', async () => {
+        if (this.dom.lifelineExtraTime) {
+            this.dom.lifelineExtraTime.addEventListener('click', async () => {
             if (this.dom.lifelineExtraTime.disabled) return;
 
             const result = await api.call('use_lifeline', { type: 'extraTime' });
@@ -221,11 +239,13 @@ const game = {
 
             let timeLeft = appState.get('timeLeft');
             timeLeft += 15;
-            appState.set('timeLeft', timeLeft);
-            this.dom.countdown.textContent = timeLeft;
-        });
+                appState.set('timeLeft', timeLeft);
+                this.dom.countdown.textContent = timeLeft;
+            });
+        }
 
-        this.dom.lifelinePass.addEventListener('click', async () => {
+        if (this.dom.lifelinePass) {
+            this.dom.lifelinePass.addEventListener('click', async () => {
             if (this.dom.lifelinePass.disabled) return;
 
             const result = await api.call('use_lifeline', { type: 'pass' });
@@ -235,7 +255,8 @@ const game = {
             this.updateLifelineUI();
             document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'correct' } }));
 
-            this.getNewQuestion();
-        });
+                this.getNewQuestion();
+            });
+        }
     }
 };

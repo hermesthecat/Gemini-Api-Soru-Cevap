@@ -79,6 +79,12 @@ const auth = {
 
     async checkUserSession() {
         try {
+            // Token yoksa direkt başarısız dön (login sayfasında token olmaz)
+            const csrfToken = (window.appState && window.appState.get ? window.appState.get('csrfToken') : null) || window.CSRF_TOKEN;
+            if (!csrfToken) {
+                return { success: false };
+            }
+
             const result = await api.call('check_session');
             return result;
         } catch (error) {
