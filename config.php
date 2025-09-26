@@ -20,3 +20,8 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'ai_quiz');
+
+/**
+ * Domain Ayarları
+ */
+define('DOMAIN', 'https://ai-soru-cevap.local.keremgok.tr/'); // Domain adresi
