@@ -742,7 +742,7 @@ const ui = (() => {
 
         quests.forEach(quest => {
             const progressPercent = quest.goal > 0 ? (quest.progress / quest.goal) * 100 : 0;
-            const isCompleted = quest.is_completed;
+            const isCompleted = parseInt(quest.is_completed) === 1;
 
             const questEl = document.createElement('div');
             questEl.className = `p-3 rounded-lg ${isCompleted ? 'bg-green-50 dark:bg-green-900/40' : 'bg-gray-100 dark:bg-gray-800/60'}`;
