@@ -70,11 +70,8 @@
 
         <script>
             // CSRF token ve kullanıcı bilgilerini JavaScript'e aktar
-            window.appState = window.appState || {};
-            if (window.appState.set) {
-                <?php if (isset($user_data)): ?>
-                window.appState.set('currentUser', <?php echo json_encode($user_data); ?>);
-                window.appState.set('csrfToken', '<?php echo htmlspecialchars($user_data['csrf_token']); ?>');
-                <?php endif; ?>
-            }
+            <?php if (isset($user_data)): ?>
+            window.USER_DATA = <?php echo json_encode($user_data); ?>;
+            window.CSRF_TOKEN = '<?php echo htmlspecialchars($user_data['csrf_token']); ?>';
+            <?php endif; ?>
         </script>

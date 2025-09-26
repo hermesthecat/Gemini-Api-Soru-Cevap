@@ -9,6 +9,11 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// CSRF token üret
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Kullanıcı bilgilerini al
 $user_data = [
     'id' => $_SESSION['user_id'],
@@ -16,6 +21,6 @@ $user_data = [
     'role' => $_SESSION['role'] ?? 'user',
     'avatar' => $_SESSION['avatar'] ?? 'avatar1.svg',
     'coins' => $_SESSION['coins'] ?? 0,
-    'csrf_token' => $_SESSION['csrf_token'] ?? ''
+    'csrf_token' => $_SESSION['csrf_token']
 ];
 ?>

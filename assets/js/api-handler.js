@@ -14,7 +14,7 @@ const api = (() => {
         };
 
         // POST isteklerine CSRF token ekle
-        const csrfToken = window.appState && window.appState.get ? window.appState.get('csrfToken') : null;
+        const csrfToken = (window.appState && window.appState.get ? window.appState.get('csrfToken') : null) || window.CSRF_TOKEN;
         if (method === 'POST' && csrfToken) {
             options.headers['X-CSRF-Token'] = csrfToken;
         }

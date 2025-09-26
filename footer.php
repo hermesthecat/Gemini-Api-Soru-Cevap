@@ -215,6 +215,9 @@
     <!-- Core API Handler -->
     <script src="assets/js/api-handler.js?v=<?php echo $v; ?>"></script>
 
+    <!-- App Data -->
+    <script src="assets/js/app-data.js?v=<?php echo $v; ?>"></script>
+
     <!-- Core UI Handler -->
     <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
 
@@ -233,18 +236,18 @@
     <!-- Main Application -->
     <script src="assets/js/app.js?v=<?php echo $v; ?>"></script>
 
-    <!-- Audio Elements -->
-    <audio id="correct-sound" preload="auto">
-        <source src="assets/sounds/correct.mp3" type="audio/mpeg">
+    <!-- Audio Elements (disabled - no sound files) -->
+    <audio id="correct-sound" preload="none">
+        <!-- <source src="assets/sounds/correct.mp3" type="audio/mpeg"> -->
     </audio>
-    <audio id="incorrect-sound" preload="auto">
-        <source src="assets/sounds/incorrect.mp3" type="audio/mpeg">
+    <audio id="incorrect-sound" preload="none">
+        <!-- <source src="assets/sounds/incorrect.mp3" type="audio/mpeg"> -->
     </audio>
-    <audio id="timeout-sound" preload="auto">
-        <source src="assets/sounds/timeout.mp3" type="audio/mpeg">
+    <audio id="timeout-sound" preload="none">
+        <!-- <source src="assets/sounds/timeout.mp3" type="audio/mpeg"> -->
     </audio>
-    <audio id="achievement-sound" preload="auto">
-        <source src="assets/sounds/achievement.mp3" type="audio/mpeg">
+    <audio id="achievement-sound" preload="none">
+        <!-- <source src="assets/sounds/achievement.mp3" type="audio/mpeg"> -->
     </audio>
 
 </body>

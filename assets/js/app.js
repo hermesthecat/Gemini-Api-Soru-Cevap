@@ -218,11 +218,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1000); // 1 saniye gecikme
             }
 
-            statsHandler.updateAll();
-            statsHandler.startLeaderboardUpdates();
-            friendsHandler.updateAll();
-            questHandler.updateQuests();
-            announcementHandler.checkForAnnouncements();
+            // User data'yı AppState'e aktar
+            if (window.USER_DATA && window.CSRF_TOKEN) {
+                appState.set('currentUser', window.USER_DATA);
+                appState.set('csrfToken', window.CSRF_TOKEN);
+            }
+
+            // Token set edildikten sonra update işlemlerini başlat
+            setTimeout(() => {
+                statsHandler.updateAll();
+                statsHandler.startLeaderboardUpdates();
+                friendsHandler.updateAll();
+                questHandler.updateQuests();
+                announcementHandler.checkForAnnouncements();
+            }, 100);
         },
 
         onLogout() {
