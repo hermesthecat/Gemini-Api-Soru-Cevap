@@ -1,51 +1,11 @@
 <?php
-require_once 'config.php';
+include 'auth_check.php';
 include 'header.php';
 ?>
 
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
-        <!-- ===== GİRİŞ VE KAYIT EKRANI (Başlangıçta görünebilir) ===== -->
-        <div id="auth-view" class="hidden">
-            <div class="text-center mb-8">
-                <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-2">AI Bilgi Yarışması</h1>
-                <p class="text-gray-600 dark:text-gray-400">Bilginizi konuşturmak için giriş yapın veya kayıt olun.</p>
-            </div>
-            <div class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
-                <!-- Form Geçiş Butonları -->
-                <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-                    <button id="show-login-btn" class="flex-1 py-2 font-semibold border-b-2 border-blue-500 text-blue-500">Giriş Yap</button>
-                    <button id="show-register-btn" class="flex-1 py-2 font-semibold text-gray-500">Kayıt Ol</button>
-                </div>
-
-                <!-- Giriş Formu -->
-                <form id="login-form">
-                    <div class="mb-4">
-                        <label for="login-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
-                        <input type="text" id="login-username" autocomplete="username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <div class="mb-6">
-                        <label for="login-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre</label>
-                        <input type="password" id="login-password" autocomplete="current-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Giriş Yap</button>
-                </form>
-
-                <!-- Kayıt Formu -->
-                <form id="register-form" class="hidden">
-                    <div class="mb-4">
-                        <label for="register-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
-                        <input type="text" id="register-username" autocomplete="username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <div class="mb-6">
-                        <label for="register-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre (min. 6 karakter)</label>
-                        <input type="password" id="register-password" autocomplete="new-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Kayıt Ol</button>
-                </form>
-            </div>
-        </div>
 
         <?php include 'nav.php'; ?>
                 <!-- Yarışma Sekmesi İçeriği -->

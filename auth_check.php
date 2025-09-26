@@ -4,8 +4,8 @@ session_start();
 
 // Kullanıcı giriş yapmış mı kontrol et
 if (!isset($_SESSION['user_id'])) {
-    // Giriş yapmamışsa ana sayfaya yönlendir
-    header('Location: ' . DOMAIN . 'index.php');
+    // Giriş yapmamışsa login sayfasına yönlendir
+    header('Location: ' . DOMAIN . 'login.php');
     exit();
 }
 
