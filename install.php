@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.2.0'; // Current schema version
+$current_version = '1.3.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -392,6 +392,41 @@ try {
   ");
   echo "API anahtarları tablosu oluşturuldu.\n";
 
+  // Performance İndexleri Ekle
+  echo "Performance indexleri ekleniyor...\n";
+
+  // Leaderboard performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_leaderboard_score_updated ON leaderboard (score DESC, last_updated ASC)");
+
+  // Friends performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_status ON friends (status)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_action_user ON friends (action_user_id)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_created ON friends (created_at)");
+
+  // Duels performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_status ON duels (status)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_category_difficulty ON duels (category, difficulty)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_created ON duels (created_at)");
+
+  // User quests performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_user_quests_assigned_date ON user_quests (assigned_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_user_quests_completed ON user_quests (is_completed)");
+
+  // Announcements performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_announcements_active_dates ON announcements (is_active, start_date, end_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_announcements_target_group ON announcements (target_group)");
+
+  // API keys performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys (is_active)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_api_keys_usage ON api_keys (usage_count ASC)");
+
+  // Users performance indexleri
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_role ON users (role)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_last_login ON users (last_login_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_created ON users (created_at)");
+
+  echo "Performance indexleri başarıyla eklendi.\n";
+
     // Fresh install tamamlandı, son versiyonu işaretle
     markMigrationComplete($pdo, $current_version, "Fresh install completed");
     echo "\n✅ Fresh install başarıyla tamamlandı!\n";
@@ -414,6 +449,10 @@ try {
       $migrations_to_run[] = '1.2.0';
     }
 
+    if (versionCompare($installed_version, '1.3.0') < 0) {
+      $migrations_to_run[] = '1.3.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -431,6 +470,9 @@ try {
             break;
           case '1.2.0':
             migration_1_2_0($pdo);
+            break;
+          case '1.3.0':
+            migration_1_3_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -748,4 +790,47 @@ function migration_1_2_0($pdo) {
   ");
 
   markMigrationComplete($pdo, '1.2.0', 'API keys table added for multiple key support');
+}
+
+function migration_1_3_0($pdo) {
+  echo "→ Migration 1.3.0: Performance indexleri ekleniyor...\n";
+
+  // Leaderboard performance indexleri
+  echo "  Leaderboard indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_leaderboard_score_updated ON leaderboard (score DESC, last_updated ASC)");
+
+  // Friends performance indexleri
+  echo "  Friends indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_status ON friends (status)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_action_user ON friends (action_user_id)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_friends_created ON friends (created_at)");
+
+  // Duels performance indexleri
+  echo "  Duels indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_status ON duels (status)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_category_difficulty ON duels (category, difficulty)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_duels_created ON duels (created_at)");
+
+  // User quests performance indexleri
+  echo "  User quests indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_user_quests_assigned_date ON user_quests (assigned_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_user_quests_completed ON user_quests (is_completed)");
+
+  // Announcements performance indexleri
+  echo "  Announcements indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_announcements_active_dates ON announcements (is_active, start_date, end_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_announcements_target_group ON announcements (target_group)");
+
+  // API keys performance indexleri
+  echo "  API keys indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys (is_active)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_api_keys_usage ON api_keys (usage_count ASC)");
+
+  // Users performance indexleri
+  echo "  Users indexleri...\n";
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_role ON users (role)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_last_login ON users (last_login_date)");
+  $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_created ON users (created_at)");
+
+  markMigrationComplete($pdo, '1.3.0', 'Performance indexes added for query optimization');
 }
