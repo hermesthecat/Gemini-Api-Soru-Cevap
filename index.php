@@ -335,27 +335,4 @@ include 'header.php';
         </div>
     </div>
 
-    <!-- Ses Efektleri -->
-    <audio id="correct-sound" src="https://actions.google.com/sounds/v1/positive/success.ogg" preload="auto"></audio>
-    <audio id="incorrect-sound" src="https://actions.google.com/sounds/v1/negative/failure.ogg" preload="auto"></audio>
-    <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-    <audio id="achievement-sound" src="https://actions.google.com/sounds/v1/achievements/achievement_bell.ogg" preload="auto"></audio>
-
-    <script src="assets/js/api-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/app-data.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/app-state.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/auth-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/game-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/stats-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/admin-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/settings-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/friends-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/duel-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/quest-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/shop-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/announcement-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/app.js?v=<?php echo $v; ?>"></script>
-</body>
-
-</html>
+<?php include 'footer.php'; ?>
