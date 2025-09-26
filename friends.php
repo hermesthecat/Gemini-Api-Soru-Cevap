@@ -1,11 +1,14 @@
-<?php include 'header.php'; ?>
+<?php
+include 'auth_check.php';
+include 'header.php';
+?>
 
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
         <?php include 'nav.php'; ?>
                 <!-- Arkadaşlar Sekmesi İçeriği -->
-        <div id="arkadaslar-tab" class="main-tab-content">
+        <div id="arkadaslar-tab" class="main-tab-content block">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Sol Taraf: Arkadaş Arama ve İstekler -->
                 <div class="space-y-8">

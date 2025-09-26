@@ -1,4 +1,7 @@
-<?php include 'header.php'; ?>
+<?php
+require_once 'config.php';
+include 'header.php';
+?>
 
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">

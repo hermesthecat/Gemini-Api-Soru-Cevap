@@ -1,21 +1,23 @@
         <!-- ===== ANA UYGULAMA EKRANI (Giriş yapıldığında görünür) ===== -->
-        <div id="main-view" class="hidden">
+        <div id="main-view" class="block">
             <!-- Üst Bar -->
             <header class="flex justify-between items-center mb-6">
                 <div id="user-info" class="flex items-center space-x-4">
                     <div class="flex items-center">
-                        <img id="user-avatar-display" src="assets/images/avatars/avatar1.svg" alt="User Avatar" class="w-10 h-10 rounded-full">
+                        <img id="user-avatar-display" src="assets/images/avatars/<?php echo isset($user_data) ? htmlspecialchars($user_data['avatar']) : 'avatar1.svg'; ?>" alt="User Avatar" class="w-10 h-10 rounded-full">
                         <div class="ml-3">
-                            <h2 id="welcome-message" class="text-sm font-semibold text-gray-700 dark:text-gray-200">Hoş Geldin, ...!</h2>
+                            <h2 id="welcome-message" class="text-sm font-semibold text-gray-700 dark:text-gray-200">Hoş Geldin, <?php echo isset($user_data) ? htmlspecialchars($user_data['username']) : '...'; ?>!</h2>
                             <div class="flex items-center text-sm text-yellow-500 font-bold">
                                 <i class="fas fa-coins mr-1"></i>
-                                <span id="user-coin-balance">0</span>
+                                <span id="user-coin-balance"><?php echo isset($user_data) ? intval($user_data['coins']) : 0; ?></span>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button id="admin-view-btn" class="hidden text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>
+                    <?php if (isset($user_data) && $user_data['role'] === 'admin'): ?>
+                    <button id="admin-view-btn" class="text-sm bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded-lg transition-colors">Yönetim Paneli</button>
+                    <?php endif; ?>
                     <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors">
                         <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
                         <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
@@ -40,27 +42,39 @@
             <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="main-tabs">
                     <li class="mr-2">
-                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="yarışma">
+                        <a href="<?php echo DOMAIN; ?>index.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
                             <i class="fas fa-gamepad mr-2"></i>Yarışma
-                        </button>
+                        </a>
                     </li>
                     <li class="mr-2">
-                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="profil">
+                        <a href="<?php echo DOMAIN; ?>profile.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'profile.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
                             <i class="fas fa-user-chart mr-2"></i>Profil ve İstatistikler
-                        </button>
+                        </a>
                     </li>
                     <li class="mr-2">
-                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="arkadaslar">
+                        <a href="<?php echo DOMAIN; ?>friends.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'friends.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
                             <i class="fas fa-users mr-2"></i>Arkadaşlar
-                        </button>
+                        </a>
                     </li>
                     <li class="mr-2">
-                        <button class="main-tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="magaza">
+                        <a href="<?php echo DOMAIN; ?>shop.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'shop.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
                             <i class="fas fa-store mr-2"></i>Mağaza
-                        </button>
+                        </a>
                     </li>
                 </ul>
             </div>
 
             <!-- Sekme İçerikleri -->
             <div id="tab-content">
+        </div>
+
+        <script>
+            // CSRF token ve kullanıcı bilgilerini JavaScript'e aktar
+            window.appState = window.appState || {};
+            if (window.appState.set) {
+                <?php if (isset($user_data)): ?>
+                window.appState.set('currentUser', <?php echo json_encode($user_data); ?>);
+                window.appState.set('csrfToken', '<?php echo htmlspecialchars($user_data['csrf_token']); ?>');
+                <?php endif; ?>
+            }
+        </script>

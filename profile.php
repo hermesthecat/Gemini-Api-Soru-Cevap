@@ -1,11 +1,14 @@
-<?php include 'header.php'; ?>
+<?php
+include 'auth_check.php';
+include 'header.php';
+?>
 
     <!-- Ana Konteyner -->
     <div id="app-container" class="container mx-auto px-4 py-8 max-w-4xl">
 
         <?php include 'nav.php'; ?>
                 <!-- Profil Sekmesi İçeriği -->
-        <div id="profil-tab" class="main-tab-content">
+        <div id="profil-tab" class="main-tab-content block">
             <aside class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- Sol Taraf (İstatistikler ve Liderlik) -->
                 <div class="space-y-8">
