@@ -264,16 +264,15 @@ const ui = (() => {
             rankSpan.className = 'font-bold w-6 text-center';
             rankSpan.textContent = `${index + 1}.`;
 
-            const avatarImg = document.createElement('img');
-            avatarImg.src = `assets/images/avatars/${player.avatar}`;
-            avatarImg.alt = player.username;
-            avatarImg.className = 'w-8 h-8 rounded-full';
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm';
+            avatarDiv.textContent = player.username.charAt(0).toUpperCase();
 
             const nameSpan = document.createElement('span');
             nameSpan.textContent = player.username;
 
             playerDiv.appendChild(rankSpan);
-            playerDiv.appendChild(avatarImg);
+            playerDiv.appendChild(avatarDiv);
             playerDiv.appendChild(nameSpan);
 
             const scoreSpan = document.createElement('span');
