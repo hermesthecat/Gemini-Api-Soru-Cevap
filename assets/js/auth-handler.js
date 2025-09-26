@@ -61,5 +61,15 @@ const auth = {
             this.dom.showLoginBtn.classList.remove('border-blue-500', 'text-blue-500');
             this.dom.showRegisterBtn.classList.add('border-blue-500', 'text-blue-500');
         });
+    },
+
+    async checkUserSession() {
+        try {
+            const result = await api.call('check_session');
+            return result;
+        } catch (error) {
+            console.error('Session check failed:', error);
+            return { success: false };
+        }
     }
 }; 

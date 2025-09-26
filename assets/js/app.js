@@ -138,11 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * Uygulama yaşam döngüsünü yöneten ana fonksiyonlar.
      */
     const App = {
-        init() {
+        async init() {
             // Tüm modülleri DOM elementleriyle başlat
             // Modüller ihtiyaç duydukları diğer modüllere (örn: appState, ui) global olarak erişir.
             ui.init(dom);
-            auth.init(dom);
+            auth.init(dom, ui);
             game.init(dom);
             statsHandler.init(dom);
             adminHandler.init(dom);
@@ -157,7 +157,23 @@ document.addEventListener('DOMContentLoaded', () => {
             this.addEventListeners();
 
             // Oturum kontrolü ile uygulamayı başlat
-            auth.checkUserSession();
+            await this.checkUserSession();
+        },
+
+        async checkUserSession() {
+            try {
+                const result = await auth.checkUserSession();
+                if (result && result.success) {
+                    // Kullanıcı giriş yapmış
+                    this.onLoginSuccess({detail: result});
+                } else {
+                    // Kullanıcı giriş yapmamış, auth view göster
+                    ui.showView('auth');
+                }
+            } catch (error) {
+                console.error('Session check failed:', error);
+                ui.showView('auth');
+            }
         },
 
         addEventListeners() {

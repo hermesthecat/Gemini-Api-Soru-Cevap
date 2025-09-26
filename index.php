@@ -1,3 +1,10 @@
+<?php
+// Cache busting için 7 haneli random sayı üretici
+function getVersion() {
+    return mt_rand(1000000, 9999999);
+}
+$v = getVersion();
+?>
 <!DOCTYPE html>
 <html lang="tr">
 
@@ -5,9 +12,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Bilgi Yarışması</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?php echo $v; ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Tema yönetimi için FOUC önleyici betik
@@ -41,11 +49,11 @@
                 <form id="login-form">
                     <div class="mb-4">
                         <label for="login-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
-                        <input type="text" id="login-username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="text" id="login-username" autocomplete="username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <div class="mb-6">
                         <label for="login-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre</label>
-                        <input type="password" id="login-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="password" id="login-password" autocomplete="current-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Giriş Yap</button>
                 </form>
@@ -54,11 +62,11 @@
                 <form id="register-form" class="hidden">
                     <div class="mb-4">
                         <label for="register-username" class="block mb-2 text-sm font-medium dark:text-gray-300">Kullanıcı Adı</label>
-                        <input type="text" id="register-username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="text" id="register-username" autocomplete="username" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <div class="mb-6">
                         <label for="register-password" class="block mb-2 text-sm font-medium dark:text-gray-300">Şifre (min. 6 karakter)</label>
-                        <input type="password" id="register-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <input type="password" id="register-password" autocomplete="new-password" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Kayıt Ol</button>
                 </form>
@@ -573,20 +581,21 @@
     <audio id="timeout-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
     <audio id="achievement-sound" src="https://actions.google.com/sounds/v1/achievements/achievement_bell.ogg" preload="auto"></audio>
 
-    <script src="assets/js/api-handler.js"></script>
-    <script src="assets/js/app-data.js"></script>
-    <script src="assets/js/app-state.js"></script>
-    <script src="assets/js/ui-handler.js"></script>
-    <script src="assets/js/auth-handler.js"></script>
-    <script src="assets/js/game-handler.js"></script>
-    <script src="assets/js/stats-handler.js"></script>
-    <script src="assets/js/admin-handler.js"></script>
-    <script src="assets/js/settings-handler.js"></script>
-    <script src="assets/js/friends-handler.js"></script>
-    <script src="assets/js/duel-handler.js"></script>
-    <script src="assets/js/quest-handler.js"></script>
-    <script src="assets/js/announcement-handler.js"></script>
-    <script src="assets/js/app.js"></script>
+    <script src="assets/js/api-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/app-data.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/app-state.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/auth-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/game-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/stats-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/settings-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/friends-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/duel-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/quest-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/shop-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/announcement-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/app.js?v=<?php echo $v; ?>"></script>
 </body>
 
 </html>

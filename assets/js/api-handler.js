@@ -1,8 +1,8 @@
 const api = (() => {
 
     const call = async (action, data = {}, method = 'POST', showLoading = true) => {
-        if (showLoading) {
-            ui.showLoading(true);
+        if (showLoading && window.ui && window.ui.showLoading) {
+            window.ui.showLoading(true);
         }
 
         const options = {
@@ -14,7 +14,7 @@ const api = (() => {
         };
 
         // POST isteklerine CSRF token ekle
-        const csrfToken = appState.get('csrfToken');
+        const csrfToken = window.appState && window.appState.get ? window.appState.get('csrfToken') : null;
         if (method === 'POST' && csrfToken) {
             options.headers['X-CSRF-Token'] = csrfToken;
         }
@@ -47,11 +47,13 @@ const api = (() => {
         } catch (error) {
             // Bu blok, ağ hatalarını (fetch başarısız oldu) veya yukarıda fırlattığımız hataları yakalar.
             console.error(`API Çağrı Hatası (${action}):`, error);
-            ui.showToast(error.message, 'error');
+            if (window.ui && window.ui.showToast) {
+                window.ui.showToast(error.message, 'error');
+            }
             return { success: false, message: error.message }; // Çağıran fonksiyona standart bir hata nesnesi döndür
         } finally {
-            if (showLoading) {
-                ui.showLoading(false);
+            if (showLoading && window.ui && window.ui.showLoading) {
+                window.ui.showLoading(false);
             }
         }
     };
