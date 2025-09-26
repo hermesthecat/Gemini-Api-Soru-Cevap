@@ -59,17 +59,6 @@
         </div>
     </div>
 
-    <!-- Günlük Görevler -->
-    <div id="daily-quests-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold mb-4 dark:text-white">Günlük Görevler</h2>
-        <div id="daily-quests-list" class="space-y-4">
-            <!-- Görevler JS ile buraya yüklenecek -->
-        </div>
-        <div id="daily-quests-loading" class="text-center py-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-            <p class="text-gray-500 dark:text-gray-400 mt-2">Görevler yükleniyor...</p>
-        </div>
-    </div>
 
     <!-- Duyuru Modal -->
     <div id="announcement-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">

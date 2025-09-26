@@ -72,7 +72,7 @@ class DataController
     public function getActiveAnnouncements()
     {
         $user_id = $_SESSION['user_id'];
-        $user_role = $_SESSION['user_role'];
+        $user_role = $_SESSION['role'] ?? 'user';
 
         // Kullanıcının rolüne göre hedef grupları belirle
         $target_groups = ['all'];
@@ -86,7 +86,7 @@ class DataController
         $stmt = $this->pdo->prepare("
             SELECT a.id, a.title, a.content, a.created_at
             FROM announcements a
-            LEFT JOIN user_announcements ua ON a.id = ua.announcement_id AND ua.user_id = :user_id
+            LEFT JOIN user_announcements ua ON a.id = ua.announcement_id AND ua.user_id = ?
             WHERE a.is_active = TRUE
               AND a.start_date <= CURRENT_TIMESTAMP
               AND a.end_date >= CURRENT_TIMESTAMP
@@ -95,13 +95,8 @@ class DataController
             ORDER BY a.created_at DESC
         ");
 
-        $params = array_merge([$user_role], [$user_id]);
-        $stmt->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-        foreach ($target_groups as $k => $group) {
-            $stmt->bindValue(($k + 1), $group);
-        }
-
-        $stmt->execute();
+        $params = array_merge([$user_id], $target_groups);
+        $stmt->execute($params);
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
