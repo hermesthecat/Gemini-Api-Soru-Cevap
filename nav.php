@@ -4,7 +4,9 @@
             <header class="flex justify-between items-center mb-6">
                 <div id="user-info" class="flex items-center space-x-4">
                     <div class="flex items-center">
-                        <img id="user-avatar-display" src="assets/images/avatars/<?php echo isset($user_data) ? htmlspecialchars($user_data['avatar']) : 'avatar1.svg'; ?>" alt="User Avatar" class="w-10 h-10 rounded-full">
+                        <div id="user-avatar-display" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                            <?php echo isset($user_data) ? strtoupper(substr($user_data['username'], 0, 1)) : '?'; ?>
+                        </div>
                         <div class="ml-3">
                             <h2 id="welcome-message" class="text-sm font-semibold text-gray-700 dark:text-gray-200">Hoş Geldin, <?php echo isset($user_data) ? htmlspecialchars($user_data['username']) : '...'; ?>!</h2>
                             <div class="flex items-center text-sm text-yellow-500 font-bold">
@@ -57,7 +59,7 @@
                     </li>
                     <li class="mr-2">
                         <a href="<?php echo DOMAIN; ?>profile.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'profile.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
-                            <i class="fas fa-user-chart mr-2"></i>Profil ve İstatistikler
+                            <i class="fas fa-user-chart mr-2"></i>Profil
                         </a>
                     </li>
                     <li class="mr-2">
@@ -68,6 +70,11 @@
                     <li class="mr-2">
                         <a href="<?php echo DOMAIN; ?>shop.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'shop.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
                             <i class="fas fa-store mr-2"></i>Mağaza
+                        </a>
+                    </li>
+                    <li class="mr-2">
+                        <a href="<?php echo DOMAIN; ?>leaderboard.php" class="main-tab-link inline-block p-4 border-b-2 rounded-t-lg hover:text-blue-600 hover:border-blue-300 <?php echo (basename($_SERVER['PHP_SELF']) == 'leaderboard.php') ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'; ?>">
+                            <i class="fas fa-trophy mr-2"></i>Liderlik
                         </a>
                     </li>
                 </ul>

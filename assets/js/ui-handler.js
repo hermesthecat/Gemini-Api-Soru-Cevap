@@ -185,12 +185,10 @@ const ui = (() => {
         }
     };
 
-    const renderWelcomeMessage = (username, avatar) => {
+    const renderWelcomeMessage = (username) => {
         if (!dom.welcomeMessage) return;
         dom.welcomeMessage.textContent = `Hoş Geldin, ${username}!`;
-        if (dom.userAvatarDisplay) {
-            dom.userAvatarDisplay.src = `assets/images/avatars/${avatar}`;
-        }
+        updateAvatarDisplay(username);
     };
 
     const toggleAdminButton = (isAdmin) => {
@@ -338,11 +336,10 @@ const ui = (() => {
             const userCell = document.createElement('td');
             userCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center space-x-3';
 
-            const avatarImg = document.createElement('img');
-            avatarImg.src = `assets/images/avatars/${user.avatar}`;
-            avatarImg.alt = user.username;
-            avatarImg.className = 'w-10 h-10 rounded-full';
-            userCell.appendChild(avatarImg);
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold';
+            avatarDiv.textContent = user.username.charAt(0).toUpperCase();
+            userCell.appendChild(avatarDiv);
 
             const nameDiv = document.createElement('div');
             const nameSpan = document.createElement('span');
@@ -430,7 +427,7 @@ const ui = (() => {
             userEl.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
             userEl.innerHTML = `
                 <div class="flex items-center space-x-3">
-                    <img src="assets/images/avatars/${user.avatar}" alt="${user.username}" class="w-8 h-8 rounded-full">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">${user.username.charAt(0).toUpperCase()}</div>
                     <span class="font-semibold text-gray-700 dark:text-gray-300">${user.username}</span>
                 </div>
                 <button data-user-id="${user.id}" class="add-friend-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-lg transition-colors">
@@ -793,48 +790,11 @@ const ui = (() => {
         });
     };
 
-    const populateAvatarGrid = (currentAvatar) => {
-        if (!dom.avatarGrid) return;
-        dom.avatarGrid.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-            const avatarFile = `avatar${i}.svg`;
-            const avatarWrapper = document.createElement('div');
-            avatarWrapper.className = 'relative cursor-pointer avatar-wrapper';
 
-            const avatarImg = document.createElement('img');
-            avatarImg.src = `assets/images/avatars/${avatarFile}`;
-            avatarImg.dataset.avatar = avatarFile;
-            avatarImg.className = `w-full h-auto rounded-full transition-all duration-200`;
-
-            const checkmark = document.createElement('div');
-            checkmark.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 transition-opacity';
-            checkmark.innerHTML = '<i class="fas fa-check text-white text-2xl"></i>';
-
-            if (avatarFile === currentAvatar) {
-                avatarImg.classList.add('ring-4', 'ring-blue-500', 'p-1');
-                avatarWrapper.classList.add('selected');
-            }
-
-            avatarWrapper.appendChild(avatarImg);
-            avatarWrapper.appendChild(checkmark);
-            dom.avatarGrid.appendChild(avatarWrapper);
-        }
-    };
-
-    const updateAvatarDisplay = (newAvatar) => {
+    const updateAvatarDisplay = (username) => {
         if (dom.userAvatarDisplay) {
-            dom.userAvatarDisplay.src = `assets/images/avatars/${newAvatar}`;
-        }
-        if (dom.avatarGrid) {
-            dom.avatarGrid.querySelectorAll('.avatar-wrapper').forEach(wrapper => {
-                wrapper.classList.remove('selected');
-                wrapper.querySelector('img').classList.remove('ring-4', 'ring-blue-500', 'p-1');
-            });
-            const newSelection = dom.avatarGrid.querySelector(`img[data-avatar="${newAvatar}"]`);
-            if (newSelection) {
-                newSelection.classList.add('ring-4', 'ring-blue-500', 'p-1');
-                newSelection.parentElement.classList.add('selected');
-            }
+            const initial = username ? username.charAt(0).toUpperCase() : '?';
+            dom.userAvatarDisplay.textContent = initial;
         }
     };
 
@@ -907,7 +867,6 @@ const ui = (() => {
         renderFriendsList,
         showDuelModal,
         renderDuelsList,
-        populateAvatarGrid,
         updateAvatarDisplay,
         showAnnouncementsModal,
         renderAnnouncementsModal,

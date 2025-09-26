@@ -23,9 +23,9 @@ class FriendsController
         }
 
         $stmt = $this->pdo->prepare("
-            SELECT u.id, u.username, u.avatar
+            SELECT u.id, u.username
             FROM users u
-            WHERE u.username LIKE ? 
+            WHERE u.username LIKE ?
               AND u.id != ?
               AND NOT EXISTS (
                   SELECT 1 FROM friends f 

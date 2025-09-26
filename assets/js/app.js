@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardLoading: document.getElementById('leaderboard-loading'),
         achievementsList: document.getElementById('achievements-list'),
         noAchievementsMessage: document.getElementById('no-achievements-message'),
-        avatarGrid: document.getElementById('avatar-grid'),
         userAvatarDisplay: document.getElementById('user-avatar-display'),
         // Admin View
         adminTotalUsers: document.getElementById('admin-total-users'),
@@ -196,14 +195,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         onLoginSuccess(e) {
             const { data: userData, daily_reward } = e.detail;
-            appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role, avatar: userData.avatar });
+            appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
             appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', userData.lifelines);
 
             // MPA'da her sayfa kendi UI'ını yönetir
             if (typeof game !== 'undefined') game.updateLifelineUI();
             if (typeof ui !== 'undefined') {
-                ui.renderWelcomeMessage(userData.username, userData.avatar);
+                ui.renderWelcomeMessage(userData.username);
                 ui.updateCoinBalance(userData.coins);
                 ui.toggleAdminButton(userData.role === 'admin');
             }

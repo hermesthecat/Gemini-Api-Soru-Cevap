@@ -1,4 +1,9 @@
 <?php
+// Session başlat
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Cache busting için 7 haneli random sayı üretici
 function getVersion() {
     return mt_rand(1000000, 9999999);
@@ -28,3 +33,14 @@ $v = getVersion();
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200 font-sans">
+
+    <!-- Header Admin Link -->
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+    <div class="bg-purple-600 text-white py-1 px-4 text-center text-sm">
+        <i class="fas fa-crown mr-2"></i>Admin Paneli:
+        <a href="admin-users.php" class="underline hover:text-purple-200">Kullanıcılar</a> |
+        <a href="admin-announcements.php" class="underline hover:text-purple-200">Duyurular</a> |
+        <a href="admin-stats.php" class="underline hover:text-purple-200">İstatistikler</a> |
+        <a href="index.php" class="underline hover:text-purple-200">Ana Sayfa</a>
+    </div>
+    <?php endif; ?>

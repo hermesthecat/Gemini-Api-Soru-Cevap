@@ -43,10 +43,6 @@ class UserController
         $stmt->execute([$username, $hashed_password]);
         $user_id = $this->pdo->lastInsertId();
 
-        // Yeni kullanıcı için varsayılan bir avatar ata
-        $default_avatar = 'avatar' . rand(1, 10) . '.svg';
-        $stmt_avatar = $this->pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-        $stmt_avatar->execute([$default_avatar, $user_id]);
 
         // Yeni kullanıcı için leaderboard'a 0 skorla ekle
         $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score, coins) VALUES (?, 0, 100)"); // 100 başlangıç jetonu
@@ -65,7 +61,7 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.avatar, u.last_login_date, u.login_streak, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass 
+        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.last_login_date, u.login_streak, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass
             FROM users u
             JOIN leaderboard l ON u.id = l.user_id
             WHERE u.username = ?");
@@ -132,9 +128,8 @@ class UserController
                 session_regenerate_id(true);
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
-                $_SESSION['user_role'] = $user['role'];
-                $_SESSION['user_avatar'] = $user['avatar'];
-                $_SESSION['user_coins'] = $user['coins'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['coins'] = $user['coins'];
                 $_SESSION['lifelines'] = [
                     'fiftyFifty' => $user['lifeline_fifty_fifty'],
                     'extraTime' => $user['lifeline_extra_time'],
@@ -148,7 +143,6 @@ class UserController
                         'id' => $user['id'],
                         'username' => $user['username'],
                         'role' => $user['role'],
-                        'avatar' => $user['avatar'],
                         'coins' => $user['coins'],
                         'lifelines' => $_SESSION['lifelines'],
                         'csrf_token' => $csrf_token
@@ -187,9 +181,8 @@ class UserController
                 'data' => [
                     'id' => $_SESSION['user_id'],
                     'username' => $_SESSION['username'],
-                    'role' => $_SESSION['user_role'],
-                    'avatar' => $_SESSION['user_avatar'] ?? 'default.svg',
-                    'coins' => $_SESSION['user_coins'] ?? 0,
+                    'role' => $_SESSION['role'],
+                    'coins' => $_SESSION['coins'] ?? 0,
                     'lifelines' => $_SESSION['lifelines'] ?? ['fiftyFifty' => 0, 'extraTime' => 0, 'pass' => 0],
                     'csrf_token' => $csrf_token
                 ]
@@ -199,23 +192,4 @@ class UserController
         }
     }
 
-    public function updateAvatar($data)
-    {
-        $user_id = $_SESSION['user_id'];
-        $new_avatar = $data['avatar'] ?? '';
-
-        if (empty($new_avatar) || !preg_match('/^avatar\d{1,2}\.svg$/', $new_avatar)) {
-            return ['success' => false, 'message' => 'Geçersiz avatar seçimi.'];
-        }
-
-        $stmt = $this->pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-        $stmt->execute([$new_avatar, $user_id]);
-
-        if ($stmt->rowCount() > 0) {
-            $_SESSION['user_avatar'] = $new_avatar;
-            return ['success' => true, 'message' => 'Avatar güncellendi.', 'data' => ['avatar' => $new_avatar]];
-        }
-
-        return ['success' => false, 'message' => 'Avatar güncellenemedi veya zaten bu avatarı kullanıyorsunuz.'];
-    }
 }
