@@ -49,7 +49,7 @@ if (!$action) {
 }
 
 // --- Controller'ları Başlat ---
-$geminiApi = new GeminiAPI(GEMINI_API_KEY);
+$geminiApi = new GeminiAPI(GEMINI_API_KEY, $pdo);
 
 $userController = new UserController($pdo);
 $gameController = new GameController($pdo, $geminiApi);
@@ -120,6 +120,12 @@ try {
         // Settings Routes
         'get_settings' => [$settingsController, 'getSettings', false, true],
         'update_settings' => [$settingsController, 'updateSettings', true, true],
+
+        // API Keys Routes
+        'get_api_keys' => [$settingsController, 'getApiKeys', false, true],
+        'add_api_key' => [$settingsController, 'addApiKey', true, true],
+        'update_api_key_status' => [$settingsController, 'updateApiKeyStatus', true, true],
+        'delete_api_key' => [$settingsController, 'deleteApiKey', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---

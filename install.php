@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.1.0'; // Current schema version
+$current_version = '1.2.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -377,6 +377,21 @@ try {
   }
   echo "Site ayarları tablosu ve varsayılan değerler oluşturuldu.\n";
 
+  // API Anahtarları Tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      api_key TEXT NOT NULL,
+      is_active BOOLEAN DEFAULT TRUE,
+      usage_count INT DEFAULT 0,
+      last_used_at TIMESTAMP NULL DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+  echo "API anahtarları tablosu oluşturuldu.\n";
+
     // Fresh install tamamlandı, son versiyonu işaretle
     markMigrationComplete($pdo, $current_version, "Fresh install completed");
     echo "\n✅ Fresh install başarıyla tamamlandı!\n";
@@ -395,6 +410,10 @@ try {
       $migrations_to_run[] = '1.1.0';
     }
 
+    if (versionCompare($installed_version, '1.2.0') < 0) {
+      $migrations_to_run[] = '1.2.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -409,6 +428,9 @@ try {
             break;
           case '1.1.0':
             migration_1_1_0($pdo);
+            break;
+          case '1.2.0':
+            migration_1_2_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -706,4 +728,24 @@ function migration_1_1_0($pdo) {
   }
 
   markMigrationComplete($pdo, '1.1.0', 'Settings table and default values added');
+}
+
+function migration_1_2_0($pdo) {
+  echo "→ Migration 1.2.0: API anahtarları tablosu ekleniyor...\n";
+
+  // API anahtarları tablosu
+  $pdo->exec("
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      api_key TEXT NOT NULL,
+      is_active BOOLEAN DEFAULT TRUE,
+      usage_count INT DEFAULT 0,
+      last_used_at TIMESTAMP NULL DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  ");
+
+  markMigrationComplete($pdo, '1.2.0', 'API keys table added for multiple key support');
 }
