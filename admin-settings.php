@@ -193,13 +193,7 @@ include 'header.php';
                         </div>
                         <div>
                             <span class="text-gray-500">Timezone:</span>
-                            <span class="text-gray-900 dark:text-white font-mono"><?php
-                                $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
-                                $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'timezone_setting'");
-                                $stmt->execute();
-                                $timezone = $stmt->fetchColumn();
-                                echo $timezone ?: 'Europe/Istanbul';
-                            ?></span>
+                            <span class="text-gray-900 dark:text-white font-mono"><?php echo DEFAULT_TIMEZONE; ?></span>
                         </div>
                         <div>
                             <span class="text-gray-500">Server Time:</span>

@@ -49,7 +49,8 @@ if (!$action) {
 }
 
 // --- Controller'ları Başlat ---
-$geminiApi = new GeminiAPI(GEMINI_API_KEY, $pdo);
+// Gemini API için dinamik API key kullanımı - SettingsController'dan çekilecek
+$geminiApi = new GeminiAPI(null, $pdo); // API key null geçiliyor, GeminiAPI class'ında dinamik çekilecek
 
 $userController = new UserController($pdo);
 $gameController = new GameController($pdo, $geminiApi);
