@@ -15,10 +15,10 @@ include 'header.php';
 
         <?php include 'nav.php'; ?>
 
-        <!-- Admin Quest Yönetimi -->
+        <!-- Admin Görev Yönetimi -->
         <div id="admin-quests-tab" class="admin-tab-content">
             <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Quest Yönetimi</h1>
+                <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Görev Yönetimi</h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Günlük görevleri yönetin ve oluşturun</p>
             </div>
 
@@ -31,7 +31,7 @@ include 'header.php';
                                 <i class="fas fa-tasks text-white text-xl"></i>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Toplam Quest</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Toplam Görev</p>
                                 <p id="total-quests" class="text-2xl font-bold text-gray-800 dark:text-white">-</p>
                             </div>
                         </div>
@@ -42,7 +42,7 @@ include 'header.php';
                                 <i class="fas fa-check-circle text-white text-xl"></i>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm text-gray-600 dark:text-gray-400">Aktif Quest</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Aktif Görev</p>
                                 <p id="active-quests" class="text-2xl font-bold text-gray-800 dark:text-white">-</p>
                             </div>
                         </div>
@@ -73,17 +73,17 @@ include 'header.php';
 
                 <!-- Yeni Quest Formu -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
-                    <h3 class="text-xl font-bold mb-4 dark:text-white">Yeni Quest Oluştur</h3>
+                    <h3 class="text-xl font-bold mb-4 dark:text-white">Yeni Görev Oluştur</h3>
                     <form id="create-quest-form" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="quest-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quest Anahtarı</label>
-                                <input type="text" id="quest-key" name="quest_key" required placeholder="ornek_quest" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
+                                <label for="quest-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Görev Anahtarı</label>
+                                <input type="text" id="quest-key" name="quest_key" required placeholder="ornek_gorev" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
                                 <p class="text-xs text-gray-500 mt-1">Sadece küçük harf, sayı ve alt çizgi kullanın</p>
                             </div>
                             <div>
-                                <label for="quest-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quest Adı</label>
-                                <input type="text" id="quest-name" name="name" required placeholder="Örnek Quest" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
+                                <label for="quest-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Görev Adı</label>
+                                <input type="text" id="quest-name" name="name" required placeholder="Örnek Görev" class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
                             </div>
                         </div>
 
@@ -95,7 +95,7 @@ include 'header.php';
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                                <label for="quest-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quest Tipi</label>
+                                <label for="quest-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Görev Tipi</label>
                                 <select id="quest-type" name="type" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
                                     <option value="">Seçiniz</option>
                                     <option value="solve_category">Kategori Çözme</option>
@@ -130,14 +130,14 @@ include 'header.php';
                             </div>
                         </div>
 
-                        <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">Quest Oluştur</button>
+                        <button type="submit" class="w-full bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">Görev Oluştur</button>
                     </form>
                 </div>
 
                 <!-- Mevcut Quest Listesi -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold dark:text-white">Mevcut Quest'ler</h3>
+                        <h3 class="text-xl font-bold dark:text-white">Mevcut Görevler</h3>
                         <button id="refresh-quests-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
                             <i class="fas fa-sync-alt mr-2"></i>Yenile
                         </button>
@@ -147,7 +147,7 @@ include 'header.php';
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Quest</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Görev</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tip</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hedef/Goal</th>
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ödül</th>
@@ -156,7 +156,7 @@ include 'header.php';
                                 </tr>
                             </thead>
                             <tbody id="quests-list-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                <!-- Quest'ler buraya JS ile eklenecek -->
+                                <!-- Görevler buraya JS ile eklenecek -->
                             </tbody>
                         </table>
                     </div>
@@ -166,11 +166,11 @@ include 'header.php';
 
     </div>
 
-    <!-- Quest Düzenleme Modal -->
+    <!-- Görev Düzenleme Modal -->
     <div id="edit-quest-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold dark:text-white">Quest Düzenle</h2>
+                <h2 class="text-xl font-semibold dark:text-white">Görev Düzenle</h2>
                 <button id="edit-modal-close-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                     <i class="fas fa-times"></i>
                 </button>
@@ -182,7 +182,7 @@ include 'header.php';
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label for="edit-quest-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Quest Adı</label>
+                            <label for="edit-quest-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Görev Adı</label>
                             <input type="text" id="edit-quest-name" name="name" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>

@@ -45,10 +45,10 @@ include 'header.php';
                     <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Başarımlar yükleniyor...</p>
                 </div>
 
-                <!-- Quest Geçmişi -->
+                <!-- Görev Geçmişi -->
                 <div id="quest-history-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold dark:text-white">Quest Geçmişi</h2>
+                        <h2 class="text-xl font-semibold dark:text-white">Görev Geçmişi</h2>
                         <button id="refresh-quest-history-btn" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
                             <i class="fas fa-sync-alt"></i> Yenile
                         </button>
@@ -82,7 +82,7 @@ include 'header.php';
                         </div>
                     </div>
 
-                    <!-- Quest Geçmişi Listesi -->
+                    <!-- Görev Geçmişi Listesi -->
                     <div id="quest-history-list" class="space-y-3">
                         <!-- JS ile doldurulacak -->
                     </div>
@@ -101,10 +101,10 @@ include 'header.php';
                     <!-- Loading ve Placeholder -->
                     <div id="quest-history-loading" class="text-center py-8">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                        <p class="text-gray-500 dark:text-gray-400">Quest geçmişi yükleniyor...</p>
+                        <p class="text-gray-500 dark:text-gray-400">Görev geçmişi yükleniyor...</p>
                     </div>
 
-                    <p id="no-quest-history-message" class="text-gray-500 dark:text-gray-400 text-center py-8 hidden">Henüz tamamlanmış quest bulunmuyor.</p>
+                    <p id="no-quest-history-message" class="text-gray-500 dark:text-gray-400 text-center py-8 hidden">Henüz tamamlanmış görev bulunmuyor.</p>
                 </div>
             </div>
         </div>
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.error('Quest history API error:', response);
                 if (noDataEl) {
-                    noDataEl.textContent = `Quest geçmişi hata: ${response.message || 'Bilinmeyen hata'}`;
+                    noDataEl.textContent = `Görev geçmişi hata: ${response.message || 'Bilinmeyen hata'}`;
                     noDataEl.classList.remove('hidden');
                 }
             }
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Quest history error:', error);
             if (loadingEl) loadingEl.classList.add('hidden');
             if (noDataEl) {
-                noDataEl.textContent = 'Quest geçmişi yüklenirken hata oluştu.';
+                noDataEl.textContent = 'Görev geçmişi yüklenirken hata oluştu.';
                 noDataEl.classList.remove('hidden');
             }
         }

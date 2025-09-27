@@ -119,9 +119,9 @@ include 'header.php';
                         </div>
                     </div>
 
-                    <!-- Son 30 Günlük Quest Trendleri -->
+                    <!-- Son 30 Günlük Görev Trendleri -->
                     <div>
-                        <h4 class="text-lg font-semibold mb-4 dark:text-white">Son 30 Günlük Quest Tamamlama Trendi</h4>
+                        <h4 class="text-lg font-semibold mb-4 dark:text-white">Son 30 Günlük Görev Tamamlama Trendi</h4>
                         <div style="height: 300px; position: relative;">
                             <canvas id="quest-trends-chart"></canvas>
                         </div>

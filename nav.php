@@ -26,7 +26,7 @@
                             <a href="admin-users.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">👥 Kullanıcı Yönetimi</a>
                             <a href="admin-announcements.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📢 Duyuru Yönetimi</a>
                             <a href="admin-achievements.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">🏆 Başarım Yönetimi</a>
-                            <a href="admin-quests.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📋 Quest Yönetimi</a>
+                            <a href="admin-quests.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📋 Görev Yönetimi</a>
                             <a href="admin-shop.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">🛒 Mağaza Yönetimi</a>
                             <a href="admin-stats.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">📊 İstatistikler</a>
                             <a href="admin-settings.php" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">🔧 Sistem Ayarları</a>
