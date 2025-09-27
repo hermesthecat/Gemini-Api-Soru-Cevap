@@ -17,7 +17,8 @@ const adminHandler = (() => {
         const result = await api.call('admin_get_all_users', {}, 'POST', false);
         if (result && result.success) {
             const currentUser = appState.get('currentUser');
-            ui.renderAdminUserList(result.data, currentUser.id);
+            const currentUserId = currentUser ? currentUser.id : null;
+            ui.renderAdminUserList(result.data, currentUserId);
         }
     };
 
