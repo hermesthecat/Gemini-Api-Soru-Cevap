@@ -437,6 +437,140 @@ class QuestController
     }
 
     /**
+     * Manuel quest refresh - admin veya test amaçlı
+     */
+    public function refreshQuests($data = [])
+    {
+        // Admin kontrolü
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            return ['success' => false, 'message' => 'Bu işlem için admin yetkisi gerekiyor.'];
+        }
+
+        try {
+            $user_id = $data['user_id'] ?? $_SESSION['user_id'];
+            $force = $data['force'] ?? false;
+
+            // Settings'den quest_refresh_time al
+            $stmt = $this->pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'quest_refresh_time'");
+            $stmt->execute();
+            $refresh_hours = (int)($stmt->fetchColumn() ?: 24);
+
+            // Son quest assignment zamanını kontrol et
+            if (!$force) {
+                $stmt = $this->pdo->prepare("
+                    SELECT MAX(assigned_date) as last_assigned
+                    FROM user_quests
+                    WHERE user_id = ?
+                ");
+                $stmt->execute([$user_id]);
+                $last_assigned = $stmt->fetchColumn();
+
+                if ($last_assigned) {
+                    $last_assigned_time = strtotime($last_assigned . ' 00:00:00');
+                    $current_time = time();
+                    $hours_passed = ($current_time - $last_assigned_time) / 3600;
+
+                    if ($hours_passed < $refresh_hours) {
+                        $remaining_hours = $refresh_hours - $hours_passed;
+                        return [
+                            'success' => false,
+                            'message' => sprintf('Quest yenileme için %.1f saat daha beklenmelidir.', $remaining_hours),
+                            'hours_remaining' => $remaining_hours
+                        ];
+                    }
+                }
+            }
+
+            // Yeni quest'ler ata
+            $today = date('Y-m-d');
+            $assigned_count = $this->assignNewQuestsAdvanced($user_id, $today);
+
+            return [
+                'success' => true,
+                'message' => "{$assigned_count} yeni quest atandı.",
+                'assigned_count' => $assigned_count,
+                'refresh_hours' => $refresh_hours
+            ];
+
+        } catch (Exception $e) {
+            error_log("Manual quest refresh error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Quest yenileme sırasında hata oluştu.'];
+        }
+    }
+
+    /**
+     * Gelişmiş quest assignment - cron script ile uyumlu
+     */
+    private function assignNewQuestsAdvanced($user_id, $date, $count = 2)
+    {
+        // Mevcut aktif quest'leri kontrol et
+        $stmt = $this->pdo->prepare("
+            SELECT COUNT(*) as active_count
+            FROM user_quests
+            WHERE user_id = ? AND assigned_date = ? AND is_completed = FALSE
+        ");
+        $stmt->execute([$user_id, $date]);
+        $active_count = (int)$stmt->fetchColumn();
+
+        // Eğer bugün için zaten aktif quest'ler varsa atama
+        if ($active_count >= $count) {
+            return 0;
+        }
+
+        $needed_count = $count - $active_count;
+
+        // Son 7 günde atanan quest'leri al (tekrar engelleme)
+        $stmt = $this->pdo->prepare("
+            SELECT DISTINCT quest_key
+            FROM user_quests
+            WHERE user_id = ? AND assigned_date >= DATE_SUB(?, INTERVAL 7 DAY)
+        ");
+        $stmt->execute([$user_id, $date]);
+        $recent_quests = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        // Uygun quest'leri bul
+        $exclude_clause = empty($recent_quests) ? '' : 'AND quest_key NOT IN (' . str_repeat('?,', count($recent_quests) - 1) . '?)';
+
+        $stmt = $this->pdo->prepare("
+            SELECT quest_key, default_goal
+            FROM quests
+            WHERE is_active = TRUE {$exclude_clause}
+            ORDER BY RAND()
+            LIMIT {$needed_count}
+        ");
+        $stmt->execute($recent_quests);
+        $available_quests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($available_quests)) {
+            return 0;
+        }
+
+        // Quest'leri ata
+        $stmt_insert = $this->pdo->prepare("
+            INSERT INTO user_quests (user_id, quest_key, goal, assigned_date, start_time)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON DUPLICATE KEY UPDATE assigned_date = assigned_date
+        ");
+
+        $assigned_count = 0;
+        foreach ($available_quests as $quest) {
+            try {
+                $stmt_insert->execute([$user_id, $quest['quest_key'], $quest['default_goal'], $date]);
+                if ($stmt_insert->rowCount() > 0) {
+                    $assigned_count++;
+                }
+            } catch (PDOException $e) {
+                // Duplicate key hatası - normal
+                if ($e->getCode() != 23000) {
+                    error_log("Quest assignment error for user {$user_id}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $assigned_count;
+    }
+
+    /**
      * Quest completion time hesaplama - start_time ile completion_time arasındaki dakika farkı
      */
     private static function calculateCompletionTime($pdo, $user_id, $quest_key, $assigned_date)

@@ -144,6 +144,7 @@ try {
 
         // Quest Routes
         'get_daily_quests' => [$questController, 'getDailyQuests', false, true],
+        'refresh_quests' => [$questController, 'refreshQuests', false, true],
 
         // Shop Routes
         'get_shop_items' => [$shopController, 'getShopItems', false, true],
