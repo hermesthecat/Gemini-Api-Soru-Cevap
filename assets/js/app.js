@@ -144,7 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
             auth.init(dom, ui);
             game.init(dom);
             statsHandler.init(dom);
-            adminHandler.init(dom);
+            if (typeof adminHandler !== 'undefined') {
+                adminHandler.init(dom);
+            }
             settingsHandler.init(dom);
             friendsHandler.init(dom);
             duelHandler.init(dom);
@@ -164,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async loadCategories() {
             try {
-                const response = await apiHandler.makeRequest('get_categories');
+                const response = await api.call('get_categories');
                 if (response.success) {
                     // Global state'e kategorileri kaydet
                     appState.categories = response.data;
