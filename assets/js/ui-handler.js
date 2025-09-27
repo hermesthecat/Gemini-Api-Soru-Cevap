@@ -1013,6 +1013,84 @@ const ui = (() => {
         }
     };
 
+    const showAchievementModal = (achievement) => {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('achievement-modal');
+            const modalContent = document.getElementById('achievement-modal-content');
+            const iconContainer = document.getElementById('achievement-modal-icon-container');
+            const nameElement = document.getElementById('achievement-modal-name');
+            const descriptionElement = document.getElementById('achievement-modal-description');
+            const closeBtn = document.getElementById('achievement-modal-close-btn');
+
+            if (!modal || !iconContainer || !nameElement || !descriptionElement || !closeBtn) {
+                console.error('Achievement modal elements not found');
+                resolve();
+                return;
+            }
+
+            // Clear previous icon
+            iconContainer.innerHTML = '';
+
+            // Create achievement icon
+            const iconDiv = document.createElement('div');
+            iconDiv.className = `w-20 h-20 rounded-full flex items-center justify-center mx-auto bg-${achievement.color}-100 dark:bg-${achievement.color}-900`;
+
+            const icon = document.createElement('i');
+            icon.className = `fas ${achievement.icon} fa-2x text-${achievement.color}-500`;
+
+            iconDiv.appendChild(icon);
+            iconContainer.appendChild(iconDiv);
+
+            // Set achievement details
+            nameElement.textContent = achievement.name;
+            descriptionElement.textContent = achievement.description;
+
+            // Show modal with animation
+            modal.classList.remove('hidden');
+
+            // Trigger animation
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modal.classList.add('opacity-100');
+                modalContent.classList.add('scale-100');
+            }, 10);
+
+            // Close handler
+            const closeHandler = () => {
+                // Hide animation
+                modal.classList.remove('opacity-100');
+                modal.classList.add('opacity-0');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    closeBtn.removeEventListener('click', closeHandler);
+                    resolve();
+                }, 300);
+            };
+
+            closeBtn.addEventListener('click', closeHandler);
+
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeHandler();
+                }
+            });
+
+            // Close on Escape key
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    closeHandler();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        });
+    };
+
     return {
         init,
         showView,
@@ -1048,6 +1126,7 @@ const ui = (() => {
         // Quests
         renderQuests,
         renderShop,
-        updateCoinBalance
+        updateCoinBalance,
+        showAchievementModal
     };
 })(); 

@@ -44,20 +44,6 @@
         </div>
     </div>
 
-    <!-- Başarım Modal -->
-    <div id="achievement-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg max-w-md w-full mx-4 text-center">
-            <div class="mb-4">
-                <div class="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-trophy text-white text-2xl"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">Yeni Başarım!</h2>
-                <h3 id="achievement-modal-title" class="text-xl font-semibold text-yellow-600 dark:text-yellow-400 mb-2"></h3>
-                <p id="achievement-modal-description" class="text-gray-600 dark:text-gray-400"></p>
-            </div>
-            <button id="achievement-modal-close" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">Harika!</button>
-        </div>
-    </div>
 
 
     <!-- Duyuru Modal -->
