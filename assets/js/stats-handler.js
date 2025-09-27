@@ -11,26 +11,20 @@ const statsHandler = (() => {
     };
 
     const updateCombinedAchievements = async () => {
-        console.log('updateCombinedAchievements called');
         // API henüz yüklenmediyse bekle
         if (typeof api === 'undefined') {
-            console.log('API not ready for combined achievements, retrying in 1 second');
             setTimeout(updateCombinedAchievements, 1000);
             return;
         }
 
         try {
-            console.log('Calling get_combined_achievements API');
             const result = await api.call('get_combined_achievements', {}, 'POST', false);
-            console.log('Combined achievements API response:', result);
             if (result && result.success) {
                 renderCombinedAchievements(result.data);
             } else {
-                console.error('Combined achievements yüklenemedi:', result.message);
                 showAchievementsPlaceholder();
             }
         } catch (error) {
-            console.error('Combined achievements hatası:', error);
             showAchievementsPlaceholder();
         }
     };
@@ -90,47 +84,34 @@ const statsHandler = (() => {
     };
 
     const updateAchievementProgress = async () => {
-        console.log('updateAchievementProgress called');
         // API henüz yüklenmediyse bekle - global api değişkenini kontrol et
         if (typeof api === 'undefined') {
-            console.log('API not ready, retrying in 1 second');
             setTimeout(updateAchievementProgress, 1000);
             return;
         }
 
         try {
-            console.log('Calling get_achievement_progress API');
             const response = await api.call('get_achievement_progress');
-            console.log('API response received:', response);
             if (response.success) {
-                console.log('Calling renderAchievementProgress with:', response.data);
                 renderAchievementProgress(response.data);
             } else {
-                console.error('Achievement progress yüklenemedi:', response.message);
                 // Hata durumunda placeholder göster
                 showProgressPlaceholder();
             }
         } catch (error) {
-            console.error('Achievement progress hatası:', error);
             showProgressPlaceholder();
         }
     };
 
     const renderAchievementProgress = (progressData) => {
-        console.log('renderAchievementProgress called with:', progressData);
         const container = document.getElementById('achievement-progress-list');
         const noProgressMessage = document.getElementById('no-progress-message');
 
-        console.log('Container:', container);
-        console.log('No progress message:', noProgressMessage);
-
         if (!container) {
-            console.error('achievement-progress-list container not found!');
             return;
         }
 
         if (!progressData || Object.keys(progressData).length === 0) {
-            console.log('No progress data, showing placeholder');
             container.classList.add('hidden');
             if (noProgressMessage) {
                 noProgressMessage.textContent = 'İlerleme verisi bulunamadı.';
@@ -192,7 +173,6 @@ const statsHandler = (() => {
         }
 
         if (!achievementsData || achievementsData.length === 0) {
-            console.log('No achievements data, showing placeholder');
             container.classList.add('hidden');
             if (noAchievementsMessage) {
                 noAchievementsMessage.textContent = 'Başarım verisi bulunamadı.';

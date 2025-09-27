@@ -111,7 +111,7 @@ const adminAchievementHandler = (() => {
                 ui.showToast(response.message || 'Başarım oluşturulurken hata oluştu!', 'error');
             }
         } catch (error) {
-            console.error('Create achievement error:', error);
+            // Create achievement error handled
             ui.showToast('Bir hata oluştu!', 'error');
         } finally {
             ui.showLoading(false);
@@ -145,7 +145,7 @@ const adminAchievementHandler = (() => {
                 ui.showToast(response.message || 'Başarım güncellenirken hata oluştu!', 'error');
             }
         } catch (error) {
-            console.error('Update achievement error:', error);
+            // Update achievement error handled
             ui.showToast('Bir hata oluştu!', 'error');
         } finally {
             ui.showLoading(false);
@@ -159,11 +159,11 @@ const adminAchievementHandler = (() => {
             if (response.success) {
                 renderAchievementsList(response.data);
             } else {
-                console.error('Failed to load achievements:', response.message);
+                // Failed to load achievements
                 ui.showToast('Başarımlar yüklenirken hata oluştu!', 'error');
             }
         } catch (error) {
-            console.error('Load achievements error:', error);
+            // Load achievements error handled
             ui.showToast('Başarımlar yüklenirken hata oluştu!', 'error');
         }
     };
@@ -189,7 +189,7 @@ const adminAchievementHandler = (() => {
                 }
             }
         } catch (error) {
-            console.error('Load stats error:', error);
+            // Load stats error handled
         }
     };
 
@@ -306,7 +306,7 @@ const adminAchievementHandler = (() => {
                 ui.showToast(response.message || 'Başarım detayları alınamadı!', 'error');
             }
         } catch (error) {
-            console.error('Get achievement details error:', error);
+            // Get achievement details error handled
             ui.showToast('Bir hata oluştu!', 'error');
         }
     };
@@ -326,7 +326,7 @@ const adminAchievementHandler = (() => {
                 ui.showToast(response.message || 'Tracking durumu değiştirilemedi!', 'error');
             }
         } catch (error) {
-            console.error('Toggle tracking error:', error);
+            // Toggle tracking error handled
             ui.showToast('Bir hata oluştu!', 'error');
         }
     };
@@ -347,7 +347,7 @@ const adminAchievementHandler = (() => {
                 ui.showToast(response.message || 'Başarım silinemedi!', 'error');
             }
         } catch (error) {
-            console.error('Delete achievement error:', error);
+            // Delete achievement error handled
             ui.showToast('Bir hata oluştu!', 'error');
         }
     };

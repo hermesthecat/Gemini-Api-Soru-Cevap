@@ -111,7 +111,7 @@ const adminQuestHandler = (() => {
             }
         } catch (error) {
             ui.showToast('Bağlantı hatası!', 'error');
-            console.error('Create quest error:', error);
+            // Create quest error handled
         }
     };
 
@@ -137,7 +137,7 @@ const adminQuestHandler = (() => {
             }
         } catch (error) {
             ui.showToast('Bağlantı hatası!', 'error');
-            console.error('Update quest error:', error);
+            // Update quest error handled
         }
     };
 
@@ -152,7 +152,7 @@ const adminQuestHandler = (() => {
             }
         } catch (error) {
             ui.showToast('Bağlantı hatası!', 'error');
-            console.error('Load quests error:', error);
+            // Load quests error handled
         }
     };
 
@@ -281,7 +281,7 @@ const adminQuestHandler = (() => {
             }
         } catch (error) {
             ui.showToast('Quest bilgileri yüklenemedi!', 'error');
-            console.error('Load quest error:', error);
+            // Load quest error handled
         }
     };
 
@@ -302,7 +302,7 @@ const adminQuestHandler = (() => {
             }
         } catch (error) {
             ui.showToast('Bağlantı hatası!', 'error');
-            console.error('Delete quest error:', error);
+            // Delete quest error handled
         }
     };
 
@@ -324,7 +324,7 @@ const adminQuestHandler = (() => {
                 dom.completedToday.textContent = stats.completed_today || '0';
             }
         } catch (error) {
-            console.error('Load stats error:', error);
+            // Load stats error handled
         }
     };
 

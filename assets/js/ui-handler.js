@@ -1062,7 +1062,6 @@ const ui = (() => {
             const closeBtn = document.getElementById('achievement-modal-close-btn');
 
             if (!modal || !iconContainer || !nameElement || !descriptionElement || !closeBtn) {
-                console.error('Achievement modal elements not found');
                 resolve();
                 return;
             }

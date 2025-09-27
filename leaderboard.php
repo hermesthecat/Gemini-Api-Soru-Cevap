@@ -87,10 +87,15 @@ async function loadLeaderboardStats() {
             }
         }
 
-        // Total questions - set a placeholder value since we don't have direct access
-        document.getElementById('total-questions').textContent = '-';
+        // Admin istatistiklerinden toplam cevaplanan soru sayısını al
+        const adminStatsResponse = await api.call('admin_get_dashboard_data', {}, 'POST', false);
+        if (adminStatsResponse.success) {
+            document.getElementById('total-questions').textContent = adminStatsResponse.data.total_questions_answered || 0;
+        } else {
+            document.getElementById('total-questions').textContent = '-';
+        }
     } catch (error) {
-        console.log('İstatistikler yüklenirken hata:', error);
+        // Error loading leaderboard stats
     }
 }
 </script>

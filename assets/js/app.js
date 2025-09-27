@@ -174,10 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Category select'leri güncelle
                     this.populateCategorySelects();
                 } else {
-                    console.error('Kategoriler yüklenemedi:', response.message);
+                    // Categories failed to load
                 }
             } catch (error) {
-                console.error('Kategori yükleme hatası:', error);
+                // Category loading error
             }
         },
 
