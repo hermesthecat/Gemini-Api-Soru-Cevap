@@ -2,27 +2,31 @@
 
 Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve potansiyel özelliklerini özetlemektedir.
 
+*Son güncelleme: 2025-09-28 (Question Rating System tamamlandı!)*
+
 ---
 
 ## 🚀 Yüksek Öncelik (1-2 Ay İçinde)
 
 Bu bölüm, acil olarak geliştirilmesi gereken kritik özellikleri içerir.
 
-### 1. Soru Kalitesi ve İçerik Yönetimi
+### 1. Teknik Borç ve Performans (UPGRADED TO TOP PRIORITY)
 
-- [ ] **Soru Kalitesi Geribildirimi (KRITIK):** Kullanıcıların soruları (1-5 yıldız) oylayabilmesi veya hatalı/kalitesiz soruları raporlayabilmesi için bir mekanizma ekle.
-- [ ] **Soru Yönetimi (KRITIK):** Raporlanan soruları incelemek ve yönetmek için admin arayüzü.
-- [ ] **Soru Kalite Metrikleri:** Admin paneline soru kalite istatistikleri ve düşük puanlı soruların otomatik flaglenmesi.
-
-### 2. Teknik Borç ve Performans
-
-- [ ] **Frontend Refactoring (ÖNEMLİ):** `ui-handler.js` (44KB) dosyasını daha küçük, yönetilebilir modüllere ayır.
+- [ ] **Frontend Refactoring (KRİTİK):** `ui-handler.js` (44KB) dosyasını daha küçük, yönetilebilir modüllere ayır.
 - [ ] **Database Optimizasyonu:** Slow query'leri tespit et ve indexing iyileştirmeleri yap.
 - [ ] **Caching Layer:** Redis veya benzeri ile session ve query caching ekle.
+- [ ] **PWA Implementation:** Progressive Web App özelliklerini tam implement et.
+
+### 2. Güvenlik Sıkılaştırma
+
+- [ ] **Two-Factor Authentication:** 2FA sistemi ekle.
+- [ ] **Advanced Session Management:** Session hijacking koruması.
+- [ ] **API Rate Limiting Geliştirme:** Gelişmiş rate limiting ve DDoS koruması.
+- [ ] **Input Validation Hardening:** Tüm input'lar için comprehensive validation.
 
 ---
 
-## ⚡ Orta Öncelik (2-6 Ay İçinde)
+## ⚡ Orta Öncelik (Q1-Q2 2026)
 
 Bu bölüm, orta vadede planlanması gereken özellikleri içerir.
 
@@ -46,7 +50,7 @@ Bu bölüm, orta vadede planlanması gereken özellikleri içerir.
 
 ---
 
-## 🌟 Uzun Vadeli Hedefler (6+ Ay)
+## 🌟 Uzun Vadeli Hedefler (Q3-Q4 2026)
 
 Bu bölüm, projenin uzun vadeli vizyonunu destekleyen büyük özellikler ve değişiklikleri içerir.
 
@@ -133,6 +137,14 @@ Bu bölüm, daha önce tamamlanmış olan ana özellikleri ve yeniden yapıland�
 - **AI Question Generation:** Gemini API entegrasyonu.
 - **Question Caching:** Database-first approach ile performans optimizasyonu.
 - **Dynamic Categories:** Admin panelinden kategori yönetimi.
+- **Question Rating System:** Kullanıcı puanlama ve admin inceleme sistemi.
+
+**Soru Kalitesi ve Yönetim (2025 Q4):**
+
+- **Soru Kalitesi Geribildirimi:** 1-5 yıldız rating sistemi, feedback ve şikayet mekanizması.
+- **Admin Soru Yönetimi:** Raporlanan soruları inceleme, gizleme ve silme arayüzü.
+- **Soru Kalite Metrikleri:** Detaylı istatistikler ve kategori bazında analiz.
+- **Question Review Workflow:** Admin notes ve bulk actions sistemi.
 
 ---
 
@@ -140,9 +152,9 @@ Bu bölüm, daha önce tamamlanmış olan ana özellikleri ve yeniden yapıland�
 
 | Özellik | Öncelik | Zorluk | Impact | Timeline |
 |---------|---------|---------|--------|----------|
-| Soru Kalitesi Geribildirimi | 🔥 Kritik | Orta | Yüksek | 2-3 hafta |
+| ✅ Soru Kalitesi Geribildirimi | 🔥 Kritik | Orta | Yüksek | TAMAMLANDI |
 | Frontend Refactoring | 🔥 Kritik | Yüksek | Yüksek | 4-6 hafta |
-| Soru Yönetimi | 🔥 Kritik | Orta | Yüksek | 2-3 hafta |
+| ✅ Soru Yönetimi | 🔥 Kritik | Orta | Yüksek | TAMAMLANDI |
 | Real-time Bildirimler | ⚡ Orta | Yüksek | Orta | 6-8 hafta |
 | Gelişmiş Profiller | ⚡ Orta | Orta | Orta | 3-4 hafta |
 | Turnuva Modu | 🌟 Düşük | Yüksek | Yüksek | 8-12 hafta |
@@ -150,30 +162,43 @@ Bu bölüm, daha önce tamamlanmış olan ana özellikleri ve yeniden yapıland�
 
 ---
 
-## 🎯 2025 Hedefleri
+## 🎯 2025-2026 Hedefleri
 
-### Q1 2025 (Ocak-Mart)
+### ✅ Q1-Q3 2025 TamamlanAN
 
-- [ ] Soru kalitesi ve yönetim sistemi
-- [ ] Frontend modularization
-- [ ] Performance optimizasyonları
+- ✅ Soru kalitesi ve yönetim sistemi (Question Rating System)
+- ✅ Admin panel geliştirmeleri
+- ✅ Database migration sistemi
+- ❌ Frontend modularization (ertelendi)
+- ❌ Performance optimizasyonları (ertelendi)
 
-### Q2 2025 (Nisan-Haziran)
+### 🔥 Q4 2025 (Ekim-Aralık) - CURRENT FOCUS
 
-- [ ] Real-time features
-- [ ] Gelişmiş sosyal özellikler
-- [ ] PWA optimizasyonu
+- [ ] **Frontend Refactoring:** ui-handler.js modularization (44KB → 4-6 modül)
+- [ ] **Performance Optimization:** Database indexing, Redis caching
+- [ ] **PWA Implementation:** Service worker, offline support
+- [ ] **Security Hardening:** 2FA, session management
+- [ ] **Mobile UX Improvements:** Touch-friendly, responsive enhancements
 
-### Q3 2025 (Temmuz-Eylül)
+### 🚀 Q1 2026 (Ocak-Mart)
 
-- [ ] Turnuva sistemi
-- [ ] Advanced analytics
+- [ ] Real-time bildirimler (WebSocket/SSE)
+- [ ] Gelişmiş kullanıcı profilleri
+- [ ] Turnuva sistemi v1.0
+- [ ] Advanced analytics dashboard
+
+### ⚡ Q2 2026 (Nisan-Haziran)
+
+- [ ] Takım/Klan sistemi
+- [ ] Seasonal events
+- [ ] User-generated content
+- [ ] API v2.0 ve dokümantasyon
+
+### 🌟 Q3-Q4 2026 (Temmuz-Aralık)
+
+- [ ] AI/ML personalization
+- [ ] Microservices mimarisi
 - [ ] Mobile app consideration
-
-### Q4 2025 (Ekim-Aralık)
-
-- [ ] Takım sistemi
-- [ ] AI/ML features
 - [ ] Scaling preparation
 
 ---
