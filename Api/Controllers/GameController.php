@@ -15,15 +15,93 @@ class GameController
     {
         unset($_SESSION['current_question_answer'], $_SESSION['current_question_explanation'], $_SESSION['start_time']);
 
-        $kategori = $data['kategori'] ?? 'genel kültür';
+        $kategori = $data['kategori'] ?? 'genel_kultur';
         $difficulty = $data['difficulty'] ?? 'orta';
 
+        // Önce veritabanından soru çekmeyi dene
+        $question = $this->getQuestionFromDatabase($kategori, $difficulty);
+
+        if ($question) {
+            // Veritabanından soru bulundu
+            $_SESSION['current_question_answer'] = $question['correct_answer'];
+            $_SESSION['current_question_explanation'] = $question['explanation'];
+            $_SESSION['start_time'] = time();
+            $_SESSION['current_question_difficulty'] = $difficulty;
+            $_SESSION['current_question_id'] = $question['id'];
+
+            // Options'ı parse et
+            $options = json_decode($question['options'], true);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'tip' => $question['question_type'],
+                    'question' => $question['question_text'],
+                    'siklar' => $options,
+                    'kategori' => $kategori,
+                    'difficulty' => $difficulty,
+                    'source' => 'database'
+                ]
+            ];
+        }
+
+        // Veritabanında soru yoksa AI'dan çek (fallback)
+        return $this->getQuestionFromAI($kategori, $difficulty);
+    }
+
+    /**
+     * Veritabanından rastgele soru çeker
+     */
+    private function getQuestionFromDatabase($kategori, $difficulty)
+    {
+        try {
+            // Kategori adını normalize et
+            $kategori = str_replace(' ', '_', strtolower($kategori));
+            $kategori = str_replace('ğ', 'g', $kategori);
+            $kategori = str_replace('ş', 's', $kategori);
+            $kategori = str_replace('ç', 'c', $kategori);
+            $kategori = str_replace('ı', 'i', $kategori);
+            $kategori = str_replace('ö', 'o', $kategori);
+            $kategori = str_replace('ü', 'u', $kategori);
+
+            $stmt = $this->pdo->prepare("
+                SELECT id, question_text, question_type, options, correct_answer, explanation
+                FROM questions
+                WHERE category = ? AND difficulty = ?
+                ORDER BY RAND()
+                LIMIT 1
+            ");
+
+            $stmt->execute([$kategori, $difficulty]);
+            $question = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($question) {
+                // Usage count'u artır
+                $update_stmt = $this->pdo->prepare("UPDATE questions SET usage_count = usage_count + 1 WHERE id = ?");
+                $update_stmt->execute([$question['id']]);
+
+                return $question;
+            }
+
+            return null;
+
+        } catch (PDOException $e) {
+            error_log("Database question fetch error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * AI'dan soru çeker (fallback method)
+     */
+    private function getQuestionFromAI($kategori, $difficulty)
+    {
         $tip = (rand(1, 100) <= 75) ? 'coktan_secmeli' : 'dogru_yanlis';
         $prompt = self::generatePrompt($tip, $kategori, $difficulty);
         $yanit = $this->gemini->soruSor($prompt);
 
         if (!$yanit) {
-            throw new Exception("Gemini API'sinden yanıt alınamadı.");
+            throw new Exception("Veritabanında soru bulunamadı ve Gemini API'sinden yanıt alınamadı.");
         }
 
         $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
@@ -47,6 +125,7 @@ class GameController
                 'siklar' => $veri['siklar'] ?? null,
                 'kategori' => $kategori,
                 'difficulty' => $difficulty,
+                'source' => 'ai'
             ]
         ];
     }

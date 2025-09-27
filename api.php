@@ -85,6 +85,7 @@ try {
         'get_user_achievements' => [$dataController, 'getUserAchievements', false, true],
         'get_active_announcements' => [$dataController, 'getActiveAnnouncements', false, true],
         'mark_announcements_as_read' => [$dataController, 'markAnnouncementsAsRead', true, true],
+        'get_categories' => [$dataController, 'getCategories', false, false],
 
         // Admin Routes
         'admin_get_dashboard_data' => [$adminController, 'getDashboardData', false, true],
@@ -97,6 +98,12 @@ try {
         'admin_get_advanced_stats' => [$adminController, 'getAdvancedStats', false, true],
         'admin_get_shop_stats' => [$adminController, 'getShopStats', false, true],
         'admin_update_shop_prices' => [$adminController, 'updateShopPrices', true, true],
+
+        // Category Management
+        'admin_get_categories' => [$adminController, 'getCategories', false, true],
+        'admin_add_category' => [$adminController, 'addCategory', true, true],
+        'admin_update_category' => [$adminController, 'updateCategory', true, true],
+        'admin_delete_category' => [$adminController, 'deleteCategory', true, true],
 
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],

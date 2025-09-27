@@ -5,24 +5,28 @@ const game = {
 
     init(dom) {
         this.dom = dom;
-        this.populateCategories(appData.categories);
+        // Kategoriler App.loadCategories() tarafından yüklenecek
         this.addEventListeners();
     },
 
-    populateCategories(categories) {
+    populateCategories() {
         if (!this.dom.categoryButtons) return;
+
+        const categories = appState.get('categories');
+        if (!categories) return;
+
         this.dom.categoryButtons.innerHTML = '';
-        for (const [key, value] of Object.entries(categories)) {
+        categories.forEach(category => {
             const button = document.createElement('button');
-            button.className = `category-button bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center justify-center text-center transition transform hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-${value.color}-500`;
-            button.dataset.kategori = key;
+            button.className = `category-button bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col items-center justify-center text-center transition transform hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-${category.color}-500`;
+            button.dataset.kategori = category.category_key;
 
             button.innerHTML = `
-                <i class="fas ${value.icon} fa-3x text-${value.color}-500 mb-2"></i>
-                <span class="font-semibold text-gray-700 dark:text-gray-200">${key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                <i class="fas ${category.icon} fa-3x text-${category.color}-500 mb-2"></i>
+                <span class="font-semibold text-gray-700 dark:text-gray-200">${category.category_name}</span>
             `;
             this.dom.categoryButtons.appendChild(button);
-        }
+        });
     },
 
     updateLifelineUI() {

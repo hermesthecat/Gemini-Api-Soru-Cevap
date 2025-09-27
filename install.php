@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.4.0'; // Current schema version
+$current_version = '1.6.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -482,6 +482,12 @@ try {
           case '1.4.0':
             migration_1_4_0($pdo);
             break;
+          case '1.5.0':
+            migration_1_5_0($pdo);
+            break;
+          case '1.6.0':
+            migration_1_6_0($pdo);
+            break;
           default:
             echo "Bilinmeyen migration version: $version\n";
         }
@@ -923,5 +929,97 @@ function migration_1_4_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.4.0 başarısız: " . $e->getMessage());
+  }
+}
+
+function migration_1_5_0($pdo) {
+  echo "→ Migration 1.5.0: Categories tablosu ekleniyor - soru kategorileri veritabanına taşınıyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // 1. categories tablosu oluştur
+    echo "  Categories tablosu oluşturuluyor...\n";
+    $pdo->exec("CREATE TABLE IF NOT EXISTS categories (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  category_key VARCHAR(50) NOT NULL UNIQUE,
+                  category_name VARCHAR(100) NOT NULL,
+                  is_active TINYINT(1) DEFAULT 1,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  INDEX idx_category_active (is_active),
+                  INDEX idx_category_key (category_key)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // 2. Varsayılan kategorileri ekle
+    echo "  Varsayılan kategoriler ekleniyor...\n";
+    $categories = [
+        'genel_kultur' => 'Genel Kültür',
+        'tarih' => 'Tarih',
+        'spor' => 'Spor',
+        'bilim' => 'Bilim',
+        'sanat' => 'Sanat',
+        'cografya' => 'Coğrafya',
+        'teknoloji' => 'Teknoloji',
+        'matematik' => 'Matematik',
+        'edebiyat' => 'Edebiyat',
+        'muzik' => 'Müzik'
+    ];
+
+    $stmt = $pdo->prepare('INSERT IGNORE INTO categories (category_key, category_name) VALUES (?, ?)');
+    foreach($categories as $key => $name) {
+        $stmt->execute([$key, $name]);
+    }
+
+    $pdo->commit();
+    echo "  ✓ Categories sistemi başarıyla kuruldu!\n";
+
+    markMigrationComplete($pdo, '1.5.0', 'Added categories table for dynamic question categories');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.5.0 başarısız: " . $e->getMessage());
+  }
+}
+
+function migration_1_6_0($pdo) {
+  echo "→ Migration 1.6.0: Categories tablosuna icon ve color sütunları ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // 1. Icon ve color sütunlarını ekle
+    echo "  Icon ve color sütunları ekleniyor...\n";
+    $pdo->exec("ALTER TABLE categories
+                ADD COLUMN icon VARCHAR(50) DEFAULT 'fa-question',
+                ADD COLUMN color VARCHAR(20) DEFAULT 'gray'");
+
+    // 2. Mevcut kategorileri icon ve renklerle güncelle
+    echo "  Varsayılan icon ve renkler atanıyor...\n";
+    $categoryStyles = [
+        'genel_kultur' => ['icon' => 'fa-brain', 'color' => 'indigo'],
+        'tarih' => ['icon' => 'fa-history', 'color' => 'blue'],
+        'spor' => ['icon' => 'fa-futbol', 'color' => 'green'],
+        'bilim' => ['icon' => 'fa-atom', 'color' => 'purple'],
+        'sanat' => ['icon' => 'fa-palette', 'color' => 'yellow'],
+        'cografya' => ['icon' => 'fa-globe-americas', 'color' => 'red'],
+        'teknoloji' => ['icon' => 'fa-microchip', 'color' => 'cyan'],
+        'matematik' => ['icon' => 'fa-calculator', 'color' => 'orange'],
+        'edebiyat' => ['icon' => 'fa-book', 'color' => 'brown'],
+        'muzik' => ['icon' => 'fa-music', 'color' => 'pink']
+    ];
+
+    $stmt = $pdo->prepare('UPDATE categories SET icon = ?, color = ? WHERE category_key = ?');
+    foreach($categoryStyles as $key => $style) {
+        $stmt->execute([$style['icon'], $style['color'], $key]);
+    }
+
+    $pdo->commit();
+    echo "  ✓ Kategori icon ve renk sistemi başarıyla kuruldu!\n";
+
+    markMigrationComplete($pdo, '1.6.0', 'Added icon and color columns to categories table with default styles');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.6.0 başarısız: " . $e->getMessage());
   }
 }

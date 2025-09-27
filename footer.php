@@ -91,16 +91,7 @@
                 <div class="mb-4">
                     <label for="duel-category-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kategori</label>
                     <select id="duel-category-select" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="genel_kultur">Genel Kültür</option>
-                        <option value="bilim">Bilim</option>
-                        <option value="tarih">Tarih</option>
-                        <option value="cografya">Coğrafya</option>
-                        <option value="sanat">Sanat</option>
-                        <option value="spor">Spor</option>
-                        <option value="teknoloji">Teknoloji</option>
-                        <option value="matematik">Matematik</option>
-                        <option value="edebiyat">Edebiyat</option>
-                        <option value="muzik">Müzik</option>
+                        <!-- Kategoriler dinamik olarak yüklenecek -->
                     </select>
                 </div>
 
@@ -214,15 +205,20 @@
     <script src="assets/js/auth-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/game-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/stats-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/admin-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/admin-settings-handler.js?v=<?php echo $v; ?>"></script>
-    <script src="assets/js/admin-shop-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/settings-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/friends-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/duel-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/quest-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/announcement-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/shop-handler.js?v=<?php echo $v; ?>"></script>
+
+    <!-- Admin Handlers (Only for Admin Users) -->
+    <?php if (isset($user_data) && $user_data['role'] === 'admin'): ?>
+    <script src="assets/js/admin-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-settings-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-shop-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-category-handler.js?v=<?php echo $v; ?>"></script>
+    <?php endif; ?>
 
     <!-- Main Application -->
     <script src="assets/js/app.js?v=<?php echo $v; ?>"></script>

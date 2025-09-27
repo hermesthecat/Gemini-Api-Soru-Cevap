@@ -356,4 +356,105 @@ class AdminController
 
         return $names[$item_type] ?? $item_type;
     }
+
+    // --- Category Management ---
+
+    public function getCategories()
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT id, category_key, category_name, icon, color, is_active, created_at,
+                   (SELECT COUNT(*) FROM questions WHERE category = categories.category_key) as question_count
+            FROM categories
+            ORDER BY category_name ASC
+        ");
+        $stmt->execute();
+        return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    public function addCategory($data)
+    {
+        $category_key = trim($data['category_key'] ?? '');
+        $category_name = trim($data['category_name'] ?? '');
+        $icon = trim($data['icon'] ?? 'fa-question');
+        $color = trim($data['color'] ?? 'gray');
+
+        if (empty($category_key) || empty($category_name)) {
+            return ['success' => false, 'message' => 'Kategori key ve ismi zorunludur.'];
+        }
+
+        // Key formatını kontrol et (sadece harf, rakam, alt çizgi)
+        if (!preg_match('/^[a-z0-9_]+$/', $category_key)) {
+            return ['success' => false, 'message' => 'Kategori key sadece küçük harf, rakam ve alt çizgi içerebilir.'];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO categories (category_key, category_name, icon, color) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$category_key, $category_name, $icon, $color]);
+            return ['success' => true, 'message' => 'Kategori başarıyla eklendi.'];
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) { // Duplicate entry
+                return ['success' => false, 'message' => 'Bu kategori key zaten mevcut.'];
+            }
+            throw $e;
+        }
+    }
+
+    public function updateCategory($data)
+    {
+        $id = intval($data['id'] ?? 0);
+        $category_name = trim($data['category_name'] ?? '');
+        $icon = trim($data['icon'] ?? '');
+        $color = trim($data['color'] ?? '');
+        $is_active = isset($data['is_active']) ? intval($data['is_active']) : 1;
+
+        if ($id <= 0 || empty($category_name)) {
+            return ['success' => false, 'message' => 'Geçersiz kategori ID veya ismi.'];
+        }
+
+        // Icon ve color varsa güncelle, yoksa mevcut değerleri koru
+        if (!empty($icon) && !empty($color)) {
+            $stmt = $this->pdo->prepare("UPDATE categories SET category_name = ?, icon = ?, color = ?, is_active = ? WHERE id = ?");
+            $stmt->execute([$category_name, $icon, $color, $is_active, $id]);
+        } else {
+            $stmt = $this->pdo->prepare("UPDATE categories SET category_name = ?, is_active = ? WHERE id = ?");
+            $stmt->execute([$category_name, $is_active, $id]);
+        }
+
+        if ($stmt->rowCount() > 0) {
+            return ['success' => true, 'message' => 'Kategori başarıyla güncellendi.'];
+        } else {
+            return ['success' => false, 'message' => 'Kategori bulunamadı veya değişiklik yapılmadı.'];
+        }
+    }
+
+    public function deleteCategory($data)
+    {
+        $id = intval($data['id'] ?? 0);
+
+        if ($id <= 0) {
+            return ['success' => false, 'message' => 'Geçersiz kategori ID.'];
+        }
+
+        // Önce bu kategoride soru var mı kontrol et
+        $stmt_check = $this->pdo->prepare("SELECT category_key FROM categories WHERE id = ?");
+        $stmt_check->execute([$id]);
+        $category = $stmt_check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$category) {
+            return ['success' => false, 'message' => 'Kategori bulunamadı.'];
+        }
+
+        $stmt_questions = $this->pdo->prepare("SELECT COUNT(*) FROM questions WHERE category = ?");
+        $stmt_questions->execute([$category['category_key']]);
+        $question_count = $stmt_questions->fetchColumn();
+
+        if ($question_count > 0) {
+            return ['success' => false, 'message' => "Bu kategoride $question_count soru var. Önce soruları silin."];
+        }
+
+        $stmt = $this->pdo->prepare("DELETE FROM categories WHERE id = ?");
+        $stmt->execute([$id]);
+
+        return ['success' => true, 'message' => 'Kategori başarıyla silindi.'];
+    }
 }

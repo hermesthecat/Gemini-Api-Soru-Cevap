@@ -162,4 +162,16 @@ class DataController
             return ['success' => false, 'message' => 'Duyurular okunmuş olarak işaretlenemedi.'];
         }
     }
+
+    public function getCategories()
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT category_key, category_name, icon, color, is_active
+            FROM categories
+            WHERE is_active = 1
+            ORDER BY category_name ASC
+        ");
+        $stmt->execute();
+        return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
 }

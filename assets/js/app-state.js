@@ -14,7 +14,8 @@ const appState = (() => {
             fiftyFifty: 0,
             extraTime: 0,
             pass: 0
-        }
+        },
+        categories: null // API'den çekilen kategoriler
     };
 
     return {

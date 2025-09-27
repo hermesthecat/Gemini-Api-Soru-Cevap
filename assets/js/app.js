@@ -155,8 +155,47 @@ document.addEventListener('DOMContentLoaded', () => {
             // Özel olayları dinle
             this.addEventListeners();
 
+            // Kategorileri yükle
+            await this.loadCategories();
+
             // Oturum kontrolü ile uygulamayı başlat
             await this.checkUserSession();
+        },
+
+        async loadCategories() {
+            try {
+                const response = await apiHandler.makeRequest('get_categories');
+                if (response.success) {
+                    // Global state'e kategorileri kaydet
+                    appState.categories = response.data;
+
+                    // Category select'leri güncelle
+                    this.populateCategorySelects();
+                } else {
+                    console.error('Kategoriler yüklenemedi:', response.message);
+                }
+            } catch (error) {
+                console.error('Kategori yükleme hatası:', error);
+            }
+        },
+
+        populateCategorySelects() {
+            // Duel category select'i güncelle
+            const duelCategorySelect = document.getElementById('duel-category-select');
+            if (duelCategorySelect && appState.categories) {
+                duelCategorySelect.innerHTML = '';
+                appState.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.category_key;
+                    option.textContent = category.category_name;
+                    duelCategorySelect.appendChild(option);
+                });
+            }
+
+            // Game category buttons'ları güncelle
+            if (typeof game !== 'undefined' && game.populateCategories) {
+                game.populateCategories();
+            }
         },
 
         async checkUserSession() {
