@@ -61,9 +61,8 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.last_login_date, u.login_streak, l.coins, l.lifeline_fifty_fifty, l.lifeline_extra_time, l.lifeline_pass
+        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.last_login_date, u.login_streak, u.coins, u.lifeline_fifty_fifty, u.lifeline_extra_time, u.lifeline_pass
             FROM users u
-            JOIN leaderboard l ON u.id = l.user_id
             WHERE u.username = ?");
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
