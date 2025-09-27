@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.16.0'; // Current schema version
+$current_version = '1.17.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -505,6 +505,10 @@ try {
       $migrations_to_run[] = '1.16.0';
     }
 
+    if (versionCompare($installed_version, '1.17.0') < 0) {
+      $migrations_to_run[] = '1.17.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tum migration'lar guncel. Guncelleme gerekmiyor.\n";
     } else {
@@ -564,6 +568,9 @@ try {
             break;
           case '1.16.0':
             migration_1_16_0($pdo);
+            break;
+          case '1.17.0':
+            migration_1_17_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1611,5 +1618,40 @@ function migration_1_16_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.16.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.17.0: Add profile_visibility column for public profiles
+ */
+function migration_1_17_0($pdo) {
+  echo "-> Migration 1.17.0: profile_visibility sutunu ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // users tablosuna profile_visibility sutunu ekle
+    $pdo->exec("
+      ALTER TABLE users
+      ADD COLUMN profile_visibility ENUM('public', 'friends', 'private') NOT NULL DEFAULT 'public'
+      AFTER avatar
+    ");
+
+    echo "   profile_visibility sutunu basariyla eklendi (default: public)\n";
+
+    // Indexing for performance
+    $pdo->exec("
+      ALTER TABLE users
+      ADD INDEX idx_profile_visibility (profile_visibility)
+    ");
+
+    echo "   profile_visibility index eklendi\n";
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.17.0', 'Added profile_visibility column to users table for public profile system');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.17.0 basarisiz: " . $e->getMessage());
   }
 }

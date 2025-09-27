@@ -101,6 +101,11 @@ try {
         'logout' => [$userController, 'logout', false, true],
         'check_session' => [$userController, 'checkSession', false, false],
 
+        // Public Profile Routes
+        'get_public_profile' => [$userController, 'getPublicProfile', true, false],
+        'search_users' => [$userController, 'searchUsers', true, false],
+        'update_profile_visibility' => [$userController, 'updateProfileVisibility', true, true],
+
         // Game Routes
         'get_question' => [$gameController, 'getQuestion', true, true],
         'submit_answer' => [$gameController, 'submitAnswer', true, true],

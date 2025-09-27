@@ -235,4 +235,308 @@ class UserController
         ];
     }
 
+    /**
+     * Get public profile by username or user ID
+     */
+    public function getPublicProfile($data)
+    {
+        $username = $data['username'] ?? '';
+        $user_id = (int)($data['user_id'] ?? 0);
+
+        if (empty($username) && $user_id <= 0) {
+            return ['success' => false, 'message' => 'Kullanıcı adı veya ID gerekli.'];
+        }
+
+        try {
+            // Get user basic info
+            if (!empty($username)) {
+                $stmt = $this->pdo->prepare("
+                    SELECT id, username, avatar, profile_visibility, created_at, login_streak, longest_login_streak, coins
+                    FROM users
+                    WHERE username = ?
+                ");
+                $stmt->execute([$username]);
+            } else {
+                $stmt = $this->pdo->prepare("
+                    SELECT id, username, avatar, profile_visibility, created_at, login_streak, longest_login_streak, coins
+                    FROM users
+                    WHERE id = ?
+                ");
+                $stmt->execute([$user_id]);
+            }
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$user) {
+                return ['success' => false, 'message' => 'Kullanıcı bulunamadı.'];
+            }
+
+            // Check visibility permissions
+            $current_user_id = $_SESSION['user_id'] ?? null;
+            $is_own_profile = $current_user_id == $user['id'];
+
+            if (!$is_own_profile && $user['profile_visibility'] === 'private') {
+                return ['success' => false, 'message' => 'Bu profil gizli olarak ayarlanmış.'];
+            }
+
+            if (!$is_own_profile && $user['profile_visibility'] === 'friends') {
+                // Check if users are friends
+                if ($current_user_id) {
+                    $stmt = $this->pdo->prepare("
+                        SELECT id FROM friends
+                        WHERE ((user_one_id = ? AND user_two_id = ?) OR (user_one_id = ? AND user_two_id = ?))
+                        AND status = 'accepted'
+                    ");
+                    $stmt->execute([$current_user_id, $user['id'], $user['id'], $current_user_id]);
+
+                    if (!$stmt->fetch()) {
+                        return ['success' => false, 'message' => 'Bu profili görüntülemek için arkadaş olmanız gerekli.'];
+                    }
+                } else {
+                    return ['success' => false, 'message' => 'Bu profili görüntülemek için giriş yapmanız gerekli.'];
+                }
+            }
+
+            // Get profile statistics
+            $profileStats = $this->getProfileStatistics($user['id']);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'user' => [
+                        'id' => (int)$user['id'],
+                        'username' => $user['username'],
+                        'avatar' => $user['avatar'],
+                        'profile_visibility' => $user['profile_visibility'],
+                        'member_since' => $user['created_at'],
+                        'login_streak' => (int)$user['login_streak'],
+                        'longest_login_streak' => (int)$user['longest_login_streak'],
+                        'coins' => (int)$user['coins'],
+                        'is_own_profile' => $is_own_profile
+                    ],
+                    'statistics' => $profileStats
+                ]
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Get public profile error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Profil bilgileri alınırken hata oluştu.'];
+        }
+    }
+
+    /**
+     * Search users for public profiles
+     */
+    public function searchUsers($data)
+    {
+        $query = trim($data['query'] ?? '');
+        $limit = min((int)($data['limit'] ?? 20), 50); // Max 50 users
+        $offset = max((int)($data['offset'] ?? 0), 0);
+
+        if (strlen($query) < 2) {
+            return ['success' => false, 'message' => 'Arama terimi en az 2 karakter olmalıdır.'];
+        }
+
+        try {
+            // Search users with public or friends visibility
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    u.id,
+                    u.username,
+                    u.avatar,
+                    u.profile_visibility,
+                    u.login_streak,
+                    l.total_score,
+                    COUNT(ua.id) as achievement_count
+                FROM users u
+                LEFT JOIN leaderboard l ON u.id = l.user_id
+                LEFT JOIN user_achievements ua ON u.id = ua.user_id
+                WHERE u.username LIKE ?
+                AND u.profile_visibility IN ('public', 'friends')
+                GROUP BY u.id, u.username, u.avatar, u.profile_visibility, u.login_streak, l.total_score
+                ORDER BY l.total_score DESC, u.username ASC
+                LIMIT $limit OFFSET $offset
+            ");
+
+            $searchTerm = '%' . $query . '%';
+            $stmt->execute([$searchTerm]);
+            $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get total count for pagination
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as total
+                FROM users
+                WHERE username LIKE ?
+                AND profile_visibility IN ('public', 'friends')
+            ");
+            $stmt->execute([$searchTerm]);
+            $total_count = $stmt->fetchColumn();
+
+            return [
+                'success' => true,
+                'data' => [
+                    'users' => array_map(function($user) {
+                        return [
+                            'id' => (int)$user['id'],
+                            'username' => $user['username'],
+                            'avatar' => $user['avatar'],
+                            'profile_visibility' => $user['profile_visibility'],
+                            'login_streak' => (int)$user['login_streak'],
+                            'total_score' => (int)($user['total_score'] ?? 0),
+                            'achievement_count' => (int)$user['achievement_count']
+                        ];
+                    }, $users),
+                    'pagination' => [
+                        'total_count' => (int)$total_count,
+                        'limit' => $limit,
+                        'offset' => $offset,
+                        'has_more' => ($offset + $limit) < $total_count
+                    ]
+                ]
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Search users error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Kullanıcı arama işlemi sırasında hata oluştu.'];
+        }
+    }
+
+    /**
+     * Update profile visibility setting
+     */
+    public function updateProfileVisibility($data)
+    {
+        if (!isset($_SESSION['user_id'])) {
+            return ['success' => false, 'message' => 'Bu işlem için giriş yapmalısınız.'];
+        }
+
+        $visibility = $data['visibility'] ?? '';
+        $valid_options = ['public', 'friends', 'private'];
+
+        if (!in_array($visibility, $valid_options)) {
+            return ['success' => false, 'message' => 'Geçersiz gizlilik ayarı.'];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE users
+                SET profile_visibility = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$visibility, $_SESSION['user_id']]);
+
+            return [
+                'success' => true,
+                'message' => 'Profil gizlilik ayarı güncellendi.',
+                'data' => ['visibility' => $visibility]
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Update profile visibility error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Gizlilik ayarı güncellenirken hata oluştu.'];
+        }
+    }
+
+    /**
+     * Get aggregated profile statistics
+     */
+    private function getProfileStatistics($user_id)
+    {
+        $stats = [];
+
+        try {
+            // Get leaderboard position and total score
+            $stmt = $this->pdo->prepare("
+                SELECT total_score, total_questions, correct_answers
+                FROM leaderboard
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $leaderboard = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $stats['total_score'] = (int)($leaderboard['total_score'] ?? 0);
+            $stats['total_questions'] = (int)($leaderboard['total_questions'] ?? 0);
+            $stats['correct_answers'] = (int)($leaderboard['correct_answers'] ?? 0);
+            $stats['accuracy_percentage'] = $stats['total_questions'] > 0
+                ? round(($stats['correct_answers'] / $stats['total_questions']) * 100, 1)
+                : 0;
+
+            // Get global rank
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) + 1 as rank
+                FROM leaderboard
+                WHERE total_score > (
+                    SELECT total_score FROM leaderboard WHERE user_id = ?
+                )
+            ");
+            $stmt->execute([$user_id]);
+            $stats['global_rank'] = (int)$stmt->fetchColumn();
+
+            // Get achievements count
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_achievements WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $stats['achievement_count'] = (int)$stmt->fetchColumn();
+
+            // Get recent achievements
+            $stmt = $this->pdo->prepare("
+                SELECT a.name, a.description, a.icon, ua.earned_at
+                FROM user_achievements ua
+                JOIN achievements a ON ua.achievement_id = a.id
+                WHERE ua.user_id = ?
+                ORDER BY ua.earned_at DESC
+                LIMIT 5
+            ");
+            $stmt->execute([$user_id]);
+            $stats['recent_achievements'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get category stats
+            $stmt = $this->pdo->prepare("
+                SELECT category,
+                       SUM(total_questions) as questions,
+                       SUM(correct_answers) as correct,
+                       ROUND(AVG(correct_answers / total_questions * 100), 1) as accuracy
+                FROM user_stats
+                WHERE user_id = ? AND total_questions > 0
+                GROUP BY category
+                ORDER BY accuracy DESC, questions DESC
+                LIMIT 10
+            ");
+            $stmt->execute([$user_id]);
+            $stats['category_stats'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get quest completion stats
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as completed_quests
+                FROM quest_history
+                WHERE user_id = ? AND status = 'completed'
+            ");
+            $stmt->execute([$user_id]);
+            $stats['completed_quests'] = (int)$stmt->fetchColumn();
+
+            // Get duel stats
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    COUNT(*) as total_duels,
+                    SUM(CASE WHEN winner_id = ? THEN 1 ELSE 0 END) as wins
+                FROM duels
+                WHERE (challenger_id = ? OR opponent_id = ?)
+                AND status = 'completed'
+            ");
+            $stmt->execute([$user_id, $user_id, $user_id]);
+            $duel_stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stats['duel_stats'] = [
+                'total_duels' => (int)$duel_stats['total_duels'],
+                'wins' => (int)$duel_stats['wins'],
+                'win_rate' => $duel_stats['total_duels'] > 0
+                    ? round(($duel_stats['wins'] / $duel_stats['total_duels']) * 100, 1)
+                    : 0
+            ];
+
+            return $stats;
+
+        } catch (PDOException $e) {
+            error_log("Get profile statistics error: " . $e->getMessage());
+            return [];
+        }
+    }
+
 }
