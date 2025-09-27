@@ -46,7 +46,6 @@ const api = (() => {
 
         } catch (error) {
             // Bu blok, ağ hatalarını (fetch başarısız oldu) veya yukarıda fırlattığımız hataları yakalar.
-            console.error(`API Çağrı Hatası (${action}):`, error);
             if (window.ui && window.ui.showToast) {
                 window.ui.showToast(error.message, 'error');
             }

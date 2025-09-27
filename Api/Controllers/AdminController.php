@@ -297,41 +297,49 @@ class AdminController
             return ['success' => false, 'message' => 'Geçersiz fiyat verisi'];
         }
 
-        // Geçerli joker türleri
-        $valid_types = ['fiftyFifty', 'extraTime', 'pass'];
-
-        // ShopController dosyasını oku ve fiyatları güncelle
-        $shop_file = __DIR__ . '/ShopController.php';
-        $content = file_get_contents($shop_file);
-
-        if (!$content) {
-            return ['success' => false, 'message' => 'ShopController dosyası okunamadı'];
-        }
+        // Map frontend names to database keys
+        $mapping = [
+            'fiftyFifty' => 'price_fifty_fifty',
+            'extraTime' => 'price_extra_time',
+            'pass' => 'price_pass'
+        ];
 
         $updated_count = 0;
-        foreach ($prices as $type => $price) {
-            if (in_array($type, $valid_types) && is_numeric($price) && $price > 0 && $price <= 1000) {
-                // Regex ile fiyatı güncelle
-                $pattern = "/'{$type}'\s*=>\s*\d+/";
-                $replacement = "'{$type}' => " . intval($price);
-                $content = preg_replace($pattern, $replacement, $content);
-                $updated_count++;
-            }
-        }
 
-        if ($updated_count > 0) {
-            // Dosyayı yaz
-            if (file_put_contents($shop_file, $content)) {
-                return [
-                    'success' => true,
-                    'message' => "{$updated_count} fiyat başarıyla güncellendi",
-                    'updated_count' => $updated_count
-                ];
-            } else {
-                return ['success' => false, 'message' => 'Dosya yazma hatası'];
+        try {
+            $this->pdo->beginTransaction();
+
+            foreach ($prices as $type => $price) {
+                if (isset($mapping[$type]) && is_numeric($price) && $price > 0 && $price <= 1000) {
+                    $db_key = $mapping[$type];
+                    $price_value = intval($price);
+
+                    // Update or insert the price in shop_settings table
+                    $stmt = $this->pdo->prepare("
+                        INSERT INTO shop_settings (setting_key, setting_value, updated_at)
+                        VALUES (?, ?, NOW())
+                        ON DUPLICATE KEY UPDATE
+                        setting_value = VALUES(setting_value),
+                        updated_at = NOW()
+                    ");
+
+                    $stmt->execute([$db_key, $price_value]);
+                    $updated_count++;
+                }
             }
-        } else {
-            return ['success' => false, 'message' => 'Güncellenecek geçerli fiyat bulunamadı'];
+
+            $this->pdo->commit();
+
+            return [
+                'success' => true,
+                'message' => "{$updated_count} fiyat başarıyla güncellendi",
+                'updated_count' => $updated_count
+            ];
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            error_log("Shop prices update error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
     }
 

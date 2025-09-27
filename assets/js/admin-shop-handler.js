@@ -22,10 +22,8 @@ const adminShopHandler = (() => {
                 populateShopForm(result.data.current_prices);
             } else {
                 const message = result?.message || 'Mağaza verileri yüklenirken hata oluştu';
-                console.error(message);
             }
         } catch (error) {
-            console.error('Shop data load error:', error);
         }
     };
 
@@ -187,7 +185,6 @@ const adminShopHandler = (() => {
                 }, 1000);
             }
         } catch (error) {
-            console.error('Shop prices update error:', error);
         }
     };
 

@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // No action needed for MPA
                 }
             } catch (error) {
-                console.error('Session check failed:', error);
                 // MPA'da hata durumunda da PHP redirect yapar
             }
         },

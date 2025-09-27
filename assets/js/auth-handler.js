@@ -97,7 +97,6 @@ const auth = {
             const result = await api.call('check_session');
             return result;
         } catch (error) {
-            console.error('Session check failed:', error);
             return { success: false };
         }
     }

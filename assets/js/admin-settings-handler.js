@@ -37,7 +37,6 @@ const adminSettingsHandler = (() => {
                 ui.showToast(result?.message || 'Ayarlar yüklenirken hata oluştu', 'error');
             }
         } catch (error) {
-            console.error('Settings load error:', error);
             ui.showToast('Ayarlar yüklenirken hata oluştu', 'error');
         }
 
@@ -51,10 +50,8 @@ const adminSettingsHandler = (() => {
             if (result && result.success) {
                 renderApiKeys(result.data);
             } else {
-                console.error('API keys load error:', result?.message);
             }
         } catch (error) {
-            console.error('API keys load error:', error);
         }
     };
 
@@ -121,7 +118,6 @@ const adminSettingsHandler = (() => {
             }
         } catch (error) {
             ui.showLoading(false);
-            console.error('Settings update error:', error);
             ui.showToast('Ayarlar kaydedilirken hata oluştu', 'error');
         }
     };
@@ -203,7 +199,6 @@ const adminSettingsHandler = (() => {
                 loadApiKeys();
             }
         } catch (error) {
-            console.error('API key save error:', error);
             ui.showToast('API anahtarı kaydedilirken hata oluştu', 'error');
         }
     };
@@ -217,7 +212,6 @@ const adminSettingsHandler = (() => {
                 loadApiKeys();
             }
         } catch (error) {
-            console.error('API key status toggle error:', error);
             ui.showToast('API anahtarı durumu güncellenirken hata oluştu', 'error');
         }
     };
@@ -235,7 +229,6 @@ const adminSettingsHandler = (() => {
                 loadApiKeys();
             }
         } catch (error) {
-            console.error('API key delete error:', error);
             ui.showToast('API anahtarı silinirken hata oluştu', 'error');
         }
     };

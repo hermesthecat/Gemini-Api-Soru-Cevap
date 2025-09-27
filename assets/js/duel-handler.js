@@ -38,7 +38,6 @@ const duelHandler = (() => {
     const displayCurrentQuestion = () => {
         if (duelState.currentQuestionIndex >= duelState.questions.length) {
             // Bu normalde olmamalı, sunucu son sorudan sonra yönlendirecek.
-            console.error("Soru dizisinin sonuna ulaşıldı.");
             return;
         }
         const question = duelState.questions[duelState.currentQuestionIndex];

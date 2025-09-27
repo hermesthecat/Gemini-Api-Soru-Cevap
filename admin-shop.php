@@ -215,13 +215,70 @@ include 'header.php';
 <script>
 // Admin mağaza sayfası yüklendiğinde içeriği yükle
 document.addEventListener('DOMContentLoaded', () => {
-    // Admin shop handler'ı yükle
-    setTimeout(() => {
+    // DOM tam yüklendiğinden emin ol
+    const initAdminShop = () => {
         if (typeof adminShopHandler !== 'undefined') {
             adminShopHandler.init();
+
+            // Event listener'ın doğru eklendiğini kontrol et
+            const form = document.getElementById('shop-settings-form');
+            if (form) {
+                // Mevcut listener'ları temizle ve yeniden ekle
+                form.replaceWith(form.cloneNode(true));
+                const newForm = document.getElementById('shop-settings-form');
+
+                if (newForm) {
+                    newForm.addEventListener('submit', async (event) => {
+                        event.preventDefault();
+
+                        const formData = new FormData(event.target);
+                        const prices = {};
+
+                        // Form verilerini topla
+                        for (let [key, value] of formData.entries()) {
+                            const numericValue = parseInt(value, 10);
+                            if (numericValue > 0 && numericValue <= 1000) {
+                                prices[key] = numericValue;
+                            }
+                        }
+
+                        if (Object.keys(prices).length === 0) {
+                            ui.showToast('Lütfen geçerli fiyatlar girin (1-1000 arası)', 'error');
+                            return;
+                        }
+
+                        try {
+                            ui.showLoading('Fiyatlar güncelleniyor...');
+                            const result = await api.call('admin_update_shop_prices', { prices });
+
+                            ui.showLoading(false);
+
+                            if (result.success) {
+                                ui.showToast(result.message || 'Fiyatlar başarıyla güncellendi!', 'success');
+
+                                // 1.5 saniye bekle, sonra sayfayı yenile
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                ui.showToast(result.message || 'Güncelleme başarısız', 'error');
+                            }
+                        } catch (error) {
+                            ui.showLoading(false);
+                            ui.showToast('Güncelleme sırasında hata oluştu', 'error');
+                        }
+                    });
+                }
+            }
+
             adminShopHandler.loadShopData();
+        } else {
+            setTimeout(initAdminShop, 100);
         }
-    }, 100);
+    };
+
+    // Biraz gecikme ile başlat
+    setTimeout(initAdminShop, 50);
 });
 </script>
 

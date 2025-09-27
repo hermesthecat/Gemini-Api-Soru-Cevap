@@ -3,15 +3,28 @@
 class ShopController
 {
     private $pdo;
-    private $item_prices = [
-        'fiftyFifty' => 80,
-        'extraTime' => 50,
-        'pass' => 100
-    ];
+    private $item_prices = null; // Lazy load from database
 
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
+    }
+
+    private function getItemPrices()
+    {
+        if ($this->item_prices === null) {
+            // Load prices from database
+            $stmt = $this->pdo->query("SELECT setting_key, setting_value FROM shop_settings WHERE setting_key LIKE 'price_%'");
+            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+            $this->item_prices = [
+                'fiftyFifty' => isset($settings['price_fifty_fifty']) ? (int)$settings['price_fifty_fifty'] : 75,
+                'extraTime' => isset($settings['price_extra_time']) ? (int)$settings['price_extra_time'] : 50,
+                'pass' => isset($settings['price_pass']) ? (int)$settings['price_pass'] : 50
+            ];
+        }
+
+        return $this->item_prices;
     }
 
     public function getShopItems()
@@ -23,12 +36,14 @@ class ShopController
         $stmt->execute([$user_id]);
         $current_lifelines = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        $prices = $this->getItemPrices();
+
         $items = [
             [
                 'key' => 'fiftyFifty',
                 'name' => '50/50 Jokeri',
                 'description' => 'İki yanlış şıkkı eler, doğruyu bulma şansını artırır.',
-                'price' => $this->item_prices['fiftyFifty'],
+                'price' => $prices['fiftyFifty'],
                 'icon' => 'fas fa-star-half-alt',
                 'current_stock' => $current_lifelines['lifeline_fifty_fifty'] ?? 0
             ],
@@ -36,7 +51,7 @@ class ShopController
                 'key' => 'extraTime',
                 'name' => '+15 Saniye Jokeri',
                 'description' => 'Soruya cevap vermek için 15 saniye daha kazandırır.',
-                'price' => $this->item_prices['extraTime'],
+                'price' => $prices['extraTime'],
                 'icon' => 'fas fa-stopwatch',
                 'current_stock' => $current_lifelines['lifeline_extra_time'] ?? 0
             ],
@@ -44,7 +59,7 @@ class ShopController
                 'key' => 'pass',
                 'name' => 'Soruyu Geç Jokeri',
                 'description' => 'Mevcut soruyu pas geçerek yerine yeni bir soru almanızı sağlar.',
-                'price' => $this->item_prices['pass'],
+                'price' => $prices['pass'],
                 'icon' => 'fas fa-arrow-right',
                 'current_stock' => $current_lifelines['lifeline_pass'] ?? 0
             ]
