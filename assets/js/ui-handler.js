@@ -515,9 +515,12 @@ const ui = (() => {
             const coinsCell = document.createElement('td');
             coinsCell.className = 'px-6 py-4';
             coinsCell.innerHTML = `
-                <span class="inline-flex items-center space-x-1">
+                <span class="inline-flex items-center space-x-1 cursor-pointer hover:bg-yellow-50 dark:hover:bg-yellow-900 px-2 py-1 rounded transition-colors coin-edit"
+                      data-user-id="${user.id}" data-username="${user.username}" data-coins="${user.coins || 0}"
+                      title="Jeton miktarını düzenlemek için tıklayın">
                     <i class="fas fa-coins text-yellow-500"></i>
                     <span>${user.coins || 0}</span>
+                    <i class="fas fa-edit text-xs text-gray-400 ml-1"></i>
                 </span>
             `;
 

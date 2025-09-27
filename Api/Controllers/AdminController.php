@@ -88,6 +88,37 @@ class AdminController
         return ['success' => false, 'message' => 'Geçersiz kullanıcı ID veya rol.'];
     }
 
+    public function updateUserCoins($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $user_id_to_update = $data['user_id'] ?? 0;
+        $new_coins = $data['new_coins'] ?? 0;
+
+        if ($user_id_to_update > 0 && is_numeric($new_coins) && $new_coins >= 0 && $new_coins <= 999999) {
+            try {
+                $stmt = $this->pdo->prepare("UPDATE users SET coins = ? WHERE id = ?");
+                $stmt->execute([$new_coins, $user_id_to_update]);
+
+                if ($stmt->rowCount() > 0) {
+                    // Session'da coins güncelle (eğer current user ise)
+                    if ($user_id_to_update == $_SESSION['user_id']) {
+                        $_SESSION['coins'] = $new_coins;
+                    }
+
+                    return ['success' => true, 'message' => 'Kullanıcının jeton miktarı güncellendi.'];
+                } else {
+                    return ['success' => false, 'message' => 'Kullanıcı bulunamadı.'];
+                }
+            } catch (PDOException $e) {
+                error_log("Coin update error: " . $e->getMessage());
+                return ['success' => false, 'message' => 'Veritabanı hatası oluştu.'];
+            }
+        }
+
+        return ['success' => false, 'message' => 'Geçersiz kullanıcı ID veya jeton miktarı.'];
+    }
+
     public function getAnnouncements()
     {
         if (($check = $this->checkAdmin()) !== true) return $check;

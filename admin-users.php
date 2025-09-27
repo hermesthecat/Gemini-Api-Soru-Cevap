@@ -64,6 +64,44 @@ include 'header.php';
             </div>
         </div>
 
+        <!-- Jeton Güncelleme Modalı -->
+        <div id="coin-update-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Jeton Güncelle</h3>
+                        <button id="coin-modal-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            Kullanıcı: <span id="coin-modal-username" class="font-semibold"></span>
+                        </p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Mevcut jeton: <span id="coin-modal-current" class="font-semibold text-yellow-600"></span>
+                        </p>
+
+                        <label for="coin-modal-input" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Yeni jeton miktarı:
+                        </label>
+                        <input type="number" id="coin-modal-input" min="0" max="999999"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button id="coin-modal-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            İptal
+                        </button>
+                        <button id="coin-modal-save" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">
+                            Güncelle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 <script>

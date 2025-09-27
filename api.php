@@ -92,6 +92,7 @@ try {
         'admin_get_all_users' => [$adminController, 'getAllUsers', false, true],
         'admin_delete_user' => [$adminController, 'deleteUser', true, true],
         'admin_update_user_role' => [$adminController, 'updateUserRole', true, true],
+        'admin_update_user_coins' => [$adminController, 'updateUserCoins', true, true],
         'admin_get_announcements' => [$adminController, 'getAnnouncements', false, true],
         'admin_create_announcement' => [$adminController, 'createAnnouncement', true, true],
         'admin_delete_announcement' => [$adminController, 'deleteAnnouncement', true, true],

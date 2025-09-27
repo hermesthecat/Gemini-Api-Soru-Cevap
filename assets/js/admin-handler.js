@@ -66,6 +66,16 @@ const adminHandler = (() => {
                     // event listener'ı doğrudan select'e ekleyince daha iyi olur
                 }
 
+                // Jeton düzenleme
+                if (target.closest('.coin-edit')) {
+                    e.preventDefault();
+                    const coinElement = target.closest('.coin-edit');
+                    const userId = coinElement.dataset.userId;
+                    const username = coinElement.dataset.username;
+                    const currentCoins = coinElement.dataset.coins;
+                    showCoinUpdateModal(userId, username, currentCoins);
+                }
+
                 // Kullanıcı silme
                 if (target.closest('.delete-user-btn')) {
                     e.preventDefault();
@@ -97,6 +107,86 @@ const adminHandler = (() => {
                 updateAdvancedStats();
             }
         });
+
+        // Modal event listeners
+        setupCoinModalEventListeners();
+    };
+
+    const showCoinUpdateModal = (userId, username, currentCoins) => {
+        const modal = document.getElementById('coin-update-modal');
+        const usernameSpan = document.getElementById('coin-modal-username');
+        const currentCoinsSpan = document.getElementById('coin-modal-current');
+        const input = document.getElementById('coin-modal-input');
+
+        if (modal && usernameSpan && currentCoinsSpan && input) {
+            usernameSpan.textContent = username;
+            currentCoinsSpan.textContent = currentCoins;
+            input.value = currentCoins;
+
+            // Store userId for later use
+            modal.dataset.userId = userId;
+
+            modal.classList.remove('hidden');
+            input.focus();
+            input.select();
+        }
+    };
+
+    const setupCoinModalEventListeners = () => {
+        const modal = document.getElementById('coin-update-modal');
+        const closeBtn = document.getElementById('coin-modal-close');
+        const cancelBtn = document.getElementById('coin-modal-cancel');
+        const saveBtn = document.getElementById('coin-modal-save');
+        const input = document.getElementById('coin-modal-input');
+
+        // Close modal
+        [closeBtn, cancelBtn].forEach(btn => {
+            btn?.addEventListener('click', () => {
+                modal?.classList.add('hidden');
+            });
+        });
+
+        // Close on backdrop click
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Save button
+        saveBtn?.addEventListener('click', async () => {
+            const userId = modal?.dataset.userId;
+            const newCoins = parseInt(input?.value) || 0;
+
+            if (userId && newCoins >= 0) {
+                await handleCoinUpdate(userId, newCoins);
+                modal?.classList.add('hidden');
+            }
+        });
+
+        // Enter key to save
+        input?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveBtn?.click();
+            }
+        });
+    };
+
+    const handleCoinUpdate = async (userId, newCoins) => {
+        try {
+            const result = await api.call('admin_update_user_coins', {
+                user_id: userId,
+                new_coins: newCoins
+            });
+
+            ui.showToast(result.message, result.success ? 'success' : 'error');
+
+            if (result.success) {
+                updateUserList();
+            }
+        } catch (error) {
+            ui.showToast('Bir hata oluştu', 'error');
+        }
     };
 
     return {
