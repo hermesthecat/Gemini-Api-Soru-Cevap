@@ -1,136 +1,217 @@
-# AI Bilgi Yarışması (Veritabanı & Kullanıcı Sistemi)
+# AI Soru Cevap Yarismasi
 
-Bu proje, Google Gemini API'sini kullanarak çeşitli kategorilerde ve zorluk seviyelerinde dinamik olarak bilgi yarışması soruları oluşturan, çok kullanıcılı, veritabanı destekli bir "Tek Sayfa Uygulaması"dır (SPA).
+Turkish AI-powered quiz application using Google Gemini API for dynamic question generation with comprehensive social features, achievements, and user management system.
 
-## Özellikler
+## Features
 
-- **Yönetici Paneli (Admin Panel):** Admin rolüne sahip kullanıcılar için özel bir arayüz.
-  - **Kullanıcı Yönetimi:** Kullanıcıları listeleme, rol değiştirme ve silme.
-  - **Genel İstatistikler:** Toplam kullanıcı sayısı ve cevaplanan soru sayısı gibi temel metrikler.
-  - **Gelişmiş İstatistik Grafikleri:** En çok oynanan kategoriler, yeni kullanıcı kayıtları ve cevap başarı oranları gibi verilerin `Chart.js` ile görselleştirilmesi.
-  - **Duyuru Sistemi:** Tüm kullanıcılara veya belirli gruplara (admin/user) yönelik uygulama içi duyurular oluşturma, listeleme ve yönetme.
-- **Arkadaşlık Sistemi:** Kullanıcılar birbirlerini arkadaş olarak ekleyebilir, istek gönderip alabilir ve arkadaşlarını listeleyebilir.
-- **Meydan Okuma (Düello) Modu:** Kullanıcılar arkadaşlarına belirli bir kategori ve zorlukta 5 soruluk düellolar için meydan okuyabilir.
-- **Günlük Görevler:** Kullanıcıların her gün tamamlayarak ekstra puan kazanabileceği "5 tarih sorusu çöz" gibi dinamik olarak atanan görevler.
-- **Avatar ve Özelleştirme:** Kullanıcılar, profillerini kişiselleştirmek için kendilerine sunulan çeşitli avatarlardan birini seçebilirler. Seçilen avatar, uygulama genelinde (arkadaş listesi, liderlik tablosu vb.) gösterilir.
-- **Kullanıcı Kayıt ve Giriş Sistemi:** Güvenli `password_hash` ile şifreleme ve PHP session yönetimi sayesinde kullanıcılar kendi hesaplarını oluşturabilir.
-- **Veritabanı Entegrasyonu:** Tüm kullanıcı verileri, kişisel istatistikler ve puanlar MySQL veritabanında saklanır.
-- **Kişiye Özel İstatistikler:** Her kullanıcının her kategorideki performansı (toplam soru, doğru cevap, başarı oranı) veritabanında tutulur ve kendi profilinde gösterilir.
-- **Dinamik Liderlik Tablosu:** Kullanıcıların aldıkları puanlara göre sıralandığı ve periyodik olarak güncellenen bir liderlik tablosu bulunur.
-- **Joker Sistemi:** Oyunculara stratejik avantaj sağlayan "%50 Eleme" ve "Ekstra Süre" jokerleri.
-- **Gelişmiş Başarım Sistemi:** "Seri Galibi", "Hız Tutkunu", "Gece Kuşu", "Kategori Uzmanı" gibi çeşitli oyun tarzlarını ödüllendiren 20'den fazla rozet.
-- **Günlük Giriş Ödülleri:** Kullanıcıları her gün giriş yapmaya teşvik eden, ardışık girişlerde artan miktarda jeton veren bir ödül sistemi.
-- **Dinamik Soru Üretimi:** Google Gemini API'si ile her seferinde özgün sorular oluşturulur.
-- **Tek Sayfa Uygulaması (SPA):** `fetch` API'si ve AJAX sayesinde sayfa yenilenmeden akıcı bir kullanıcı deneyimi sunar.
-- **Çoklu Soru Tipi:** Çoktan seçmeli ve Doğru/Yanlış formatlarında rastgele sorular sunarak yarışmayı dinamik tutar.
-- **Çoklu Kategori ve Zorluk:** Çeşitli kategorilerde "Kolay", "Orta" ve "Zor" seviyelerinde yarışma imkanı.
-- **Açık/Koyu Tema:** Kullanıcının tercihine veya sistem ayarlarına göre değişen modern ve göz dostu arayüz.
-- **Duyarlı Tasarım:** Tailwind CSS ile oluşturulmuş modern ve mobil uyumlu arayüz.
-- **Oyun İçi Para Birimi ve Mağaza:**
-  - Kullanıcılar doğru cevaplardan, görevlerden ve düellolardan "jeton" kazanır.
-  - Kazandıkları jetonları, joker gibi oyun içi avantajlar satın almak için "Mağaza"da harcayabilirler.
-  - Joker sayıları veritabanında kalıcı olarak saklanır.
+### Core Game System
+- **Dynamic Question Generation**: Google Gemini API integration with database caching for performance
+- **Multiple Categories**: Dynamic categories (History, Sports, Science, Arts, Geography, etc.)
+- **Difficulty Levels**: Easy, Medium, Hard with adaptive scoring
+- **Lifeline System**: 50/50, Extra Time, Pass options with in-game currency
 
-## Kullanılan Teknolojiler
+### Social Features
+- **Friends System**: Add friends, send/receive requests, view friend performance
+- **Duel System**: Challenge friends to 1v1 quiz battles with custom question counts (5-25)
+- **Leaderboards**: Global and category-specific rankings with performance tracking
 
-- **Backend:** PHP, MySQL
-- **Frontend:** HTML, Tailwind CSS, JavaScript (ES6+)
-- **API İletişimi:** AJAX (`fetch` API)
-- **AI Model:** Google Gemini Pro
-- **Oturum Yönetimi:** PHP Sessions (`$_SESSION`)
+### User Management
+- **Role-based Access**: User and Admin roles with different permissions
+- **Achievement System**: 20+ dynamic achievements with automatic tracking
+- **Daily Quests**: Rotating daily challenges with rewards
+- **Login Streaks**: Daily login rewards to encourage engagement
 
-## Kurulum ve Çalıştırma
+### Economy System
+- **Token Currency**: Earn tokens from correct answers, quests, and duels
+- **In-game Shop**: Purchase lifelines and upgrades with earned tokens
+- **Dynamic Pricing**: Admin-configurable shop prices with sales analytics
 
-Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağıdaki adımları izleyin:
+### Admin Panel
+- **User Management**: View, edit, and manage user accounts
+- **Analytics Dashboard**: Comprehensive statistics with Chart.js visualizations
+- **Announcement System**: Send notifications to users
+- **Shop Management**: Configure prices and view sales data
+- **Category Management**: Add/edit quiz categories dynamically
 
-1. **Projeyi Klonlayın:**
+## Technology Stack
 
-    ```bash
-    git clone https://github.com/hermesthecat/Gemini-Api-Soru-Cevap.git
-    cd Gemini-Api-Soru-Cevap
-    ```
+- **Backend**: PHP 7.4+ with MVC architecture
+- **Database**: MySQL with comprehensive migration system
+- **Frontend**: Vanilla JavaScript with modular design
+- **UI Framework**: Tailwind CSS for responsive design
+- **AI Integration**: Google Gemini API for question generation
+- **Authentication**: PHP Sessions with CSRF protection
 
-2. **`config.php` Dosyasını Oluşturun:**
-    - Proje kök dizininde `config.php` adında bir dosya oluşturun. Bu dosya hem veritabanı bağlantı bilgilerinizi hem de API anahtarınızı içerecektir.
+## Installation
 
-    ```php
-    <?php
-    // Veritabanı Ayarları
-    define('DB_HOST', 'localhost');
-    define('DB_USER', 'root'); // Veritabanı kullanıcı adınız
-    define('DB_PASS', '');     // Veritabanı şifreniz
-    define('DB_NAME', 'ai_quiz'); // Kullanmak istediğiniz veritabanı adı
+### Requirements
+- PHP 7.4 or higher
+- MySQL 5.7 or higher
+- Web server (Apache/Nginx)
+- Google Gemini API key
 
-    ```
+### Setup Instructions
 
-3. **Veritabanını ve Tabloları Kurun:**
-    - Tarayıcınızdan `http://localhost/proje-klasoru/install.php` adresini çalıştırın.
-    - Bu betik, `config.php`'de belirttiğiniz isimde veritabanını, gerekli tüm tabloları (`users`, `friends`, `duels`, `leaderboard`, `user_stats`, `achievements`, `user_achievements`, `quests`, `user_quests`, `announcements`, `user_announcements`) ve varsayılan bir yönetici hesabını (`kullanıcı adı: admin`, `şifre: password`) otomatik olarak oluşturacaktır.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ai-soru-cevap
+   ```
 
-4. **Uygulamayı Başlatın:**
-    - `install.php`'yi çalıştırdıktan sonra tarayıcınızdan ana dizine (`http://localhost/proje-klasoru/`) gidin.
-    - Artık yeni bir kullanıcı kaydedebilir veya `admin` hesabıyla giriş yapabilirsiniz.
+2. **Create configuration file**
+   ```php
+   // config.php
+   <?php
+   // Database Settings
+   define('DB_HOST', 'localhost');
+   define('DB_USER', 'your_username');
+   define('DB_PASS', 'your_password');
+   define('DB_NAME', 'ai_quiz');
 
-## Dosya Yapısı
+   // Google Gemini API
+   define('GEMINI_API_KEY', 'your_gemini_api_key');
 
+   // Domain Configuration
+   define('DOMAIN', 'https://your-domain.com');
+   ?>
+   ```
+
+3. **Run database installation**
+   ```bash
+   # For development (WARNING: Deletes all data)
+   http://localhost/ai-soru-cevap/install.php?fresh=1
+
+   # For production (Safe update)
+   http://localhost/ai-soru-cevap/install.php
+   ```
+
+4. **Access the application**
+   - URL: `http://localhost/ai-soru-cevap/`
+   - Default admin: username `admin`, password `password`
+
+## Database Schema
+
+Current schema version: **1.10.0**
+
+### Core Tables
+- `users` - User accounts with coins, lifelines, login streaks
+- `categories` - Dynamic question categories with icons/colors
+- `questions` - Cached AI-generated questions for performance
+- `leaderboard` - Global scoring system
+- `user_stats` - Per-category performance tracking
+
+### Social System
+- `friends` - Friend relationships with status tracking
+- `duels` - 1v1 challenge system with questions and scores
+- `achievements` / `user_achievements` - Badge system
+- `achievement_rules` - Dynamic achievement tracking rules
+
+### Quest & Economy
+- `quests` / `user_quests` - Daily task system
+- `quest_history` - Quest completion analytics
+- `shop_settings` - Dynamic pricing configuration
+- `purchase_logs` - Transaction history
+
+### Admin System
+- `announcements` / `user_announcements` - Notification system
+- `settings` - Site configuration
+- `api_keys` - Multiple Gemini API key support
+- `schema_migrations` - Database version tracking
+
+## Architecture
+
+### Backend (MVC Pattern)
+- **API Router**: `api.php` - Central request handler with CSRF protection
+- **Controllers**: `Api/Controllers/` - Business logic separation
+  - `GameController` - Question generation and answer validation
+  - `UserController` - Authentication and user management
+  - `DuelController` - Challenge system
+  - `AdminController` - Admin panel functionality
+  - `DataController` - Statistics and leaderboards
+
+### Frontend (Modular MPA)
+- **Multi-Page Application**: Independent PHP pages with shared components
+- **Modular JavaScript**: Feature-specific handlers in `assets/js/`
+- **State Management**: Global state through `app-state.js`
+- **API Communication**: Centralized through `api-handler.js`
+
+### Performance Optimizations
+- **Question Caching**: Database-first approach reduces AI API calls by ~90%
+- **Asset Cache Busting**: Timestamp-based versioning
+- **Optimized Queries**: Proper indexing and query optimization
+- **Modular Loading**: JavaScript modules loaded per page
+
+## Migration System
+
+The application uses a robust migration system for database updates:
+
+- **Version Tracking**: `schema_migrations` table tracks applied migrations
+- **Safe Updates**: Production updates preserve existing data
+- **Rollback Support**: Transaction-based migrations with automatic rollback
+- **Development Reset**: Fresh install option for development environments
+
+### Migration Commands
 ```bash
-.
-├── Api/
-│   └── Controllers/      # Backend Controller sınıfları
-│       ├── AdminController.php
-│       ├── DataController.php
-│       ├── DuelController.php
-│       ├── FriendsController.php
-│       ├── GameController.php
-│       ├── QuestController.php
-│       ├── ShopController.php
-│       └── UserController.php
-├── assets/
-│   ├── css/style.css
-│   ├── images/
-│   │   └── avatars/      # Kullanıcı avatar dosyaları
-│   └── js/               # Modüler JavaScript dosyaları
-│       ├── admin-handler.js
-│       ├── announcement-handler.js
-│       ├── api-handler.js
-│       ├── app-data.js
-│       ├── app-state.js
-│       ├── app.js
-│       ├── auth-handler.js
-│       ├── friends-handler.js
-│       ├── game-handler.js
-│       ├── quest-handler.js
-│       ├── settings-handler.js
-│       ├── shop-handler.js
-│       ├── stats-handler.js
-│       └── ui-handler.js
-├── api.php             # Ana API yönlendiricisi (Router)
-├── config.php          # Veritabanı ve API anahtarı yapılandırması
-├── GeminiAPI.php       # Google Gemini API ile iletişim sınıfı
-├── index.php           # Ana HTML iskeleti ve UI konteynerları
-├── install.php         # Veritabanı kurulum betiği
-└── README.md           # Bu dosya
+# Safe production update
+php install.php
+
+# Development reset (destroys data)
+php install.php?fresh=1
 ```
 
-## Nasıl Çalışır?
+## Development
 
-Uygulama, modern bir SPA mimarisiyle çalışır:
+### Adding New Features
+1. Create controller method in appropriate `Api/Controllers/` file
+2. Add route to `api.php` routes array
+3. Create corresponding handler in `assets/js/`
+4. Update UI templates in appropriate PHP page files
 
-1. **Başlatma:** Kullanıcı `index.php`'yi açtığında, `app.js` çalışır ve `api.php`'ye bir `check_session` isteği göndererek aktif bir oturum olup olmadığını kontrol eder.
-2. **Oturum Yönetimi:**
-    - **Oturum Varsa:** `api.php` kullanıcı bilgilerini (`id`, `username`, `role`) döndürür.
-        - **Kullanıcı 'admin' ise:** Frontend, Yönetim Panelini (`admin-view`) gösterir. Panel için gerekli veriler (kullanıcı listesi, genel istatistikler) API'den çekilir.
-        - **Kullanıcı 'user' ise:** Frontend, ana uygulama ekranını (`main-view`) gösterir, kullanıcıyı karşılar ve verileri (kişisel istatistikler, liderlik tablosu) yükler.
-    - **Oturum Yoksa:** Frontend, giriş/kayıt formlarının olduğu `auth-view`'ı gösterir.
-3. **Admin İşlemleri:** Admin, panel üzerinden bir kullanıcının rolünü değiştirdiğinde veya bir kullanıcıyı sildiğinde, `app.js` ilgili `admin_*` endpoint'ini çağırır ve başarılı olursa arayüzü günceller.
-4. **Sosyal Etkileşim:** Kullanıcılar "Arkadaşlar" sekmesinden diğer kullanıcıları arayabilir, istek gönderebilir, gelen istekleri yönetebilir. Arkadaşlarına meydan okuma isteği gönderebilirler. Backend'de bu işlemler `FriendsController` ve `DuelController` tarafından yönetilir.
-5. **Oyun Akışı:** (Normal kullanıcılar veya admin "Oyuncu Görünümü"ne geçtiğinde)
-    - Kullanıcı bir kategori seçer ve `api.php`'nin `get_question` endpoint'inden bir soru istenir.
-    - `api.php`, Gemini'den soruyu alır, doğru cevabı ve açıklamayı sunucu tarafında `$_SESSION`'a kaydeder ve sadece soruyu/seçenekleri ön uca gönderir.
-    - Kullanıcı cevabını `submit_answer` endpoint'ine gönderir.
-    - `api.php`, cevabı `$_SESSION`'daki doğru cevapla karşılaştırır, puanı hesaplar ve kullanıcının `user_stats` ve `leaderboard` tablolarındaki verilerini günceller.
-6. **Arayüz Güncelleme:** Ön uç, cevabın sonucunu (`doğru`/`yanlış`, `açıklama`) alır, arayüzü günceller ve en güncel istatistik/liderlik tablosu verilerini ekrana yansıtır.
+### Database Changes
+1. Increment `$current_version` in `install.php`
+2. Create new `migration_X_X_X($pdo)` function
+3. Use transactions for data safety
+4. Add case to migration switch statement
 
-## Lisans
+### Code Organization
+- Controllers handle business logic and database operations
+- Handlers manage UI interactions and API communication
+- Modular JavaScript prevents monolithic client-side code
+- Consistent error handling and logging patterns
 
-Bu proje MIT Lisansı altında lisanslanmıştır.
+## Security Features
+
+- **Authentication**: Secure password hashing with PHP `password_hash()`
+- **CSRF Protection**: Token validation on all authenticated requests
+- **SQL Injection Prevention**: PDO prepared statements throughout
+- **Rate Limiting**: Failed login attempt tracking
+- **Session Management**: Secure PHP session handling
+- **Input Validation**: Comprehensive server-side validation
+
+## API Key Management
+
+The application supports multiple Google Gemini API keys for reliability:
+- Database-stored API keys with usage tracking
+- Automatic failover between keys
+- Admin panel for key management
+- Usage analytics and monitoring
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Follow existing code patterns and conventions
+4. Test thoroughly including migration scenarios
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support and documentation, please refer to:
+- `CLAUDE.md` - Comprehensive development guide
+- Migration logs in `schema_migrations` table
+- Error logs in server error logs
+- Admin panel analytics for system health

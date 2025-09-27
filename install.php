@@ -8,37 +8,37 @@ header('Content-Type: text/plain; charset=utf-8');
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
 $current_version = '1.10.0'; // Current schema version
 
-echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
-echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
+echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
+echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
 echo "Hedef Version: $current_version\n\n";
 
 if ($fresh_install) {
     echo "!  UYARI: Fresh install modu tum mevcut verileri silecek!\n";
-    echo "Production ortamında kullanmayın. Devam etmek için 3 saniye bekleniyor...\n\n";
+    echo "Production ortaminda kullanmayin. Devam etmek icin 3 saniye bekleniyor...\n\n";
     sleep(3);
 }
 
 try {
-  // Önce veritabanı olmadan MySQL sunucusuna bağlan
+  // Once veritabani olmadan MySQL sunucusuna baglan
   $pdo_init = new PDO("mysql:host=" . DB_HOST, DB_USER, DB_PASS);
   $pdo_init->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $pdo_init->exec("SET NAMES 'utf8mb4'");
 
-  // Veritabanı var mı diye kontrol et, yoksa oluştur
+  // Veritabani var mi diye kontrol et, yoksa olustur
   $stmt = $pdo_init->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" . DB_NAME . "'");
   if ($stmt->rowCount() == 0) {
     $pdo_init->exec("CREATE DATABASE `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-    echo "Veritabanı '" . DB_NAME . "' başarıyla oluşturuldu.\n";
+    echo "Veritabani '" . DB_NAME . "' basariyla olusturuldu.\n";
   } else {
-    echo "Veritabanı '" . DB_NAME . "' zaten mevcut.\n";
+    echo "Veritabani '" . DB_NAME . "' zaten mevcut.\n";
   }
 
-  // Oluşturulan veya mevcut veritabanına bağlan
+  // Olusturulan veya mevcut veritabanina baglan
   $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $pdo->exec("SET NAMES 'utf8mb4'");
 
-  echo "Veritabanı bağlantısı başarılı.\n\n";
+  echo "Veritabani baglantisi basarili.\n\n";
 
   // --- Migration Sistemi ---
 
@@ -51,7 +51,7 @@ try {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
     $pdo->exec($sql);
-    echo "Migration tracking tablosu hazır.\n";
+    echo "Migration tracking tablosu hazir.\n";
   }
 
   function getCurrentVersion($pdo) {
@@ -60,7 +60,7 @@ try {
       $result = $stmt->fetch(PDO::FETCH_ASSOC);
       return $result ? $result['version'] : '0.0.0';
     } catch (PDOException $e) {
-      return '0.0.0'; // Migration tablosu henüz yok
+      return '0.0.0'; // Migration tablosu henuz yok
     }
   }
 
@@ -74,20 +74,20 @@ try {
     return version_compare($v1, $v2);
   }
 
-  // Migration tablosunu oluştur
+  // Migration tablosunu olustur
   createMigrationTable($pdo);
   $installed_version = getCurrentVersion($pdo);
   echo "Mevcut schema version: $installed_version\n\n";
 
   if ($fresh_install) {
-    // --- Fresh Install: Tabloları Temizle ve Yeniden Oluştur ---
+    // --- Fresh Install: Tablolari Temizle ve Yeniden Olustur ---
 
-  // Yabancı anahtar kısıtlamalarını dikkate alarak tabloları doğru sırada sil
+  // Yabanci anahtar kisitlamalarini dikkate alarak tablolari dogru sirada sil
   echo "Mevcut tablolar temizleniyor...\n";
   $pdo->exec("DROP TABLE IF EXISTS `user_announcements`, `user_quests`, `quests`, `duels`, `friends`, `user_achievements`, `user_difficulty_stats`, `user_stats`, `leaderboard`, `users`, `achievements`, `announcements`;");
-  echo "Eski tablolar başarıyla silindi.\n\n";
+  echo "Eski tablolar basariyla silindi.\n\n";
 
-  echo "Yeni tablolar oluşturuluyor...\n";
+  echo "Yeni tablolar olusturuluyor...\n";
 
   // `users` tablosu
   $sql_users = "
@@ -97,15 +97,15 @@ try {
       `password` VARCHAR(255) NOT NULL,
       `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
       `avatar` VARCHAR(255) NOT NULL DEFAULT 'avatar1.svg',
-      `last_login_date` DATE NULL DEFAULT NULL COMMENT 'Kullanıcının son giriş yaptığı tarih',
-      `login_streak` INT(11) NOT NULL DEFAULT 0 COMMENT 'Kullanıcının ardışık giriş yapma serisi',
+      `last_login_date` DATE NULL DEFAULT NULL COMMENT 'Kullanicinin son giris yaptigi tarih',
+      `login_streak` INT(11) NOT NULL DEFAULT 0 COMMENT 'Kullanicinin ardisik giris yapma serisi',
       `failed_login_attempts` INT NOT NULL DEFAULT 0,
       `last_login_attempt` TIMESTAMP NULL DEFAULT NULL,
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_users);
-  echo "Tablo 'users' (rate limiting ve günlük giriş sütunları ile) başarıyla oluşturuldu.\n";
+  echo "Tablo 'users' (rate limiting ve gunluk giris sutunlari ile) basariyla olusturuldu.\n";
 
   // `friends` tablosu
   $sql_friends = "
@@ -114,7 +114,7 @@ try {
       `user_one_id` INT NOT NULL,
       `user_two_id` INT NOT NULL,
       `status` ENUM('pending', 'accepted', 'declined', 'blocked') NOT NULL,
-      `action_user_id` INT NOT NULL COMMENT 'Son aksiyonu yapan kullanıcının IDsi',
+      `action_user_id` INT NOT NULL COMMENT 'Son aksiyonu yapan kullanicinin IDsi',
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (`user_one_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
@@ -123,7 +123,7 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ";
   $pdo->exec($sql_friends);
-  echo "Tablo 'friends' başarıyla oluşturuldu.\n";
+  echo "Tablo 'friends' basariyla olusturuldu.\n";
 
   // `duels` tablosu
   $sql_duels = "
@@ -148,14 +148,14 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ";
   $pdo->exec($sql_duels);
-  echo "Tablo 'duels' başarıyla oluşturuldu.\n";
+  echo "Tablo 'duels' basariyla olusturuldu.\n";
 
   // `quests` tablosu
   $sql_quests = "
     CREATE TABLE `quests` (
         `quest_key` VARCHAR(50) PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
-        `description_template` VARCHAR(255) NOT NULL COMMENT 'e.g., ''{goal} {target} sorusu çöz''',
+        `description_template` VARCHAR(255) NOT NULL COMMENT 'e.g., ''{goal} {target} sorusu coz''',
         `type` ENUM('solve_category', 'solve_difficulty', 'consecutive_days', 'win_duels') NOT NULL,
         `target` VARCHAR(50) DEFAULT NULL COMMENT 'e.g., ''tarih'' or ''zor''',
         `default_goal` INT NOT NULL,
@@ -164,7 +164,7 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ";
   $pdo->exec($sql_quests);
-  echo "Tablo 'quests' başarıyla oluşturuldu.\n";
+  echo "Tablo 'quests' basariyla olusturuldu.\n";
 
   // `user_quests` tablosu
   $sql_user_quests = "
@@ -183,9 +183,9 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ";
   $pdo->exec($sql_user_quests);
-  echo "Tablo 'user_quests' başarıyla oluşturuldu.\n";
+  echo "Tablo 'user_quests' basariyla olusturuldu.\n";
 
-  // `leaderboard` tablosu (users tablosuna bağlı)
+  // `leaderboard` tablosu (users tablosuna bagli)
   $sql_leaderboard = "
     CREATE TABLE `leaderboard` (
       `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -201,9 +201,9 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_leaderboard);
-  echo "Tablo 'leaderboard' başarıyla oluşturuldu ve 'users' tablosuna bağlandı.\n";
+  echo "Tablo 'leaderboard' basariyla olusturuldu ve 'users' tablosuna baglandi.\n";
 
-  // `user_stats` tablosu (users tablosuna bağlı) - YENİ SÜTUNLAR EKLENDİ
+  // `user_stats` tablosu (users tablosuna bagli) - YENI SUTUNLAR EKLENDI
   $sql_user_stats = "
     CREATE TABLE `user_stats` (
       `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -218,9 +218,9 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_user_stats);
-  echo "Tablo 'user_stats' (zorluk ve süre ile) başarıyla oluşturuldu.\n";
+  echo "Tablo 'user_stats' (zorluk ve sure ile) basariyla olusturuldu.\n";
 
-  // `achievements` tablosu (Başarım tanımları için)
+  // `achievements` tablosu (Basarim tanimlari icin)
   $sql_achievements = "
     CREATE TABLE `achievements` (
       `achievement_key` VARCHAR(50) PRIMARY KEY,
@@ -231,9 +231,9 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_achievements);
-  echo "Tablo 'achievements' başarıyla oluşturuldu.\n";
+  echo "Tablo 'achievements' basariyla olusturuldu.\n";
 
-  // `user_achievements` tablosu (users tablosuna bağlı)
+  // `user_achievements` tablosu (users tablosuna bagli)
   $sql_user_achievements = "
     CREATE TABLE `user_achievements` (
       `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -246,78 +246,78 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ";
   $pdo->exec($sql_user_achievements);
-  echo "Tablo 'user_achievements' başarıyla oluşturuldu ve 'users' ve 'achievements' tablolarına bağlandı.\n";
+  echo "Tablo 'user_achievements' basariyla olusturuldu ve 'users' ve 'achievements' tablolarina baglandi.\n";
 
-  // `user_difficulty_stats` tablosu kaldırıldığı için oluşturma kodu silindi.
+  // `user_difficulty_stats` tablosu kaldirildigi icin olusturma kodu silindi.
 
-  // --- Başarım Verilerini Veritabanına Ekle ---
-  echo "\nBaşarım verileri veritabanına ekleniyor...\n";
+  // --- Basarim Verilerini Veritabanina Ekle ---
+  echo "\nBasarim verileri veritabanina ekleniyor...\n";
   $achievements_data = [
-    ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
-    ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
-    ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
-    ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
-    ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
-    ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
-    ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
-    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
-    ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
-    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
-    ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
-    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
-    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
-    ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
-    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
-    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
-    ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
-    ['uzman_coğrafya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
-    ['kusursuz_coğrafya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
-    ['uzman_genel kültür', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
-    ['kusursuz_genel kültür', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
+    ['ilk_adim', 'Ilk Adim', 'Ilk sorunu dogru cevapladin, tebrikler!', 'fa-shoe-prints', 'green'],
+    ['hiz_tutkunu', 'Hiz Tutkunu', 'Bir soruyu 5 saniyeden kisa surede dogru cevapladin!', 'fa-bolt', 'blue'],
+    ['seri_galibi_10', 'Seri Galibi', 'Ust uste 10 soruyu dogru cevapladin!', 'fa-trophy', 'yellow'],
+    ['seri_galibi_25', 'Yenilmez', 'Inanilmaz! 25 soruyu art arda dogru bildin!', 'fa-crown', 'red'],
+    ['merakli', 'Merakli', 'Tum kategorilerden en az bir soru cevapladin!', 'fa-compass', 'purple'],
+    ['puan_avcisi_1000', 'Puan Avcisi', 'Toplamda 1000 puana ulastin!', 'fa-star', 'yellow'],
+    ['gece_kusu', 'Gece Kusu', 'Gece 00:00 - 04:00 arasi soru cozdun!', 'fa-moon', 'indigo'],
+    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu dogru cevapladin!', 'fa-user-secret', 'gray'],
+    ['koleksiyoncu', 'Koleksiyoncu', '10 farkli basarim rozeti topladin!', 'fa-gem', 'pink'],
+    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya dogru cevap verdin!', 'fa-history', 'blue'],
+    ['kusursuz_tarih', 'Kusursuz Tarihci', 'Tarih kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-scroll', 'blue'],
+    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya dogru cevap verdin!', 'fa-futbol', 'green'],
+    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-running', 'green'],
+    ['uzman_bilim', 'Bilim Kasifi', 'Bilim kategorisinde 20 soruya dogru cevap verdin!', 'fa-atom', 'purple'],
+    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-flask', 'purple'],
+    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya dogru cevap verdin!', 'fa-palette', 'yellow'],
+    ['kusursuz_sanat', 'Kusursuz Sanatci', 'Sanat kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
+    ['uzman_cografya', 'Dunya Gezgini', 'Cografya kategorisinde 20 soruya dogru cevap verdin!', 'fa-globe-americas', 'red'],
+    ['kusursuz_cografya', 'Kusursuz Kasif', 'Cografya kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
+    ['uzman_genel kultur', 'Her Seyi Bilen', 'Genel Kultur kategorisinde 20 soruya dogru cevap verdin!', 'fa-brain', 'indigo'],
+    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kultur kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-lightbulb', 'indigo']
   ];
 
   $stmt_ach_insert = $pdo->prepare("INSERT INTO achievements (achievement_key, name, description, icon, color) VALUES (?, ?, ?, ?, ?)");
   foreach ($achievements_data as $ach) {
     $stmt_ach_insert->execute($ach);
   }
-  echo count($achievements_data) . " adet başarım veritabanına eklendi.\n";
+  echo count($achievements_data) . " adet basarim veritabanina eklendi.\n";
 
-  // --- Görev Verilerini Veritabanına Ekle ---
-  echo "\nGörev verileri veritabanına ekleniyor...\n";
+  // --- Gorev Verilerini Veritabanina Ekle ---
+  echo "\nGorev verileri veritabanina ekleniyor...\n";
   $quests_data = [
-    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25, 25],
-    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25, 25],
-    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25, 25],
-    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50, 50],
-    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30, 40]
+    ['solve_5_tarih', 'Tarihci', '{goal} tarih sorusu coz', 'solve_category', 'tarih', 5, 25, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu coz', 'solve_category', 'spor', 5, 25, 25],
+    ['solve_5_bilim', 'Kasif', '{goal} bilim sorusu coz', 'solve_category', 'bilim', 5, 25, 25],
+    ['solve_3_zor', 'Gozu Pek', '{goal} zor soru coz', 'solve_difficulty', 'zor', 3, 50, 50],
+    ['solve_10_orta', 'Istikrarli', '{goal} orta soru coz', 'solve_difficulty', 'orta', 10, 30, 40]
   ];
 
   $stmt_quest_insert = $pdo->prepare("INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
   foreach ($quests_data as $quest) {
     $stmt_quest_insert->execute($quest);
   }
-  echo count($quests_data) . " adet görev veritabanına eklendi.\n";
+  echo count($quests_data) . " adet gorev veritabanina eklendi.\n";
 
-  // --- Varsayılan Admin Kullanıcısını Oluştur ---
-  echo "\nVarsayılan admin kullanıcısı oluşturuluyor...\n";
+  // --- Varsayilan Admin Kullanicisini Olustur ---
+  echo "\nVarsayilan admin kullanicisi olusturuluyor...\n";
   try {
     $admin_user = 'admin';
-    $admin_pass = 'password'; // Geliştirme için basit bir şifre. Canlı ortamda değiştirin!
+    $admin_pass = 'password'; // Gelistirme icin basit bir sifre. Canli ortamda degistirin!
     $hashed_password = password_hash($admin_pass, PASSWORD_DEFAULT);
 
-    // Admin kullanıcısını ekle
+    // Admin kullanicisini ekle
     $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, 'admin')");
     $stmt->execute([$admin_user, $hashed_password]);
     $admin_id = $pdo->lastInsertId();
 
-    // Admin için leaderboard kaydı oluştur
+    // Admin icin leaderboard kaydi olustur
     $stmt = $pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)");
     $stmt->execute([$admin_id]);
 
-    echo "Kullanıcı: '$admin_user' (Şifre: '$admin_pass') başarıyla oluşturuldu.\n";
+    echo "Kullanici: '$admin_user' (Sifre: '$admin_pass') basariyla olusturuldu.\n";
   } catch (PDOException $e) {
     if ($e->errorInfo[1] == 1062) { // 1062 = Duplicate entry
-      echo "Admin kullanıcısı zaten mevcut.\n";
+      echo "Admin kullanicisi zaten mevcut.\n";
     } else {
       throw $e;
     }
@@ -339,7 +339,7 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
 
-  // Kullanıcıların Okuduğu Duyurular Tablosu
+  // Kullanicilarin Okudugu Duyurular Tablosu
   $pdo->exec("
     CREATE TABLE IF NOT EXISTS user_announcements (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -352,7 +352,7 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
 
-  // Site Ayarları Tablosu
+  // Site Ayarlari Tablosu
   $pdo->exec("
     CREATE TABLE IF NOT EXISTS settings (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -363,21 +363,21 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
 
-  // Varsayılan ayarları ekle
+  // Varsayilan ayarlari ekle
   $default_settings = [
-    ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
-    ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
-    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],
-    ['timezone_setting', 'Europe/Istanbul', 'Varsayılan zaman dilimi ayarı']
+    ['gemini_model', 'gemini-1.5-flash', 'Kullanilacak Gemini model adi'],
+    ['site_name', 'AI Soru Cevap Yarismasi', 'Site basligi'],
+    ['registration_enabled', '1', 'Yeni kullanici kaydi aktif mi (1: aktif, 0: pasif)'],
+    ['timezone_setting', 'Europe/Istanbul', 'Varsayilan zaman dilimi ayari']
   ];
 
   $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
   foreach ($default_settings as $setting) {
     $stmt_setting->execute($setting);
   }
-  echo "Site ayarları tablosu ve varsayılan değerler oluşturuldu.\n";
+  echo "Site ayarlari tablosu ve varsayilan degerler olusturuldu.\n";
 
-  // API Anahtarları Tablosu
+  // API Anahtarlari Tablosu
   $pdo->exec("
     CREATE TABLE IF NOT EXISTS api_keys (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -390,9 +390,9 @@ try {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
-  echo "API anahtarları tablosu oluşturuldu.\n";
+  echo "API anahtarlari tablosu olusturuldu.\n";
 
-  // Performance İndexleri Ekle
+  // Performance Indexleri Ekle
   echo "Performance indexleri ekleniyor...\n";
 
   // Leaderboard performance indexleri
@@ -425,16 +425,16 @@ try {
   $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_last_login ON users (last_login_date)");
   $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_created ON users (created_at)");
 
-  echo "Performance indexleri başarıyla eklendi.\n";
+  echo "Performance indexleri basariyla eklendi.\n";
 
-    // Fresh install tamamlandı, son versiyonu işaretle
+    // Fresh install tamamlandi, son versiyonu isaretle
     markMigrationComplete($pdo, $current_version, "Fresh install completed");
-    echo "\n+ Fresh install başarıyla tamamlandı!\n";
+    echo "\n+ Fresh install basariyla tamamlandi!\n";
   } else {
-    // --- Safe Update: Sadece gerekli migration'ları çalıştır ---
+    // --- Safe Update: Sadece gerekli migration'lari calistir ---
     echo "Safe update modu - mevcut veriler korunacak.\n\n";
 
-    // Hangi migration'ların çalıştırılması gerektiğini belirle
+    // Hangi migration'larin calistirilmasi gerektigini belirle
     $migrations_to_run = [];
 
     if (versionCompare($installed_version, '1.0.0') < 0) {
@@ -474,12 +474,12 @@ try {
     }
 
     if (empty($migrations_to_run)) {
-      echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
+      echo "Tum migration'lar guncel. Guncelleme gerekmiyor.\n";
     } else {
-      echo "Çalıştırılacak migration'lar: " . implode(', ', $migrations_to_run) . "\n\n";
+      echo "Calistirilacak migration'lar: " . implode(', ', $migrations_to_run) . "\n\n";
 
       foreach ($migrations_to_run as $version) {
-        echo "Migration $version çalıştırılıyor...\n";
+        echo "Migration $version calistiriliyor...\n";
 
         switch ($version) {
           case '1.0.0':
@@ -518,17 +518,17 @@ try {
       }
     }
 
-    echo "\n+ Güncelleme başarıyla tamamlandı!\n";
+    echo "\n+ Guncelleme basariyla tamamlandi!\n";
   }
 
 } catch (PDOException $e) {
-  die("! Kurulum/güncelleme sırasında hata: " . $e->getMessage());
+  die("! Kurulum/guncelleme sirasinda hata: " . $e->getMessage());
 }
 
 // === MIGRATION FUNCTIONS ===
 
 function migration_1_0_0($pdo) {
-  echo "->  Migration 1.0.0: İlk tablo yapısı oluşturuluyor...\n";
+  echo "->  Migration 1.0.0: Ilk tablo yapisi olusturuluyor...\n";
 
   // users tablosu
   $pdo->exec("
@@ -538,8 +538,8 @@ function migration_1_0_0($pdo) {
       `password` VARCHAR(255) NOT NULL,
       `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
       `avatar` VARCHAR(255) NOT NULL DEFAULT 'avatar1.svg',
-      `last_login_date` DATE NULL DEFAULT NULL COMMENT 'Kullanıcının son giriş yaptığı tarih',
-      `login_streak` INT(11) NOT NULL DEFAULT 0 COMMENT 'Kullanıcının ardışık giriş yapma serisi',
+      `last_login_date` DATE NULL DEFAULT NULL COMMENT 'Kullanicinin son giris yaptigi tarih',
+      `login_streak` INT(11) NOT NULL DEFAULT 0 COMMENT 'Kullanicinin ardisik giris yapma serisi',
       `failed_login_attempts` INT NOT NULL DEFAULT 0,
       `last_login_attempt` TIMESTAMP NULL DEFAULT NULL,
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -553,7 +553,7 @@ function migration_1_0_0($pdo) {
       `user_one_id` INT NOT NULL,
       `user_two_id` INT NOT NULL,
       `status` ENUM('pending', 'accepted', 'declined', 'blocked') NOT NULL,
-      `action_user_id` INT NOT NULL COMMENT 'Son aksiyonu yapan kullanıcının IDsi',
+      `action_user_id` INT NOT NULL COMMENT 'Son aksiyonu yapan kullanicinin IDsi',
       `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (`user_one_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
@@ -585,14 +585,14 @@ function migration_1_0_0($pdo) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   ");
 
-  // Diğer tablolar...
+  // Diger tablolar...
   createQuestTables($pdo);
   createLeaderboardTable($pdo);
   createUserStatsTable($pdo);
   createAchievementTables($pdo);
   createAnnouncementTables($pdo);
 
-  // Varsayılan verileri ekle
+  // Varsayilan verileri ekle
   insertDefaultData($pdo);
 
   markMigrationComplete($pdo, '1.0.0', 'Initial database schema');
@@ -603,7 +603,7 @@ function createQuestTables($pdo) {
     CREATE TABLE IF NOT EXISTS `quests` (
         `quest_key` VARCHAR(50) PRIMARY KEY,
         `name` VARCHAR(100) NOT NULL,
-        `description_template` VARCHAR(255) NOT NULL COMMENT 'e.g., ''{goal} {target} sorusu çöz''',
+        `description_template` VARCHAR(255) NOT NULL COMMENT 'e.g., ''{goal} {target} sorusu coz''',
         `type` ENUM('solve_category', 'solve_difficulty', 'consecutive_days', 'win_duels') NOT NULL,
         `target` VARCHAR(50) DEFAULT NULL COMMENT 'e.g., ''tarih'' or ''zor''',
         `default_goal` INT NOT NULL,
@@ -716,29 +716,29 @@ function createAnnouncementTables($pdo) {
 }
 
 function insertDefaultData($pdo) {
-  // Başarım verilerini ekle
+  // Basarim verilerini ekle
   $achievements_data = [
-    ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
-    ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
-    ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
-    ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
-    ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
-    ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
-    ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
-    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
-    ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
-    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
-    ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
-    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
-    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
-    ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
-    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
-    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
-    ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
-    ['uzman_coğrafya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
-    ['kusursuz_coğrafya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
-    ['uzman_genel kültür', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
-    ['kusursuz_genel kültür', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
+    ['ilk_adim', 'Ilk Adim', 'Ilk sorunu dogru cevapladin, tebrikler!', 'fa-shoe-prints', 'green'],
+    ['hiz_tutkunu', 'Hiz Tutkunu', 'Bir soruyu 5 saniyeden kisa surede dogru cevapladin!', 'fa-bolt', 'blue'],
+    ['seri_galibi_10', 'Seri Galibi', 'Ust uste 10 soruyu dogru cevapladin!', 'fa-trophy', 'yellow'],
+    ['seri_galibi_25', 'Yenilmez', 'Inanilmaz! 25 soruyu art arda dogru bildin!', 'fa-crown', 'red'],
+    ['merakli', 'Merakli', 'Tum kategorilerden en az bir soru cevapladin!', 'fa-compass', 'purple'],
+    ['puan_avcisi_1000', 'Puan Avcisi', 'Toplamda 1000 puana ulastin!', 'fa-star', 'yellow'],
+    ['gece_kusu', 'Gece Kusu', 'Gece 00:00 - 04:00 arasi soru cozdun!', 'fa-moon', 'indigo'],
+    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu dogru cevapladin!', 'fa-user-secret', 'gray'],
+    ['koleksiyoncu', 'Koleksiyoncu', '10 farkli basarim rozeti topladin!', 'fa-gem', 'pink'],
+    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya dogru cevap verdin!', 'fa-history', 'blue'],
+    ['kusursuz_tarih', 'Kusursuz Tarihci', 'Tarih kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-scroll', 'blue'],
+    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya dogru cevap verdin!', 'fa-futbol', 'green'],
+    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-running', 'green'],
+    ['uzman_bilim', 'Bilim Kasifi', 'Bilim kategorisinde 20 soruya dogru cevap verdin!', 'fa-atom', 'purple'],
+    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-flask', 'purple'],
+    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya dogru cevap verdin!', 'fa-palette', 'yellow'],
+    ['kusursuz_sanat', 'Kusursuz Sanatci', 'Sanat kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
+    ['uzman_cografya', 'Dunya Gezgini', 'Cografya kategorisinde 20 soruya dogru cevap verdin!', 'fa-globe-americas', 'red'],
+    ['kusursuz_cografya', 'Kusursuz Kasif', 'Cografya kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
+    ['uzman_genel kultur', 'Her Seyi Bilen', 'Genel Kultur kategorisinde 20 soruya dogru cevap verdin!', 'fa-brain', 'indigo'],
+    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kultur kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-lightbulb', 'indigo']
   ];
 
   $stmt_ach_insert = $pdo->prepare("INSERT IGNORE INTO achievements (achievement_key, name, description, icon, color) VALUES (?, ?, ?, ?, ?)");
@@ -746,13 +746,13 @@ function insertDefaultData($pdo) {
     $stmt_ach_insert->execute($ach);
   }
 
-  // Görev verilerini ekle
+  // Gorev verilerini ekle
   $quests_data = [
-    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25, 25],
-    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25, 25],
-    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25, 25],
-    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50, 50],
-    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30, 40]
+    ['solve_5_tarih', 'Tarihci', '{goal} tarih sorusu coz', 'solve_category', 'tarih', 5, 25, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu coz', 'solve_category', 'spor', 5, 25, 25],
+    ['solve_5_bilim', 'Kasif', '{goal} bilim sorusu coz', 'solve_category', 'bilim', 5, 25, 25],
+    ['solve_3_zor', 'Gozu Pek', '{goal} zor soru coz', 'solve_difficulty', 'zor', 3, 50, 50],
+    ['solve_10_orta', 'Istikrarli', '{goal} orta soru coz', 'solve_difficulty', 'orta', 10, 30, 40]
   ];
 
   $stmt_quest_insert = $pdo->prepare("INSERT IGNORE INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -760,7 +760,7 @@ function insertDefaultData($pdo) {
     $stmt_quest_insert->execute($quest);
   }
 
-  // Varsayılan admin kullanıcısını oluştur
+  // Varsayilan admin kullanicisini olustur
   try {
     $admin_user = 'admin';
     $admin_pass = 'password';
@@ -773,17 +773,17 @@ function insertDefaultData($pdo) {
       $admin_id = $pdo->lastInsertId();
       $stmt = $pdo->prepare("INSERT IGNORE INTO leaderboard (user_id, score) VALUES (?, 0)");
       $stmt->execute([$admin_id]);
-      echo "->  Admin kullanıcısı oluşturuldu: '$admin_user' (Şifre: '$admin_pass')\n";
+      echo "->  Admin kullanicisi olusturuldu: '$admin_user' (Sifre: '$admin_pass')\n";
     }
   } catch (PDOException $e) {
-    // Admin zaten mevcut, sorun değil
+    // Admin zaten mevcut, sorun degil
   }
 }
 
 function migration_1_1_0($pdo) {
-  echo "->  Migration 1.1.0: Site ayarları tablosu ekleniyor...\n";
+  echo "->  Migration 1.1.0: Site ayarlari tablosu ekleniyor...\n";
 
-  // Site ayarları tablosu
+  // Site ayarlari tablosu
   $pdo->exec("
     CREATE TABLE IF NOT EXISTS settings (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -794,12 +794,12 @@ function migration_1_1_0($pdo) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   ");
 
-  // Varsayılan ayarları ekle
+  // Varsayilan ayarlari ekle
   $default_settings = [
-    ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
-    ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
-    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],
-    ['timezone_setting', 'Europe/Istanbul', 'Varsayılan zaman dilimi ayarı']
+    ['gemini_model', 'gemini-1.5-flash', 'Kullanilacak Gemini model adi'],
+    ['site_name', 'AI Soru Cevap Yarismasi', 'Site basligi'],
+    ['registration_enabled', '1', 'Yeni kullanici kaydi aktif mi (1: aktif, 0: pasif)'],
+    ['timezone_setting', 'Europe/Istanbul', 'Varsayilan zaman dilimi ayari']
   ];
 
   $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
@@ -811,9 +811,9 @@ function migration_1_1_0($pdo) {
 }
 
 function migration_1_2_0($pdo) {
-  echo "->  Migration 1.2.0: API anahtarları tablosu ekleniyor...\n";
+  echo "->  Migration 1.2.0: API anahtarlari tablosu ekleniyor...\n";
 
-  // API anahtarları tablosu
+  // API anahtarlari tablosu
   $pdo->exec("
     CREATE TABLE IF NOT EXISTS api_keys (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -874,13 +874,13 @@ function migration_1_3_0($pdo) {
 }
 
 function migration_1_4_0($pdo) {
-  echo "->  Migration 1.4.0: Database yapısı düzeltiliyor - coins ve lifelines users tablosuna taşınıyor...\n";
+  echo "->  Migration 1.4.0: Database yapisi duzeltiliyor - coins ve lifelines users tablosuna tasiniyor...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // 1. users tablosuna yeni sütunları ekle
-    echo "  Users tablosuna coins ve lifeline sütunları ekleniyor...\n";
+    // 1. users tablosuna yeni sutunlari ekle
+    echo "  Users tablosuna coins ve lifeline sutunlari ekleniyor...\n";
     $pdo->exec("ALTER TABLE users
                 ADD COLUMN coins INT NOT NULL DEFAULT 100,
                 ADD COLUMN lifeline_fifty_fifty INT NOT NULL DEFAULT 1,
@@ -888,7 +888,7 @@ function migration_1_4_0($pdo) {
                 ADD COLUMN lifeline_pass INT NOT NULL DEFAULT 1");
 
     // 2. Mevcut verileri leaderboard'dan users'a kopyala
-    echo "  Mevcut veriler leaderboard'dan users tablosuna kopyalanıyor...\n";
+    echo "  Mevcut veriler leaderboard'dan users tablosuna kopyalaniyor...\n";
     $pdo->exec("UPDATE users u
                 INNER JOIN leaderboard l ON u.id = l.user_id
                 SET u.coins = l.coins,
@@ -896,22 +896,22 @@ function migration_1_4_0($pdo) {
                     u.lifeline_extra_time = l.lifeline_extra_time,
                     u.lifeline_pass = l.lifeline_pass");
 
-    // 3. Yeni kullanıcılar için leaderboard'da eksik kayıtları oluştur (güvenlik için)
-    echo "  Eksik leaderboard kayıtları kontrol ediliyor...\n";
+    // 3. Yeni kullanicilar icin leaderboard'da eksik kayitlari olustur (guvenlik icin)
+    echo "  Eksik leaderboard kayitlari kontrol ediliyor...\n";
     $pdo->exec("INSERT IGNORE INTO leaderboard (user_id, score, coins, lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass)
                 SELECT id, 0, coins, lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass
                 FROM users
                 WHERE id NOT IN (SELECT user_id FROM leaderboard)");
 
-    // 4. leaderboard tablosundan coins ve lifeline sütunlarını kaldır
-    echo "  Leaderboard tablosundan gereksiz sütunlar kaldırılıyor...\n";
+    // 4. leaderboard tablosundan coins ve lifeline sutunlarini kaldir
+    echo "  Leaderboard tablosundan gereksiz sutunlar kaldiriliyor...\n";
     $pdo->exec("ALTER TABLE leaderboard
                 DROP COLUMN coins,
                 DROP COLUMN lifeline_fifty_fifty,
                 DROP COLUMN lifeline_extra_time,
                 DROP COLUMN lifeline_pass");
 
-    // 5. purchase_logs tablosu varsa oluştur (ShopController'da kullanılıyor)
+    // 5. purchase_logs tablosu varsa olustur (ShopController'da kullaniliyor)
     echo "  Purchase logs tablosu kontrol ediliyor...\n";
     $pdo->exec("CREATE TABLE IF NOT EXISTS purchase_logs (
                   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -923,7 +923,7 @@ function migration_1_4_0($pdo) {
                   INDEX idx_purchase_user_date (user_id, purchase_date)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // 6. shop_settings tablosu varsa oluştur (admin shop için)
+    // 6. shop_settings tablosu varsa olustur (admin shop icin)
     echo "  Shop settings tablosu kontrol ediliyor...\n";
     $pdo->exec("CREATE TABLE IF NOT EXISTS shop_settings (
                   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -932,7 +932,7 @@ function migration_1_4_0($pdo) {
                   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Varsayılan shop fiyatlarını ekle
+    // Varsayilan shop fiyatlarini ekle
     $default_shop_settings = [
       ['price_fifty_fifty', '95'],
       ['price_extra_time', '50'],
@@ -945,24 +945,24 @@ function migration_1_4_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  + Veritabanı yapısı başarıyla düzeltildi!\n";
+    echo "  + Veritabani yapisi basariyla duzeltildi!\n";
 
     markMigrationComplete($pdo, '1.4.0', 'Fixed database structure: moved coins and lifelines to users table');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.4.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.4.0 basarisiz: " . $e->getMessage());
   }
 }
 
 function migration_1_5_0($pdo) {
-  echo "->  Migration 1.5.0: Categories tablosu ekleniyor - soru kategorileri veritabanına taşınıyor...\n";
+  echo "->  Migration 1.5.0: Categories tablosu ekleniyor - soru kategorileri veritabanina tasiniyor...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // 1. categories tablosu oluştur
-    echo "  Categories tablosu oluşturuluyor...\n";
+    // 1. categories tablosu olustur
+    echo "  Categories tablosu olusturuluyor...\n";
     $pdo->exec("CREATE TABLE IF NOT EXISTS categories (
                   id INT AUTO_INCREMENT PRIMARY KEY,
                   category_key VARCHAR(50) NOT NULL UNIQUE,
@@ -973,19 +973,19 @@ function migration_1_5_0($pdo) {
                   INDEX idx_category_key (category_key)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // 2. Varsayılan kategorileri ekle
-    echo "  Varsayılan kategoriler ekleniyor...\n";
+    // 2. Varsayilan kategorileri ekle
+    echo "  Varsayilan kategoriler ekleniyor...\n";
     $categories = [
-        'genel_kultur' => 'Genel Kültür',
+        'genel_kultur' => 'Genel Kultur',
         'tarih' => 'Tarih',
         'spor' => 'Spor',
         'bilim' => 'Bilim',
         'sanat' => 'Sanat',
-        'cografya' => 'Coğrafya',
+        'cografya' => 'Cografya',
         'teknoloji' => 'Teknoloji',
         'matematik' => 'Matematik',
         'edebiyat' => 'Edebiyat',
-        'muzik' => 'Müzik'
+        'muzik' => 'Muzik'
     ];
 
     $stmt = $pdo->prepare('INSERT IGNORE INTO categories (category_key, category_name) VALUES (?, ?)');
@@ -994,30 +994,30 @@ function migration_1_5_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  + Categories sistemi başarıyla kuruldu!\n";
+    echo "  + Categories sistemi basariyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.5.0', 'Added categories table for dynamic question categories');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.5.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.5.0 basarisiz: " . $e->getMessage());
   }
 }
 
 function migration_1_6_0($pdo) {
-  echo "->  Migration 1.6.0: Categories tablosuna icon ve color sütunları ekleniyor...\n";
+  echo "->  Migration 1.6.0: Categories tablosuna icon ve color sutunlari ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // 1. Icon ve color sütunlarını ekle
-    echo "  Icon ve color sütunları ekleniyor...\n";
+    // 1. Icon ve color sutunlarini ekle
+    echo "  Icon ve color sutunlari ekleniyor...\n";
     $pdo->exec("ALTER TABLE categories
                 ADD COLUMN icon VARCHAR(50) DEFAULT 'fa-question',
                 ADD COLUMN color VARCHAR(20) DEFAULT 'gray'");
 
-    // 2. Mevcut kategorileri icon ve renklerle güncelle
-    echo "  Varsayılan icon ve renkler atanıyor...\n";
+    // 2. Mevcut kategorileri icon ve renklerle guncelle
+    echo "  Varsayilan icon ve renkler ataniyor...\n";
     $categoryStyles = [
         'genel_kultur' => ['icon' => 'fa-brain', 'color' => 'indigo'],
         'tarih' => ['icon' => 'fa-history', 'color' => 'blue'],
@@ -1037,24 +1037,24 @@ function migration_1_6_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  + Kategori icon ve renk sistemi başarıyla kuruldu!\n";
+    echo "  + Kategori icon ve renk sistemi basariyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.6.0', 'Added icon and color columns to categories table with default styles');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.6.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.6.0 basarisiz: " . $e->getMessage());
   }
 }
 
 function migration_1_7_0($pdo) {
-  echo "->  Migration 1.7.0: Achievement rules tablosu ekleniyor - dinamik başarım kuralları sistemi...\n";
+  echo "->  Migration 1.7.0: Achievement rules tablosu ekleniyor - dinamik basarim kurallari sistemi...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // 1. achievement_rules tablosu oluştur
-    echo "  Achievement rules tablosu oluşturuluyor...\n";
+    // 1. achievement_rules tablosu olustur
+    echo "  Achievement rules tablosu olusturuluyor...\n";
     $pdo->exec("CREATE TABLE IF NOT EXISTS achievement_rules (
                   id INT AUTO_INCREMENT PRIMARY KEY,
                   achievement_key VARCHAR(50) NOT NULL,
@@ -1080,33 +1080,33 @@ function migration_1_7_0($pdo) {
                   FOREIGN KEY (achievement_key) REFERENCES achievements(achievement_key) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
-    // 2. Mevcut başarımlar için kuralları ekle
-    echo "  Mevcut başarımlar için kurallar ekleniyor...\n";
+    // 2. Mevcut basarimlar icin kurallari ekle
+    echo "  Mevcut basarimlar icin kurallar ekleniyor...\n";
     $achievement_rules = [
-      // Tracking destekli başarımlar
+      // Tracking destekli basarimlar
       ['ilk_adim', 'first_correct', null, 1, true],
       ['puan_avcisi_1000', 'total_score', null, 1000, true],
       ['gece_kusu', 'night_hours', '00:00-04:00', 1, true],
       ['merakli', 'all_categories', null, 1, true],
       ['koleksiyoncu', 'collect_achievements', null, 10, true],
 
-      // Kategori uzmanları (20 doğru) - tracking destekli
+      // Kategori uzmanlari (20 dogru) - tracking destekli
       ['uzman_tarih', 'category_expert', 'tarih', 20, true],
       ['uzman_spor', 'category_expert', 'spor', 20, true],
       ['uzman_bilim', 'category_expert', 'bilim', 20, true],
       ['uzman_sanat', 'category_expert', 'sanat', 20, true],
-      ['uzman_coğrafya', 'category_expert', 'cografya', 20, true],
-      ['uzman_genel kültür', 'category_expert', 'genel_kultur', 20, true],
+      ['uzman_cografya', 'category_expert', 'cografya', 20, true],
+      ['uzman_genel kultur', 'category_expert', 'genel_kultur', 20, true],
 
-      // Kategori kusursuzları (%100) - tracking destekli
+      // Kategori kusursuzlari (%100) - tracking destekli
       ['kusursuz_tarih', 'category_perfect', 'tarih', 10, true],
       ['kusursuz_spor', 'category_perfect', 'spor', 10, true],
       ['kusursuz_bilim', 'category_perfect', 'bilim', 10, true],
       ['kusursuz_sanat', 'category_perfect', 'sanat', 10, true],
-      ['kusursuz_coğrafya', 'category_perfect', 'cografya', 10, true],
-      ['kusursuz_genel kültür', 'category_perfect', 'genel_kultur', 10, true],
+      ['kusursuz_cografya', 'category_perfect', 'cografya', 10, true],
+      ['kusursuz_genel kultur', 'category_perfect', 'genel_kultur', 10, true],
 
-      // Diğer başarımlar (şimdilik tracking yok ama gelecekte eklenebilir)
+      // Diger basarimlar (simdilik tracking yok ama gelecekte eklenebilir)
       ['hiz_tutkunu', 'speed_answer', '5', 1, true],
       ['seri_galibi_10', 'consecutive_correct', null, 10, true],
       ['seri_galibi_25', 'consecutive_correct', null, 25, true],
@@ -1119,27 +1119,27 @@ function migration_1_7_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  + Achievement rules sistemi başarıyla kuruldu! " . count($achievement_rules) . " adet kural eklendi.\n";
+    echo "  + Achievement rules sistemi basariyla kuruldu! " . count($achievement_rules) . " adet kural eklendi.\n";
 
     markMigrationComplete($pdo, '1.7.0', 'Added achievement_rules table for dynamic achievement tracking system');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.7.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.7.0 basarisiz: " . $e->getMessage());
   }
 }
 
 // Migration 1.8.0: Quest system improvements - Login streak tracking ve yeni quest types
 function migration_1_8_0($pdo) {
-  echo "->  Migration 1.8.0: Quest sistem iyileştirmeleri - Login streak tracking ve yeni quest types ekleniyor...\n";
+  echo "->  Migration 1.8.0: Quest sistem iyilestirmeleri - Login streak tracking ve yeni quest types ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // 1. Login streak tracking için users tablosuna sütunlar ekle
-    echo "  Users tablosuna login streak tracking sütunları ekleniyor...\n";
+    // 1. Login streak tracking icin users tablosuna sutunlar ekle
+    echo "  Users tablosuna login streak tracking sutunlari ekleniyor...\n";
 
-    // MySQL IF NOT EXISTS syntax farklı, bu yüzden manuel kontrol edelim
+    // MySQL IF NOT EXISTS syntax farkli, bu yuzden manuel kontrol edelim
     $columns_to_add = [
       'last_login_date' => 'ALTER TABLE users ADD COLUMN last_login_date DATE DEFAULT NULL',
       'current_login_streak' => 'ALTER TABLE users ADD COLUMN current_login_streak INT DEFAULT 0',
@@ -1151,25 +1151,25 @@ function migration_1_8_0($pdo) {
         $check = $pdo->query("SHOW COLUMNS FROM users LIKE '$column'")->rowCount();
         if ($check == 0) {
           $pdo->exec($sql);
-          echo "    + $column sütunu eklendi\n";
+          echo "    + $column sutunu eklendi\n";
         } else {
-          echo "    - $column sütunu zaten mevcut\n";
+          echo "    - $column sutunu zaten mevcut\n";
         }
       } catch (PDOException $e) {
-        echo "    ! $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+        echo "    ! $column sutunu eklenirken hata: " . $e->getMessage() . "\n";
       }
     }
 
-    // 2. Yeni quest types için test data ekle
-    echo "  Yeni quest types için test veriler ekleniyor...\n";
+    // 2. Yeni quest types icin test data ekle
+    echo "  Yeni quest types icin test veriler ekleniyor...\n";
 
     $new_quests = [
-      ['login_streak_3', 'Düzenli Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 3, 50, 30],
-      ['login_streak_7', 'Kararlı Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 7, 150, 100],
-      ['login_streak_14', 'Adanmış Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 14, 300, 200],
-      ['win_duels_1', 'Düello Ustası', 'Bugün {goal} düello kazan', 'win_duels', NULL, 1, 75, 50],
-      ['win_duels_3', 'Düello Şampiyonu', 'Bugün {goal} düello kazan', 'win_duels', NULL, 3, 200, 150],
-      ['win_duels_5', 'Düello Efsanesi', 'Bugün {goal} düello kazan', 'win_duels', NULL, 5, 400, 300]
+      ['login_streak_3', 'Duzenli Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 3, 50, 30],
+      ['login_streak_7', 'Kararli Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 7, 150, 100],
+      ['login_streak_14', 'Adanmis Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 14, 300, 200],
+      ['win_duels_1', 'Duello Ustasi', 'Bugun {goal} duello kazan', 'win_duels', NULL, 1, 75, 50],
+      ['win_duels_3', 'Duello Sampiyonu', 'Bugun {goal} duello kazan', 'win_duels', NULL, 3, 200, 150],
+      ['win_duels_5', 'Duello Efsanesi', 'Bugun {goal} duello kazan', 'win_duels', NULL, 5, 400, 300]
     ];
 
     $stmt = $pdo->prepare("INSERT IGNORE INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -1205,25 +1205,25 @@ function migration_1_8_0($pdo) {
     echo "    + Performance indexleri eklendi\n";
 
     $pdo->commit();
-    echo "  + Quest sistem iyileştirmeleri başarıyla tamamlandı!\n";
+    echo "  + Quest sistem iyilestirmeleri basariyla tamamlandi!\n";
 
     markMigrationComplete($pdo, '1.8.0', 'Added login streak tracking and new quest types (consecutive_days, win_duels) with performance optimizations');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.8.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.8.0 basarisiz: " . $e->getMessage());
   }
 }
 
-// Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi
+// Migration 1.9.0: Quest History Tracking - Quest gecmisi ve performans analizi
 function migration_1_9_0($pdo) {
-  echo "->  Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi ekleniyor...\n";
+  echo "->  Migration 1.9.0: Quest History Tracking - Quest gecmisi ve performans analizi ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
 
-    // Quest history tablosu oluştur
-    echo "  quest_history tablosu oluşturuluyor...\n";
+    // Quest history tablosu olustur
+    echo "  quest_history tablosu olusturuluyor...\n";
 
     $sql = "
       CREATE TABLE IF NOT EXISTS `quest_history` (
@@ -1250,10 +1250,10 @@ function migration_1_9_0($pdo) {
     ";
 
     $pdo->exec($sql);
-    echo "    + quest_history tablosu oluşturuldu\n";
+    echo "    + quest_history tablosu olusturuldu\n";
 
-    // user_quests tablosuna completion tracking için sütunlar ekle
-    echo "  user_quests tablosuna completion tracking sütunları ekleniyor...\n";
+    // user_quests tablosuna completion tracking icin sutunlar ekle
+    echo "  user_quests tablosuna completion tracking sutunlari ekleniyor...\n";
 
     $columns_to_add = [
       'start_time' => 'ALTER TABLE user_quests ADD COLUMN start_time DATETIME DEFAULT NULL',
@@ -1265,17 +1265,17 @@ function migration_1_9_0($pdo) {
         $check = $pdo->query("SHOW COLUMNS FROM user_quests LIKE '$column'")->rowCount();
         if ($check == 0) {
           $pdo->exec($sql);
-          echo "    + $column sütunu eklendi\n";
+          echo "    + $column sutunu eklendi\n";
         } else {
-          echo "    - $column sütunu zaten mevcut\n";
+          echo "    - $column sutunu zaten mevcut\n";
         }
       } catch (PDOException $e) {
-        echo "    ! $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+        echo "    ! $column sutunu eklenirken hata: " . $e->getMessage() . "\n";
       }
     }
 
-    // Mevcut tamamlanmış questleri history'ye aktar (varsa)
-    echo "  Mevcut tamamlanmış questler history'ye aktarılıyor...\n";
+    // Mevcut tamamlanmis questleri history'ye aktar (varsa)
+    echo "  Mevcut tamamlanmis questler history'ye aktariliyor...\n";
 
     $migrate_sql = "
       INSERT INTO quest_history (
@@ -1302,16 +1302,16 @@ function migration_1_9_0($pdo) {
     $stmt = $pdo->prepare($migrate_sql);
     $stmt->execute();
     $migrated_count = $stmt->rowCount();
-    echo "    + $migrated_count tamamlanmış quest history'ye aktarıldı\n";
+    echo "    + $migrated_count tamamlanmis quest history'ye aktarildi\n";
 
     $pdo->commit();
-    echo "  + Quest history tracking sistemi başarıyla kuruldu!\n";
+    echo "  + Quest history tracking sistemi basariyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.9.0', 'Added quest_history table and completion tracking system for performance analytics');
 
   } catch (Exception $e) {
     $pdo->rollBack();
-    throw new Exception("Migration 1.9.0 başarısız: " . $e->getMessage());
+    throw new Exception("Migration 1.9.0 basarisiz: " . $e->getMessage());
   }
 }
 
@@ -1321,10 +1321,10 @@ function migration_1_10_0($pdo) {
   try {
     $pdo->beginTransaction();
 
-    // duels tablosunun status enum'ına cancelled değerini ekle
+    // duels tablosunun status enum'ina cancelled degerini ekle
     echo "  duels tablosu status enum'ina 'cancelled' degeri ekleniyor...\n";
 
-    // Önce mevcut enum değerlerini kontrol et
+    // Once mevcut enum degerlerini kontrol et
     $stmt = $pdo->query("SHOW COLUMNS FROM duels WHERE Field = 'status'");
     $column_info = $stmt->fetch(PDO::FETCH_ASSOC);
 
