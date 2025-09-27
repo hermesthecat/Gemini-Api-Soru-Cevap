@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await api.call('get_categories');
                 if (response.success) {
                     // Global state'e kategorileri kaydet
-                    appState.categories = response.data;
+                    appState.set('categories', response.data);
 
                     // Category select'leri güncelle
                     this.populateCategorySelects();
@@ -184,9 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
         populateCategorySelects() {
             // Duel category select'i güncelle
             const duelCategorySelect = document.getElementById('duel-category-select');
-            if (duelCategorySelect && appState.categories) {
+            const categories = appState.get('categories');
+            if (duelCategorySelect && categories) {
                 duelCategorySelect.innerHTML = '';
-                appState.categories.forEach(category => {
+                categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.category_key;
                     option.textContent = category.category_name;
