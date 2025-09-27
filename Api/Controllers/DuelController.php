@@ -20,7 +20,7 @@ class DuelController
     {
         $challenger_id = $_SESSION['user_id'];
         $opponent_id = $data['opponent_id'] ?? 0;
-        $category = $data['category'] ?? 'genel kültür';
+        $category = $data['category'] ?? 'genel_kultur';
         $difficulty = $data['difficulty'] ?? 'orta';
         $question_count = 5; // Her düello 5 sorudan oluşacak
 
@@ -347,14 +347,8 @@ class DuelController
     private function getDuelQuestionsFromDatabase($category, $difficulty, $count)
     {
         try {
-            // Category name'den category_key'i al
-            $stmt = $this->pdo->prepare("SELECT category_key FROM categories WHERE category_name = ?");
-            $stmt->execute([$category]);
-            $category_key = $stmt->fetchColumn();
-
-            if (!$category_key) {
-                return []; // Kategori bulunamadı
-            }
+            // $category parametresi zaten category_key'dir (frontend'den geliyor)
+            error_log("Duel DB Query: category=$category, difficulty=$difficulty, count=$count");
 
             $stmt = $this->pdo->prepare("
                 SELECT id, question_text, options, correct_answer, explanation
@@ -363,8 +357,10 @@ class DuelController
                 ORDER BY RAND()
                 LIMIT ?
             ");
-            $stmt->execute([$category_key, $difficulty, $count]);
+            $stmt->execute([$category, $difficulty, $count]);
             $db_questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            error_log("Duel DB Result: found " . count($db_questions) . " questions");
 
             $formatted_questions = [];
             foreach ($db_questions as $q) {
