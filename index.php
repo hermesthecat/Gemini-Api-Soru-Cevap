@@ -208,4 +208,80 @@ include 'header.php';
         </div>
     </div>
 
+    <!-- Soru Değerlendirme Modalı -->
+    <div id="question-rating-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="question-rating-modal-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-md transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white flex items-center">
+                    <i class="fas fa-star mr-3 text-yellow-500"></i>Soruyu Değerlendir
+                </h2>
+                <button id="question-rating-modal-close-btn" class="text-gray-500 hover:text-gray-800 dark:hover:text-white">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Yıldız Derecelendirmesi -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Bu soruyu kaç yıldızla değerlendirirsiniz?
+                    </label>
+                    <div id="rating-stars" class="flex space-x-1 justify-center">
+                        <button class="rating-star text-2xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="1">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="rating-star text-2xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="2">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="rating-star text-2xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="3">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="rating-star text-2xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="4">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button class="rating-star text-2xl text-gray-300 hover:text-yellow-400 transition-colors" data-rating="5">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                        1 = Çok Kötü, 5 = Mükemmel
+                    </p>
+                </div>
+
+                <!-- Geri Bildirim (Opsiyonel) -->
+                <div>
+                    <label for="rating-feedback" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Geri Bildirim (İsteğe Bağlı)
+                    </label>
+                    <textarea id="rating-feedback" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        placeholder="Soruyla ilgili düşüncelerinizi paylaşın..."></textarea>
+                </div>
+
+                <!-- Şikayet Seçenekleri -->
+                <div id="report-section" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Şikayet Sebebi
+                    </label>
+                    <select id="report-reason" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">Şikayet sebebi seçin</option>
+                        <option value="hata">Soru hatası</option>
+                        <option value="belirsiz">Belirsiz/Anlaşılmaz</option>
+                        <option value="kalitesiz">Kalitesiz içerik</option>
+                        <option value="tekrar">Tekrarlanan soru</option>
+                        <option value="diger">Diğer</option>
+                    </select>
+                </div>
+
+                <!-- Butonlar -->
+                <div class="flex space-x-3 pt-4">
+                    <button id="rating-submit-btn" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors disabled:opacity-50" disabled>
+                        <i class="fas fa-check mr-2"></i>Gönder
+                    </button>
+                    <button id="rating-report-btn" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-flag mr-2"></i>Şikayet Et
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <?php include 'footer.php'; ?>

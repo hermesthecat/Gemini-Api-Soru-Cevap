@@ -1119,6 +1119,286 @@ const ui = (() => {
         }
     };
 
+    // Question Management UI Methods
+    const renderReportedQuestions = (questionsData) => {
+        const container = document.getElementById('reported-questions-container');
+        if (!container) return;
+
+        if (!questionsData || questionsData.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-clipboard-check fa-3x text-gray-400 mb-4"></i>
+                    <p class="text-gray-600 dark:text-gray-400">Henüz şikayet edilen soru bulunmuyor.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = questionsData.map(question => `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                            Soru #${question.id}
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-2">
+                            ${question.question_text.substring(0, 150)}${question.question_text.length > 150 ? '...' : ''}
+                        </p>
+                        <div class="flex items-center space-x-4 text-sm">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                ${question.category}
+                            </span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                ${question.difficulty}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-3 mb-4">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-flag text-red-500 mr-2"></i>
+                        <span class="text-sm font-medium text-red-700 dark:text-red-400">
+                            ${question.report_count} şikayet
+                        </span>
+                    </div>
+                    <p class="text-sm text-red-600 dark:text-red-300">
+                        Son şikayet: ${question.latest_report_reason || 'Belirtilmemiş'}
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        Ortalama Puan: ${question.average_rating}/5 (${question.total_ratings} değerlendirme)
+                    </div>
+                    <button onclick="adminHandler.showReviewQuestionModal(${question.id})"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition-colors">
+                        <i class="fas fa-eye mr-2"></i>İncele
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    const showQuestionReviewModal = (questionData) => {
+        const modal = document.getElementById('question-review-modal');
+        if (!modal) {
+            // Create modal if it doesn't exist
+            const modalHTML = `
+                <div id="question-review-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+                    <div id="question-review-modal-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-4xl transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+                                <i class="fas fa-search mr-3 text-blue-500"></i>Soru İncelemesi
+                            </h2>
+                            <button id="question-review-modal-close-btn" class="text-gray-500 hover:text-gray-800 dark:hover:text-white text-2xl">&times;</button>
+                        </div>
+                        <div id="question-review-content"></div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // Add event listeners
+            document.getElementById('question-review-modal-close-btn').addEventListener('click', hideQuestionReviewModal);
+            document.getElementById('question-review-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'question-review-modal') hideQuestionReviewModal();
+            });
+        }
+
+        const content = document.getElementById('question-review-content');
+        content.innerHTML = `
+            <div class="space-y-6">
+                <!-- Question Details -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Soru Bilgileri</h3>
+                    <div class="space-y-2">
+                        <p><strong>ID:</strong> ${questionData.id}</p>
+                        <p><strong>Kategori:</strong> ${questionData.category}</p>
+                        <p><strong>Zorluk:</strong> ${questionData.difficulty}</p>
+                        <p><strong>Soru:</strong></p>
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded border">
+                            ${questionData.question_text}
+                        </div>
+                        ${questionData.options ? `
+                            <p><strong>Seçenekler:</strong></p>
+                            <div class="bg-white dark:bg-gray-800 p-3 rounded border">
+                                ${JSON.parse(questionData.options).map((option, index) =>
+                                    `<div>${String.fromCharCode(65 + index)}) ${option}</div>`
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                        <p><strong>Doğru Cevap:</strong> ${questionData.correct_answer}</p>
+                    </div>
+                </div>
+
+                <!-- Rating Statistics -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Değerlendirme İstatistikleri</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">${questionData.total_ratings}</div>
+                            <div class="text-sm text-gray-600">Toplam Değerlendirme</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">${questionData.average_rating}/5</div>
+                            <div class="text-sm text-gray-600">Ortalama Puan</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-red-600">${questionData.report_count}</div>
+                            <div class="text-sm text-gray-600">Şikayet Sayısı</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">${questionData.usage_count}</div>
+                            <div class="text-sm text-gray-600">Kullanım Sayısı</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                ${questionData.reports && questionData.reports.length > 0 ? `
+                    <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                        <h3 class="font-semibold text-red-800 dark:text-red-200 mb-3">Şikayetler</h3>
+                        <div class="space-y-3">
+                            ${questionData.reports.map(report => `
+                                <div class="bg-white dark:bg-gray-800 p-3 rounded border">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-medium">${report.username}</span>
+                                        <span class="text-sm text-gray-500">${report.created_at}</span>
+                                    </div>
+                                    <div class="text-sm">
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs mr-2">
+                                            ${report.report_reason}
+                                        </span>
+                                        ${report.feedback ? `<p class="mt-2">${report.feedback}</p>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Admin Actions -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">İnceleme Kararı</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Admin Notları</label>
+                            <textarea id="admin-notes" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                placeholder="İnceleme ile ilgili notlarınızı yazın..."></textarea>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="adminHandler.reviewQuestion(${questionData.id}, 'reviewed', document.getElementById('admin-notes').value)"
+                                class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors">
+                                <i class="fas fa-check mr-2"></i>İncelendi (Sorun Yok)
+                            </button>
+                            <button onclick="adminHandler.reviewQuestion(${questionData.id}, 'hidden', document.getElementById('admin-notes').value)"
+                                class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded transition-colors">
+                                <i class="fas fa-eye-slash mr-2"></i>Gizle
+                            </button>
+                            <button onclick="adminHandler.reviewQuestion(${questionData.id}, 'deleted', document.getElementById('admin-notes').value)"
+                                class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Sil
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Show modal
+        document.getElementById('question-review-modal').classList.remove('hidden');
+        setTimeout(() => {
+            document.getElementById('question-review-modal').classList.remove('opacity-0');
+            document.getElementById('question-review-modal-content').classList.remove('scale-95');
+        }, 10);
+    };
+
+    const hideQuestionReviewModal = () => {
+        const modal = document.getElementById('question-review-modal');
+        if (!modal) return;
+
+        modal.classList.add('opacity-0');
+        document.getElementById('question-review-modal-content').classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    };
+
+    const renderQuestionStats = (statsData) => {
+        const container = document.getElementById('question-stats-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                            <i class="fas fa-question-circle text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Toplam Soru</h3>
+                            <p class="text-2xl font-bold text-blue-600">${statsData.total_questions || 0}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900">
+                            <i class="fas fa-star text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Ortalama Puan</h3>
+                            <p class="text-2xl font-bold text-yellow-600">${statsData.average_rating || 0}/5</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                            <i class="fas fa-flag text-red-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Şikayetli Soru</h3>
+                            <p class="text-2xl font-bold text-red-600">${statsData.reported_questions || 0}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${statsData.category_stats ? `
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Kategori Bazında İstatistikler</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left py-2">Kategori</th>
+                                    <th class="text-center py-2">Soru Sayısı</th>
+                                    <th class="text-center py-2">Ortalama Puan</th>
+                                    <th class="text-center py-2">Şikayet</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${statsData.category_stats.map(cat => `
+                                    <tr class="border-b border-gray-100 dark:border-gray-800">
+                                        <td class="py-2 font-medium">${cat.category}</td>
+                                        <td class="text-center py-2">${cat.question_count}</td>
+                                        <td class="text-center py-2">${cat.average_rating || 0}/5</td>
+                                        <td class="text-center py-2">${cat.report_count || 0}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+    };
+
     const showAchievementModal = (achievement) => {
         return new Promise((resolve) => {
             const modal = document.getElementById('achievement-modal');
@@ -1232,6 +1512,11 @@ const ui = (() => {
         renderQuests,
         renderShop,
         updateCoinBalance,
-        showAchievementModal
+        showAchievementModal,
+        // Question Management
+        renderReportedQuestions,
+        showQuestionReviewModal,
+        hideQuestionReviewModal,
+        renderQuestionStats
     };
 })(); 

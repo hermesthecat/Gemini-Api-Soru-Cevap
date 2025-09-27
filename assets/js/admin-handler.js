@@ -231,10 +231,78 @@ const adminHandler = (() => {
         });
     };
 
+    // Question Management Methods
+    const loadReportedQuestions = async () => {
+        try {
+            const result = await api.call('admin_get_reported_questions', {}, 'POST', false);
+            if (result && result.success) {
+                ui.renderReportedQuestions(result.data);
+            } else {
+                console.error('Failed to load reported questions:', result?.message);
+            }
+        } catch (error) {
+            console.error('Error loading reported questions:', error);
+        }
+    };
+
+    const showReviewQuestionModal = async (questionId) => {
+        try {
+            const result = await api.call('admin_get_question_details', { question_id: questionId }, 'POST', false);
+            if (result && result.success) {
+                ui.showQuestionReviewModal(result.data);
+            } else {
+                ui.showToast(result?.message || 'Soru detayları alınamadı.', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading question details:', error);
+            ui.showToast('Bağlantı hatası oluştu.', 'error');
+        }
+    };
+
+    const reviewQuestion = async (questionId, status, adminNotes = '') => {
+        try {
+            const result = await api.call('admin_review_question', {
+                question_id: questionId,
+                status: status,
+                admin_notes: adminNotes
+            }, 'POST', true);
+
+            if (result && result.success) {
+                ui.showToast(result.message || 'Soru başarıyla incelendi.', 'success');
+                ui.hideQuestionReviewModal();
+                // Refresh the reported questions list
+                loadReportedQuestions();
+            } else {
+                ui.showToast(result?.message || 'İnceleme işlemi başarısız.', 'error');
+            }
+        } catch (error) {
+            console.error('Error reviewing question:', error);
+            ui.showToast('Bağlantı hatası oluştu.', 'error');
+        }
+    };
+
+    const loadQuestionStats = async () => {
+        try {
+            const result = await api.call('admin_get_question_stats', {}, 'POST', false);
+            if (result && result.success) {
+                ui.renderQuestionStats(result.data);
+            } else {
+                console.error('Failed to load question stats:', result?.message);
+            }
+        } catch (error) {
+            console.error('Error loading question stats:', error);
+        }
+    };
+
     return {
         init,
         updateAll,
         updateAdvancedStats,
-        loadAdvancedStats: updateAdvancedStats
+        loadAdvancedStats: updateAdvancedStats,
+        // Question management
+        loadReportedQuestions,
+        showReviewQuestionModal,
+        reviewQuestion,
+        loadQuestionStats
     };
 })();
