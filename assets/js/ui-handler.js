@@ -741,14 +741,36 @@ const ui = (() => {
         duels.forEach(duel => {
             const isChallenger = duel.challenger_id === currentUserId;
             const opponentName = isChallenger ? duel.opponent_name : duel.challenger_name;
-            const opponentAvatar = isChallenger ? duel.opponent_avatar : duel.challenger_avatar;
+
+            // Create initials-based avatar
+            const initial = opponentName ? opponentName.charAt(0).toUpperCase() : '?';
+            const avatarColors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+            const colorIndex = opponentName.charCodeAt(0) % avatarColors.length;
+            const avatarColor = avatarColors[colorIndex];
+
             let statusText = '';
             let buttons = '';
+
+            // Determine question count from stored questions
+            let questionCount = 5; // default
+            if (duel.questions) {
+                try {
+                    const questions = JSON.parse(duel.questions);
+                    questionCount = questions.length;
+                } catch (e) {
+                    questionCount = 5;
+                }
+            }
 
             switch (duel.status) {
                 case 'pending':
                     if (isChallenger) {
                         statusText = `<span class="text-yellow-500">Rakibin onayı bekleniyor.</span>`;
+                        buttons = `
+                            <button data-duel-id="${duel.id}" data-action="cancel" class="duel-action-btn text-sm bg-gray-500 hover:bg-gray-600 text-white py-1 px-2 rounded-lg transition-colors" title="İptal Et">
+                                <i class="fas fa-times"></i> İptal Et
+                            </button>
+                        `;
                     } else {
                         statusText = `<strong class="text-green-500">${opponentName} sana meydan okudu!</strong>`;
                         buttons = `
@@ -790,17 +812,24 @@ const ui = (() => {
                 case 'expired':
                     statusText = `<span class="text-gray-400">Zaman aşımına uğradı.</span>`;
                     break;
+                case 'cancelled':
+                    statusText = `<span class="text-gray-400">İptal edildi.</span>`;
+                    break;
             }
 
             const duelEl = document.createElement('div');
             duelEl.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
             duelEl.innerHTML = `
                 <div class="flex items-center space-x-3 mb-2 sm:mb-0">
-                    <img src="assets/images/avatars/${opponentAvatar}" alt="${opponentName}" class="w-10 h-10 rounded-full">
+                    <div class="w-10 h-10 ${avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        ${initial}
+                    </div>
                     <div>
                         <p class="font-semibold text-gray-800 dark:text-gray-200">
-                            Rakip: ${opponentName} 
-                            <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(${duel.category} - ${duel.difficulty})</span>
+                            Rakip: ${opponentName}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            ${duel.category_name || duel.category} • ${duel.difficulty} • ${questionCount} soru
                         </p>
                         <p class="text-sm">${statusText}</p>
                     </div>

@@ -115,6 +115,16 @@ const friendsHandler = (() => {
         }
     };
 
+    const cancelDuel = async (duelId) => {
+        if (confirm('Bu düello davetini iptal etmek istediğinizden emin misiniz?')) {
+            const result = await api.call('duel_cancel', { duel_id: duelId });
+            ui.showToast(result.message, result.success ? 'success' : 'error');
+            if (result.success) {
+                updateDuelsList();
+            }
+        }
+    };
+
     const addEventListeners = () => {
         // Kullanıcı Arama
         dom.friendSearchInput?.addEventListener('keyup', (e) => {
@@ -180,6 +190,8 @@ const friendsHandler = (() => {
                 const action = button.dataset.action;
                 if (action === 'accept' || action === 'decline') {
                     respondToDuel(duelId, action);
+                } else if (action === 'cancel') {
+                    cancelDuel(duelId);
                 } else if (action === 'play') {
                     // Oynama eylemini duelHandler'a devret
                     duelHandler.startDuel(duelId);
@@ -198,6 +210,7 @@ const friendsHandler = (() => {
         updateFriendsList,
         removeFriend,
         updateDuelsList,
-        respondToDuel
+        respondToDuel,
+        cancelDuel
     };
 })(); 

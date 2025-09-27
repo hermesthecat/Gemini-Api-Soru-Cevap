@@ -66,7 +66,7 @@ class DuelController
 
         $stmt = $this->pdo->prepare("
             SELECT
-                d.id, d.category, d.difficulty, d.status,
+                d.id, d.category, cat.category_name, d.difficulty, d.status, d.questions,
                 d.challenger_id, c.username as challenger_name,
                 d.opponent_id, o.username as opponent_name,
                 d.winner_id, w.username as winner_name,
@@ -76,6 +76,7 @@ class DuelController
             JOIN users c ON d.challenger_id = c.id
             JOIN users o ON d.opponent_id = o.id
             LEFT JOIN users w ON d.winner_id = w.id
+            LEFT JOIN categories cat ON d.category = cat.category_key
             WHERE d.challenger_id = ? OR d.opponent_id = ?
             ORDER BY d.updated_at DESC
         ");
@@ -100,9 +101,9 @@ class DuelController
         $new_status = ($response === 'accept') ? 'active' : 'declined';
 
         $stmt = $this->pdo->prepare("
-            UPDATE duels 
+            UPDATE duels
             SET status = ?
-            WHERE id = ? 
+            WHERE id = ?
               AND opponent_id = ?
               AND status = 'pending'
         ");
@@ -113,6 +114,34 @@ class DuelController
         }
 
         return ['success' => false, 'message' => 'İşlem başarısız oldu veya bu isteğe yanıt verme yetkiniz yok.'];
+    }
+
+    /**
+     * Gönderen kişi tarafından bekleyen düello davetini iptal eder.
+     */
+    public function cancelDuel($data)
+    {
+        $user_id = $_SESSION['user_id'];
+        $duel_id = $data['duel_id'] ?? 0;
+
+        if ($duel_id == 0) {
+            return ['success' => false, 'message' => 'Geçersiz düello ID.'];
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE duels
+            SET status = 'cancelled'
+            WHERE id = ?
+              AND challenger_id = ?
+              AND status = 'pending'
+        ");
+        $stmt->execute([$duel_id, $user_id]);
+
+        if ($stmt->rowCount() > 0) {
+            return ['success' => true, 'message' => 'Düello daveti iptal edildi.'];
+        }
+
+        return ['success' => false, 'message' => 'İşlem başarısız oldu veya bu daveti iptal etme yetkiniz yok.'];
     }
 
     /**
