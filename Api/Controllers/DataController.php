@@ -225,19 +225,15 @@ class DataController
                 ];
 
                 // Eğer kazanılmamışsa progress bilgisini ekle
-                if (!$isEarned) {
-                    // İlk 5 tracking başarımı için progress bilgisi var
-                    $trackingAchievements = ['ilk_adim', 'puan_avcisi_1000', 'gece_kusu', 'merakli', 'koleksiyoncu'];
-
-                    if (in_array($achievement_key, $trackingAchievements) && isset($progressData[$achievement_key])) {
-                        $progress = $progressData[$achievement_key];
-                        $combinedAchievement['progress'] = [
-                            'current' => $progress['current'],
-                            'target' => $progress['target'],
-                            'percentage' => round(($progress['current'] / $progress['target']) * 100),
-                            'hint' => $progress['hint'] ?? ''
-                        ];
-                    }
+                if (!$isEarned && isset($progressData[$achievement_key])) {
+                    // Dinamik progress bilgisini ekle (tracking_enabled = true olan tüm başarımlar için)
+                    $progress = $progressData[$achievement_key];
+                    $combinedAchievement['progress'] = [
+                        'current' => $progress['current'],
+                        'target' => $progress['target'],
+                        'percentage' => round(($progress['current'] / $progress['target']) * 100),
+                        'hint' => $progress['hint'] ?? ''
+                    ];
                 }
 
                 $combinedAchievements[] = $combinedAchievement;
@@ -262,75 +258,148 @@ class DataController
 
         try {
             error_log("getAchievementProgress called for user: " . $user_id);
-            // 1. İlk Adım - İlk doğru cevap
-            $stmt = $this->pdo->prepare("SELECT SUM(correct_answers) as total_correct FROM user_stats WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-            $total_correct = $stmt->fetchColumn() ?: 0;
-            $progress['ilk_adim'] = [
-                'current' => min($total_correct, 1),
-                'target' => 1,
-                'completed' => $total_correct >= 1,
-                'name' => 'İlk Adım',
-                'description' => 'İlk doğru cevabını ver'
-            ];
 
-            // 2. Puan Avcısı - 1000 puan
-            $stmt = $this->pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-            $current_score = $stmt->fetchColumn() ?: 0;
-            $progress['puan_avcisi_1000'] = [
-                'current' => $current_score,
-                'target' => 1000,
-                'completed' => $current_score >= 1000,
-                'name' => 'Puan Avcısı',
-                'description' => '1000 puan topla'
-            ];
-
-            // 3. Gece Kuşu - Gece saatlerinde oyun
-            $stmt = $this->pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ? AND achievement_key = 'gece_kusu'");
-            $stmt->execute([$user_id]);
-            $has_gece_kusu = $stmt->fetch() ? true : false;
-            $current_hour = (int)date('H');
-            $is_night_time = ($current_hour >= 0 && $current_hour <= 4);
-
-            $progress['gece_kusu'] = [
-                'current' => $has_gece_kusu ? 1 : ($is_night_time ? 1 : 0),
-                'target' => 1,
-                'completed' => $has_gece_kusu,
-                'name' => 'Gece Kuşu',
-                'description' => 'Gece saatlerinde (00:00-04:00) oyun oyna',
-                'hint' => $is_night_time && !$has_gece_kusu ? 'Şimdi bir soru çöz!' : ''
-            ];
-
-            // 4. Meraklı - Tüm kategorilerde oyun
-            $stmt = $this->pdo->prepare("SELECT COUNT(DISTINCT category) as unique_categories FROM user_stats WHERE user_id = ? AND total_questions > 0");
-            $stmt->execute([$user_id]);
-            $unique_categories = $stmt->fetchColumn() ?: 0;
-
-            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE is_active = 1");
+            // 1. Tüm tracking destekli achievement rules'ları al
+            $stmt = $this->pdo->prepare("
+                SELECT ar.achievement_key, ar.rule_type, ar.target_value, ar.goal_count,
+                       a.name, a.description
+                FROM achievement_rules ar
+                JOIN achievements a ON ar.achievement_key = a.achievement_key
+                WHERE ar.tracking_enabled = 1
+                ORDER BY ar.achievement_key
+            ");
             $stmt->execute();
-            $total_categories = $stmt->fetchColumn() ?: 0;
+            $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $progress['merakli'] = [
-                'current' => $unique_categories,
-                'target' => $total_categories,
-                'completed' => $unique_categories >= $total_categories && $total_categories > 0,
-                'name' => 'Meraklı',
-                'description' => 'Tüm kategorilerde en az 1 soru çöz'
-            ];
+            // 2. Her rule için progress hesapla
+            foreach ($rules as $rule) {
+                $achievement_key = $rule['achievement_key'];
+                $rule_type = $rule['rule_type'];
+                $target_value = $rule['target_value'];
+                $goal_count = (int)$rule['goal_count'];
+                $name = $rule['name'];
+                $description = $rule['description'];
 
-            // 5. Koleksiyoncu - 10 başarım toplama
-            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_achievements WHERE user_id = ?");
-            $stmt->execute([$user_id]);
-            $achievement_count = $stmt->fetchColumn() ?: 0;
+                $current = 0;
+                $completed = false;
+                $hint = '';
 
-            $progress['koleksiyoncu'] = [
-                'current' => $achievement_count,
-                'target' => 10,
-                'completed' => $achievement_count >= 10,
-                'name' => 'Koleksiyoncu',
-                'description' => '10 başarım topla'
-            ];
+                switch ($rule_type) {
+                    case 'first_correct':
+                        $stmt = $this->pdo->prepare("SELECT SUM(correct_answers) as total_correct FROM user_stats WHERE user_id = ?");
+                        $stmt->execute([$user_id]);
+                        $total_correct = $stmt->fetchColumn() ?: 0;
+                        $current = min($total_correct, $goal_count);
+                        $completed = $total_correct >= $goal_count;
+                        break;
+
+                    case 'total_score':
+                        $stmt = $this->pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+                        $stmt->execute([$user_id]);
+                        $current_score = $stmt->fetchColumn() ?: 0;
+                        $current = $current_score;
+                        $completed = $current_score >= $goal_count;
+                        break;
+
+                    case 'night_hours':
+                        // Gece kuşu - zaten kazanılmış mı kontrol et
+                        $stmt = $this->pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ? AND achievement_key = ?");
+                        $stmt->execute([$user_id, $achievement_key]);
+                        $has_achievement = $stmt->fetch() ? true : false;
+
+                        $current_hour = (int)date('H');
+                        $is_night_time = ($current_hour >= 0 && $current_hour <= 4);
+
+                        $current = $has_achievement ? 1 : ($is_night_time ? 1 : 0);
+                        $completed = $has_achievement;
+                        $hint = $is_night_time && !$has_achievement ? 'Şimdi bir soru çöz!' : '';
+                        break;
+
+                    case 'all_categories':
+                        $stmt = $this->pdo->prepare("SELECT COUNT(DISTINCT category) as unique_categories FROM user_stats WHERE user_id = ? AND total_questions > 0");
+                        $stmt->execute([$user_id]);
+                        $unique_categories = $stmt->fetchColumn() ?: 0;
+
+                        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE is_active = 1");
+                        $stmt->execute();
+                        $total_categories = $stmt->fetchColumn() ?: 0;
+
+                        $current = $unique_categories;
+                        $goal_count = $total_categories; // Dinamik hedef
+                        $completed = $unique_categories >= $total_categories && $total_categories > 0;
+                        break;
+
+                    case 'collect_achievements':
+                        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_achievements WHERE user_id = ?");
+                        $stmt->execute([$user_id]);
+                        $achievement_count = $stmt->fetchColumn() ?: 0;
+                        $current = $achievement_count;
+                        $completed = $achievement_count >= $goal_count;
+                        break;
+
+                    case 'category_expert':
+                        // Belirli kategoride 20 doğru cevap
+                        $stmt = $this->pdo->prepare("SELECT SUM(correct_answers) as category_correct FROM user_stats WHERE user_id = ? AND category = ?");
+                        $stmt->execute([$user_id, $target_value]);
+                        $category_correct = $stmt->fetchColumn() ?: 0;
+                        $current = $category_correct;
+                        $completed = $category_correct >= $goal_count;
+                        break;
+
+                    case 'category_perfect':
+                        // Belirli kategoride %100 başarı (min 10 soru)
+                        $stmt = $this->pdo->prepare("
+                            SELECT SUM(total_questions) as total, SUM(correct_answers) as correct
+                            FROM user_stats
+                            WHERE user_id = ? AND category = ?
+                        ");
+                        $stmt->execute([$user_id, $target_value]);
+                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                        $total_questions = $result['total'] ?: 0;
+                        $correct_answers = $result['correct'] ?: 0;
+
+                        if ($total_questions >= $goal_count && $total_questions > 0) {
+                            $percentage = ($correct_answers / $total_questions) * 100;
+                            $current = $percentage;
+                            $completed = $percentage >= 100;
+                        } else {
+                            $current = 0;
+                            $completed = false;
+                        }
+                        $goal_count = 100; // %100 için display
+                        break;
+
+                    case 'difficulty_expert':
+                        // Belirli zorluktaki sorularda başarı
+                        $stmt = $this->pdo->prepare("SELECT SUM(correct_answers) as difficulty_correct FROM user_stats WHERE user_id = ? AND difficulty = ?");
+                        $stmt->execute([$user_id, $target_value]);
+                        $difficulty_correct = $stmt->fetchColumn() ?: 0;
+                        $current = $difficulty_correct;
+                        $completed = $difficulty_correct >= $goal_count;
+                        break;
+
+                    case 'consecutive_correct':
+                        // Bu henüz implement edilmedi - şimdilik 0
+                        $current = 0;
+                        $completed = false;
+                        break;
+
+                    case 'speed_answer':
+                        // Bu henüz implement edilmedi - şimdilik 0
+                        $current = 0;
+                        $completed = false;
+                        break;
+                }
+
+                $progress[$achievement_key] = [
+                    'current' => $current,
+                    'target' => $goal_count,
+                    'completed' => $completed,
+                    'name' => $name,
+                    'description' => $description,
+                    'hint' => $hint
+                ];
+            }
 
             return ['success' => true, 'data' => $progress];
 

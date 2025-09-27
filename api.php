@@ -108,6 +108,15 @@ try {
         'admin_update_category' => [$adminController, 'updateCategory', true, true],
         'admin_delete_category' => [$adminController, 'deleteCategory', true, true],
 
+        // Achievement Management
+        'admin_get_achievements' => [$adminController, 'getAchievements', false, true],
+        'admin_get_achievement_details' => [$adminController, 'getAchievementDetails', true, true],
+        'admin_create_achievement' => [$adminController, 'createAchievement', true, true],
+        'admin_update_achievement' => [$adminController, 'updateAchievement', true, true],
+        'admin_delete_achievement' => [$adminController, 'deleteAchievement', true, true],
+        'admin_toggle_achievement_tracking' => [$adminController, 'toggleAchievementTracking', true, true],
+        'admin_get_achievement_stats' => [$adminController, 'getAchievementStats', false, true],
+
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],
         'friends_send_request' => [$friendsController, 'sendRequest', true, true],

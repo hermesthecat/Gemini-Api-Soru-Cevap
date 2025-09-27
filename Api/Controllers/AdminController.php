@@ -488,4 +488,269 @@ class AdminController
 
         return ['success' => true, 'message' => 'Kategori başarıyla silindi.'];
     }
+
+    // === ACHIEVEMENT MANAGEMENT ===
+
+    public function getAchievements()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $stmt = $this->pdo->prepare("
+            SELECT
+                a.achievement_key,
+                a.name,
+                a.description,
+                a.icon,
+                a.color,
+                ar.rule_type,
+                ar.target_value,
+                ar.goal_count,
+                ar.tracking_enabled,
+                COUNT(ua.id) as earned_count
+            FROM achievements a
+            LEFT JOIN achievement_rules ar ON a.achievement_key = ar.achievement_key
+            LEFT JOIN user_achievements ua ON a.achievement_key = ua.achievement_key
+            GROUP BY a.achievement_key
+            ORDER BY a.name ASC
+        ");
+        $stmt->execute();
+
+        return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    public function getAchievementDetails($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $achievement_key = $data['achievement_key'] ?? '';
+        if (empty($achievement_key)) {
+            return ['success' => false, 'message' => 'Başarım anahtarı gerekli.'];
+        }
+
+        $stmt = $this->pdo->prepare("
+            SELECT
+                a.achievement_key,
+                a.name,
+                a.description,
+                a.icon,
+                a.color,
+                ar.rule_type,
+                ar.target_value,
+                ar.goal_count,
+                ar.tracking_enabled
+            FROM achievements a
+            LEFT JOIN achievement_rules ar ON a.achievement_key = ar.achievement_key
+            WHERE a.achievement_key = ?
+        ");
+        $stmt->execute([$achievement_key]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$result) {
+            return ['success' => false, 'message' => 'Başarım bulunamadı.'];
+        }
+
+        return ['success' => true, 'data' => $result];
+    }
+
+    public function createAchievement($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $achievement_key = $data['achievement_key'] ?? '';
+        $name = $data['name'] ?? '';
+        $description = $data['description'] ?? '';
+        $icon = $data['icon'] ?? '';
+        $color = $data['color'] ?? '';
+        $rule_type = $data['rule_type'] ?? '';
+        $target_value = $data['target_value'] ?? null;
+        $goal_count = intval($data['goal_count'] ?? 0);
+        $tracking_enabled = $data['tracking_enabled'] ?? false;
+
+        // Validasyon
+        if (empty($achievement_key) || empty($name) || empty($description) || empty($icon) || empty($color) || empty($rule_type) || $goal_count <= 0) {
+            return ['success' => false, 'message' => 'Tüm gerekli alanlar doldurulmalıdır.'];
+        }
+
+        if (!preg_match('/^[a-z0-9_]+$/', $achievement_key)) {
+            return ['success' => false, 'message' => 'Başarım anahtarı sadece küçük harf, sayı ve alt çizgi içerebilir.'];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Achievement oluştur
+            $stmt_achievement = $this->pdo->prepare("
+                INSERT INTO achievements (achievement_key, name, description, icon, color)
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            $stmt_achievement->execute([$achievement_key, $name, $description, $icon, $color]);
+
+            // 2. Achievement rule oluştur
+            $stmt_rule = $this->pdo->prepare("
+                INSERT INTO achievement_rules (achievement_key, rule_type, target_value, goal_count, tracking_enabled)
+                VALUES (?, ?, ?, ?, ?)
+            ");
+            $stmt_rule->execute([$achievement_key, $rule_type, $target_value, $goal_count, $tracking_enabled]);
+
+            $this->pdo->commit();
+            return ['success' => true, 'message' => 'Başarım başarıyla oluşturuldu.'];
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                return ['success' => false, 'message' => 'Bu başarım anahtarı zaten kullanımda.'];
+            }
+            return ['success' => false, 'message' => 'Başarım oluşturulurken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function updateAchievement($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $achievement_key = $data['achievement_key'] ?? '';
+        $name = $data['name'] ?? '';
+        $description = $data['description'] ?? '';
+        $icon = $data['icon'] ?? '';
+        $color = $data['color'] ?? '';
+        $goal_count = intval($data['goal_count'] ?? 0);
+        $tracking_enabled = $data['tracking_enabled'] ?? false;
+
+        if (empty($achievement_key) || empty($name) || empty($description) || empty($icon) || empty($color) || $goal_count <= 0) {
+            return ['success' => false, 'message' => 'Tüm gerekli alanlar doldurulmalıdır.'];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Achievement güncelle
+            $stmt_achievement = $this->pdo->prepare("
+                UPDATE achievements
+                SET name = ?, description = ?, icon = ?, color = ?
+                WHERE achievement_key = ?
+            ");
+            $stmt_achievement->execute([$name, $description, $icon, $color, $achievement_key]);
+
+            // 2. Achievement rule güncelle
+            $stmt_rule = $this->pdo->prepare("
+                UPDATE achievement_rules
+                SET goal_count = ?, tracking_enabled = ?
+                WHERE achievement_key = ?
+            ");
+            $stmt_rule->execute([$goal_count, $tracking_enabled, $achievement_key]);
+
+            $this->pdo->commit();
+
+            if ($stmt_achievement->rowCount() > 0 || $stmt_rule->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Başarım başarıyla güncellendi.'];
+            } else {
+                return ['success' => false, 'message' => 'Başarım bulunamadı veya değişiklik yapılmadı.'];
+            }
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            return ['success' => false, 'message' => 'Başarım güncellenirken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function toggleAchievementTracking($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $achievement_key = $data['achievement_key'] ?? '';
+        $tracking_enabled = $data['tracking_enabled'] ?? false;
+
+        if (empty($achievement_key)) {
+            return ['success' => false, 'message' => 'Başarım anahtarı gerekli.'];
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE achievement_rules
+            SET tracking_enabled = ?
+            WHERE achievement_key = ?
+        ");
+        $stmt->execute([$tracking_enabled, $achievement_key]);
+
+        if ($stmt->rowCount() > 0) {
+            return ['success' => true, 'message' => 'Tracking durumu başarıyla değiştirildi.'];
+        } else {
+            return ['success' => false, 'message' => 'Başarım bulunamadı.'];
+        }
+    }
+
+    public function deleteAchievement($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $achievement_key = $data['achievement_key'] ?? '';
+        if (empty($achievement_key)) {
+            return ['success' => false, 'message' => 'Başarım anahtarı gerekli.'];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Kullanıcı başarımlarını sil
+            $stmt_user_achievements = $this->pdo->prepare("DELETE FROM user_achievements WHERE achievement_key = ?");
+            $stmt_user_achievements->execute([$achievement_key]);
+
+            // 2. Achievement rule'ı sil
+            $stmt_rule = $this->pdo->prepare("DELETE FROM achievement_rules WHERE achievement_key = ?");
+            $stmt_rule->execute([$achievement_key]);
+
+            // 3. Achievement'ı sil
+            $stmt_achievement = $this->pdo->prepare("DELETE FROM achievements WHERE achievement_key = ?");
+            $stmt_achievement->execute([$achievement_key]);
+
+            $this->pdo->commit();
+
+            if ($stmt_achievement->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Başarım ve tüm ilgili veriler başarıyla silindi.'];
+            } else {
+                return ['success' => false, 'message' => 'Başarım bulunamadı.'];
+            }
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            return ['success' => false, 'message' => 'Başarım silinirken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function getAchievementStats()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        // 1. Toplam başarım sayısı
+        $stmt_total = $this->pdo->query("SELECT COUNT(*) FROM achievements");
+        $total_achievements = $stmt_total->fetchColumn();
+
+        // 2. Tracking aktif olan başarım sayısı
+        $stmt_tracking = $this->pdo->query("SELECT COUNT(*) FROM achievement_rules WHERE tracking_enabled = 1");
+        $tracking_enabled = $stmt_tracking->fetchColumn();
+
+        // 3. Toplam kazanılan başarım sayısı
+        $stmt_earned = $this->pdo->query("SELECT COUNT(*) FROM user_achievements");
+        $total_earned = $stmt_earned->fetchColumn();
+
+        // 4. Ortalama tamamlanma yüzdesi
+        $average_completion = 0;
+        if ($total_achievements > 0) {
+            $stmt_users = $this->pdo->query("SELECT COUNT(*) FROM users");
+            $total_users = $stmt_users->fetchColumn();
+
+            if ($total_users > 0) {
+                $average_completion = round(($total_earned / ($total_achievements * $total_users)) * 100, 1);
+            }
+        }
+
+        return [
+            'success' => true,
+            'data' => [
+                'total_achievements' => $total_achievements,
+                'tracking_enabled' => $tracking_enabled,
+                'total_earned' => $total_earned,
+                'average_completion' => $average_completion
+            ]
+        ];
+    }
 }

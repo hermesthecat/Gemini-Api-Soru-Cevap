@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.6.0'; // Current schema version
+$current_version = '1.7.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -458,6 +458,18 @@ try {
       $migrations_to_run[] = '1.4.0';
     }
 
+    if (versionCompare($installed_version, '1.5.0') < 0) {
+      $migrations_to_run[] = '1.5.0';
+    }
+
+    if (versionCompare($installed_version, '1.6.0') < 0) {
+      $migrations_to_run[] = '1.6.0';
+    }
+
+    if (versionCompare($installed_version, '1.7.0') < 0) {
+      $migrations_to_run[] = '1.7.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -487,6 +499,9 @@ try {
             break;
           case '1.6.0':
             migration_1_6_0($pdo);
+            break;
+          case '1.7.0':
+            migration_1_7_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1021,5 +1036,87 @@ function migration_1_6_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.6.0 başarısız: " . $e->getMessage());
+  }
+}
+
+function migration_1_7_0($pdo) {
+  echo "→ Migration 1.7.0: Achievement rules tablosu ekleniyor - dinamik başarım kuralları sistemi...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // 1. achievement_rules tablosu oluştur
+    echo "  Achievement rules tablosu oluşturuluyor...\n";
+    $pdo->exec("CREATE TABLE IF NOT EXISTS achievement_rules (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  achievement_key VARCHAR(50) NOT NULL,
+                  rule_type ENUM(
+                    'first_correct',
+                    'total_score',
+                    'night_hours',
+                    'all_categories',
+                    'collect_achievements',
+                    'category_expert',
+                    'category_perfect',
+                    'difficulty_expert',
+                    'consecutive_correct',
+                    'speed_answer'
+                  ) NOT NULL,
+                  target_value VARCHAR(100),
+                  goal_count INT NOT NULL,
+                  tracking_enabled BOOLEAN DEFAULT TRUE,
+                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  INDEX idx_achievement_rules_key (achievement_key),
+                  INDEX idx_achievement_rules_type (rule_type),
+                  INDEX idx_achievement_rules_tracking (tracking_enabled),
+                  FOREIGN KEY (achievement_key) REFERENCES achievements(achievement_key) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    // 2. Mevcut başarımlar için kuralları ekle
+    echo "  Mevcut başarımlar için kurallar ekleniyor...\n";
+    $achievement_rules = [
+      // Tracking destekli başarımlar
+      ['ilk_adim', 'first_correct', null, 1, true],
+      ['puan_avcisi_1000', 'total_score', null, 1000, true],
+      ['gece_kusu', 'night_hours', '00:00-04:00', 1, true],
+      ['merakli', 'all_categories', null, 1, true],
+      ['koleksiyoncu', 'collect_achievements', null, 10, true],
+
+      // Kategori uzmanları (20 doğru) - tracking destekli
+      ['uzman_tarih', 'category_expert', 'tarih', 20, true],
+      ['uzman_spor', 'category_expert', 'spor', 20, true],
+      ['uzman_bilim', 'category_expert', 'bilim', 20, true],
+      ['uzman_sanat', 'category_expert', 'sanat', 20, true],
+      ['uzman_coğrafya', 'category_expert', 'cografya', 20, true],
+      ['uzman_genel kültür', 'category_expert', 'genel_kultur', 20, true],
+
+      // Kategori kusursuzları (%100) - tracking destekli
+      ['kusursuz_tarih', 'category_perfect', 'tarih', 10, true],
+      ['kusursuz_spor', 'category_perfect', 'spor', 10, true],
+      ['kusursuz_bilim', 'category_perfect', 'bilim', 10, true],
+      ['kusursuz_sanat', 'category_perfect', 'sanat', 10, true],
+      ['kusursuz_coğrafya', 'category_perfect', 'cografya', 10, true],
+      ['kusursuz_genel kültür', 'category_perfect', 'genel_kultur', 10, true],
+
+      // Diğer başarımlar (şimdilik tracking yok ama gelecekte eklenebilir)
+      ['hiz_tutkunu', 'speed_answer', '5', 1, true],
+      ['seri_galibi_10', 'consecutive_correct', null, 10, true],
+      ['seri_galibi_25', 'consecutive_correct', null, 25, true],
+      ['zorlu_rakip', 'difficulty_expert', 'zor', 10, true]
+    ];
+
+    $stmt = $pdo->prepare("INSERT INTO achievement_rules (achievement_key, rule_type, target_value, goal_count, tracking_enabled) VALUES (?, ?, ?, ?, ?)");
+    foreach ($achievement_rules as $rule) {
+      $stmt->execute($rule);
+    }
+
+    $pdo->commit();
+    echo "  ✓ Achievement rules sistemi başarıyla kuruldu! " . count($achievement_rules) . " adet kural eklendi.\n";
+
+    markMigrationComplete($pdo, '1.7.0', 'Added achievement_rules table for dynamic achievement tracking system');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.7.0 başarısız: " . $e->getMessage());
   }
 }
