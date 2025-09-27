@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.13.0'; // Current schema version
+$current_version = '1.14.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -539,6 +539,9 @@ try {
             break;
           case '1.13.0':
             migration_1_13_0($pdo);
+            break;
+          case '1.14.0':
+            migration_1_14_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1481,5 +1484,37 @@ function migration_1_13_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.13.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.14.0: Add welcome_bonus setting
+ */
+function migration_1_14_0($pdo) {
+  echo "-> Migration 1.14.0: welcome_bonus ayarini ekleme...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // welcome_bonus setting'ini ekle
+    $stmt = $pdo->prepare("
+      INSERT INTO settings (setting_key, setting_value, description)
+      VALUES ('welcome_bonus', '100', 'Yeni kullanıcılara kayıt sırasında verilecek hoş geldin jetonu miktarı')
+      ON DUPLICATE KEY UPDATE description = VALUES(description)
+    ");
+    $stmt->execute();
+
+    if ($stmt->rowCount() > 0) {
+      echo "   welcome_bonus ayari eklendi (default: 100 jeton)\n";
+    } else {
+      echo "   welcome_bonus ayari zaten mevcut\n";
+    }
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.14.0', 'Added welcome_bonus setting for new user registration bonus');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.14.0 basarisiz: " . $e->getMessage());
   }
 }

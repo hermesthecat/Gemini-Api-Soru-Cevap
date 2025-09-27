@@ -245,6 +245,21 @@ include 'header.php';
                                     </label>
                                 </div>
                                 <p class="text-xs text-gray-500">Bu seçenek kapatıldığında yeni kullanıcılar kayıt olamaz</p>
+
+                                <div>
+                                    <label for="welcome-bonus" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Hoş Geldin Jetonu (kayıt bonusu)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="welcome-bonus"
+                                        name="welcome_bonus"
+                                        min="0"
+                                        placeholder="100"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                    <p class="mt-1 text-xs text-gray-500">Yeni kullanıcılara kayıt sırasında verilecek jeton miktarı</p>
+                                </div>
                             </div>
                         </div>
 

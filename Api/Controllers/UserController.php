@@ -38,9 +38,14 @@ class UserController
             return ['success' => false, 'message' => 'Bu kullanıcı adı zaten alınmış.'];
         }
 
+        // Hoş geldin bonusunu settings'den al
+        $stmt = $this->pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'welcome_bonus'");
+        $stmt->execute();
+        $welcome_bonus = (int)($stmt->fetchColumn() ?: 100); // Default 100 jeton
+
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
-        $stmt->execute([$username, $hashed_password]);
+        $stmt = $this->pdo->prepare("INSERT INTO users (username, password, coins) VALUES (?, ?, ?)");
+        $stmt->execute([$username, $hashed_password, $welcome_bonus]);
         $user_id = $this->pdo->lastInsertId();
 
 
