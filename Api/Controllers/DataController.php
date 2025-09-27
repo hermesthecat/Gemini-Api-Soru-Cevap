@@ -174,4 +174,94 @@ class DataController
         $stmt->execute();
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
+
+    public function getAchievementProgress()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            return ['success' => false, 'message' => 'Kullanıcı oturumu bulunamadı.'];
+        }
+
+        $user_id = $_SESSION['user_id'];
+        $progress = [];
+
+        try {
+            error_log("getAchievementProgress called for user: " . $user_id);
+            // 1. İlk Adım - İlk doğru cevap
+            $stmt = $this->pdo->prepare("SELECT SUM(correct_answers) as total_correct FROM user_stats WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $total_correct = $stmt->fetchColumn() ?: 0;
+            $progress['ilk_adim'] = [
+                'current' => min($total_correct, 1),
+                'target' => 1,
+                'completed' => $total_correct >= 1,
+                'name' => 'İlk Adım',
+                'description' => 'İlk doğru cevabını ver'
+            ];
+
+            // 2. Puan Avcısı - 1000 puan
+            $stmt = $this->pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $current_score = $stmt->fetchColumn() ?: 0;
+            $progress['puan_avcisi_1000'] = [
+                'current' => $current_score,
+                'target' => 1000,
+                'completed' => $current_score >= 1000,
+                'name' => 'Puan Avcısı',
+                'description' => '1000 puan topla'
+            ];
+
+            // 3. Gece Kuşu - Gece saatlerinde oyun
+            $stmt = $this->pdo->prepare("SELECT achievement_key FROM user_achievements WHERE user_id = ? AND achievement_key = 'gece_kusu'");
+            $stmt->execute([$user_id]);
+            $has_gece_kusu = $stmt->fetch() ? true : false;
+            $current_hour = (int)date('H');
+            $is_night_time = ($current_hour >= 0 && $current_hour <= 4);
+
+            $progress['gece_kusu'] = [
+                'current' => $has_gece_kusu ? 1 : ($is_night_time ? 1 : 0),
+                'target' => 1,
+                'completed' => $has_gece_kusu,
+                'name' => 'Gece Kuşu',
+                'description' => 'Gece saatlerinde (00:00-04:00) oyun oyna',
+                'hint' => $is_night_time && !$has_gece_kusu ? 'Şimdi bir soru çöz!' : ''
+            ];
+
+            // 4. Meraklı - Tüm kategorilerde oyun
+            $stmt = $this->pdo->prepare("SELECT COUNT(DISTINCT category) as unique_categories FROM user_stats WHERE user_id = ? AND total_questions > 0");
+            $stmt->execute([$user_id]);
+            $unique_categories = $stmt->fetchColumn() ?: 0;
+
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE is_active = 1");
+            $stmt->execute();
+            $total_categories = $stmt->fetchColumn() ?: 0;
+
+            $progress['merakli'] = [
+                'current' => $unique_categories,
+                'target' => $total_categories,
+                'completed' => $unique_categories >= $total_categories && $total_categories > 0,
+                'name' => 'Meraklı',
+                'description' => 'Tüm kategorilerde en az 1 soru çöz'
+            ];
+
+            // 5. Koleksiyoncu - 10 başarım toplama
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM user_achievements WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $achievement_count = $stmt->fetchColumn() ?: 0;
+
+            $progress['koleksiyoncu'] = [
+                'current' => $achievement_count,
+                'target' => 10,
+                'completed' => $achievement_count >= 10,
+                'name' => 'Koleksiyoncu',
+                'description' => '10 başarım topla'
+            ];
+
+            return ['success' => true, 'data' => $progress];
+
+        } catch (Exception $e) {
+            error_log("Achievement progress error: " . $e->getMessage());
+            error_log("Achievement progress stack trace: " . $e->getTraceAsString());
+            return ['success' => false, 'message' => 'Başarım ilerlemesi alınamadı: ' . $e->getMessage()];
+        }
+    }
 }
