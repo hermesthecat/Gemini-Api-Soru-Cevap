@@ -110,6 +110,9 @@ const adminHandler = (() => {
 
         // Modal event listeners
         setupCoinModalEventListeners();
+
+        // Quest refresh button
+        setupQuestRefreshEventListener();
     };
 
     const showCoinUpdateModal = (userId, username, currentCoins) => {
@@ -187,6 +190,45 @@ const adminHandler = (() => {
         } catch (error) {
             ui.showToast('Bir hata oluştu', 'error');
         }
+    };
+
+    const setupQuestRefreshEventListener = () => {
+        const refreshBtn = document.getElementById('refresh-all-quests-btn');
+        const statusDiv = document.getElementById('quest-refresh-status');
+
+        refreshBtn?.addEventListener('click', async () => {
+            try {
+                // Butonu deaktif et ve yükleme durumunu göster
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = 'Quest\'ler yenileniyor...';
+                statusDiv?.classList.remove('hidden');
+                statusDiv.textContent = 'İşlem başlatıldı...';
+
+                const result = await api.call('refresh_quests', {}, 'POST', false);
+
+                if (result.success) {
+                    const message = `Başarılı! ${result.assigned_count || 0} yeni quest atandı`;
+                    ui.showToast(message, 'success');
+                    statusDiv.textContent = message;
+                } else {
+                    const message = result.message || 'Quest yenileme başarısız';
+                    ui.showToast(message, 'warning');
+                    statusDiv.textContent = message;
+                }
+            } catch (error) {
+                ui.showToast('Quest yenilenirken hata oluştu', 'error');
+                statusDiv.textContent = 'Hata oluştu';
+            } finally {
+                // Butonu tekrar aktif et
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = 'Tüm Kullanıcıların Questlerini Yenile';
+
+                // Status mesajını 5 saniye sonra gizle
+                setTimeout(() => {
+                    statusDiv?.classList.add('hidden');
+                }, 5000);
+            }
+        });
     };
 
     return {

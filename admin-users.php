@@ -22,7 +22,7 @@ include 'header.php';
             </div>
 
             <!-- İstatistikler -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <!-- Toplam Kullanıcı -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg flex items-center space-x-4">
                     <i class="fas fa-users fa-3x text-blue-500"></i>
@@ -37,6 +37,20 @@ include 'header.php';
                     <div>
                         <p class="text-gray-500 dark:text-gray-400">Toplam Cevaplanan Soru</p>
                         <p id="admin-total-questions" class="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                    </div>
+                </div>
+                <!-- Quest Yönetimi -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="text-center">
+                        <i class="fas fa-tasks fa-3x text-purple-500 mb-3"></i>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">Quest Yönetimi</p>
+                        <button id="refresh-all-quests-btn"
+                                class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium">
+                            Tüm Kullanıcıların Questlerini Yenile
+                        </button>
+                        <div id="quest-refresh-status" class="mt-2 text-xs text-gray-500 dark:text-gray-400 hidden">
+                            <!-- Status mesajları buraya -->
+                        </div>
                     </div>
                 </div>
             </div>
