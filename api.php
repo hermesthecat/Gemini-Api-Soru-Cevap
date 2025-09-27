@@ -117,6 +117,13 @@ try {
         'admin_toggle_achievement_tracking' => [$adminController, 'toggleAchievementTracking', true, true],
         'admin_get_achievement_stats' => [$adminController, 'getAchievementStats', false, true],
 
+        // Quest Management
+        'admin_get_quests' => [$adminController, 'getAllQuests', false, true],
+        'admin_create_quest' => [$adminController, 'createQuest', true, true],
+        'admin_update_quest' => [$adminController, 'updateQuest', true, true],
+        'admin_delete_quest' => [$adminController, 'deleteQuest', true, true],
+        'admin_get_quest_stats' => [$adminController, 'getQuestStats', false, true],
+
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],
         'friends_send_request' => [$friendsController, 'sendRequest', true, true],

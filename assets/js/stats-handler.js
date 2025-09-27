@@ -183,15 +183,11 @@ const statsHandler = (() => {
     };
 
     const renderCombinedAchievements = (achievementsData) => {
-        console.log('renderCombinedAchievements called with:', achievementsData);
         const container = document.getElementById('achievements-list');
         const noAchievementsMessage = document.getElementById('no-achievements-message');
 
-        console.log('Achievements container:', container);
-        console.log('No achievements message:', noAchievementsMessage);
-
         if (!container) {
-            console.error('achievements-list container not found!');
+            // Silent return - achievements container not needed on all admin pages
             return;
         }
 

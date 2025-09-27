@@ -205,6 +205,7 @@
     <script src="assets/js/admin-shop-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/admin-category-handler.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/admin-achievement-handler.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/admin-quest-handler.js?v=<?php echo $v; ?>"></script>
     <?php endif; ?>
 
     <!-- Main Application -->

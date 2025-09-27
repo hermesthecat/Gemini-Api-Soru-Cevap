@@ -753,4 +753,206 @@ class AdminController
             ]
         ];
     }
+
+    // =============== QUEST MANAGEMENT METHODS ===============
+
+    public function getAllQuests()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        try {
+            $stmt = $this->pdo->query("
+                SELECT
+                    quest_key,
+                    name,
+                    description_template,
+                    type,
+                    target,
+                    default_goal,
+                    reward_points,
+                    reward_coins,
+                    is_active,
+                    created_at
+                FROM quests
+                ORDER BY created_at DESC
+            ");
+
+            return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+        } catch (Exception $e) {
+            error_log("getAllQuests error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Quest listesi alınamadı: ' . $e->getMessage()];
+        }
+    }
+
+    public function createQuest($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $quest_key = $data['quest_key'] ?? '';
+        $name = $data['name'] ?? '';
+        $description_template = $data['description_template'] ?? '';
+        $type = $data['type'] ?? '';
+        $target = $data['target'] ?? null;
+        $default_goal = intval($data['default_goal'] ?? 0);
+        $reward_points = intval($data['reward_points'] ?? 0);
+        $reward_coins = intval($data['reward_coins'] ?? 0);
+        $is_active = $data['is_active'] ?? true;
+
+        // Validasyon
+        if (empty($quest_key) || empty($name) || empty($description_template) || empty($type) || $default_goal <= 0) {
+            return ['success' => false, 'message' => 'Tüm gerekli alanlar doldurulmalıdır.'];
+        }
+
+        if (!preg_match('/^[a-z0-9_]+$/', $quest_key)) {
+            return ['success' => false, 'message' => 'Quest anahtarı sadece küçük harf, sayı ve alt çizgi içerebilir.'];
+        }
+
+        // Quest type kontrolü
+        $valid_types = ['solve_category', 'solve_difficulty', 'consecutive_days', 'win_duels'];
+        if (!in_array($type, $valid_types)) {
+            return ['success' => false, 'message' => 'Geçersiz quest tipi. Geçerli tipler: ' . implode(', ', $valid_types)];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([$quest_key, $name, $description_template, $type, $target, $default_goal, $reward_points, $reward_coins, $is_active]);
+
+            return ['success' => true, 'message' => 'Quest başarıyla oluşturuldu.'];
+
+        } catch (PDOException $e) {
+            if ($e->errorInfo[1] == 1062) { // Duplicate entry
+                return ['success' => false, 'message' => 'Bu quest anahtarı zaten kullanımda.'];
+            }
+            return ['success' => false, 'message' => 'Quest oluşturulurken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function updateQuest($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $quest_key = $data['quest_key'] ?? '';
+        $name = $data['name'] ?? '';
+        $description_template = $data['description_template'] ?? '';
+        $target = $data['target'] ?? null;
+        $default_goal = intval($data['default_goal'] ?? 0);
+        $reward_points = intval($data['reward_points'] ?? 0);
+        $reward_coins = intval($data['reward_coins'] ?? 0);
+        $is_active = $data['is_active'] ?? true;
+
+        if (empty($quest_key) || empty($name) || empty($description_template) || $default_goal <= 0) {
+            return ['success' => false, 'message' => 'Tüm gerekli alanlar doldurulmalıdır.'];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE quests
+                SET name = ?, description_template = ?, target = ?, default_goal = ?,
+                    reward_points = ?, reward_coins = ?, is_active = ?
+                WHERE quest_key = ?
+            ");
+            $stmt->execute([$name, $description_template, $target, $default_goal, $reward_points, $reward_coins, $is_active, $quest_key]);
+
+            if ($stmt->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Quest başarıyla güncellendi.'];
+            } else {
+                return ['success' => false, 'message' => 'Quest bulunamadı veya değişiklik yapılmadı.'];
+            }
+
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Quest güncellenirken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function deleteQuest($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $quest_key = $data['quest_key'] ?? '';
+
+        if (empty($quest_key)) {
+            return ['success' => false, 'message' => 'Quest anahtarı gereklidir.'];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Önce user_quests tablosundan bu quest'e ait kayıtları sil
+            $stmt_user_quests = $this->pdo->prepare("DELETE FROM user_quests WHERE quest_key = ?");
+            $stmt_user_quests->execute([$quest_key]);
+
+            // 2. Quest'i sil
+            $stmt_quest = $this->pdo->prepare("DELETE FROM quests WHERE quest_key = ?");
+            $stmt_quest->execute([$quest_key]);
+
+            $this->pdo->commit();
+
+            if ($stmt_quest->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Quest ve tüm ilgili veriler başarıyla silindi.'];
+            } else {
+                return ['success' => false, 'message' => 'Quest bulunamadı.'];
+            }
+
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            return ['success' => false, 'message' => 'Quest silinirken hata oluştu: ' . $e->getMessage()];
+        }
+    }
+
+    public function getQuestStats()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        try {
+            // 1. Toplam quest sayısı
+            $stmt_total = $this->pdo->query("SELECT COUNT(*) FROM quests");
+            $total_quests = $stmt_total->fetchColumn();
+
+            // 2. Aktif quest sayısı
+            $stmt_active = $this->pdo->query("SELECT COUNT(*) FROM quests WHERE is_active = 1");
+            $active_quests = $stmt_active->fetchColumn();
+
+            // 3. Bugün atanmış quest sayısı
+            $today = date('Y-m-d');
+            $stmt_assigned_today = $this->pdo->prepare("SELECT COUNT(*) FROM user_quests WHERE assigned_date = ?");
+            $stmt_assigned_today->execute([$today]);
+            $assigned_today = $stmt_assigned_today->fetchColumn();
+
+            // 4. Bugün tamamlanan quest sayısı
+            $stmt_completed_today = $this->pdo->prepare("SELECT COUNT(*) FROM user_quests WHERE assigned_date = ? AND is_completed = 1");
+            $stmt_completed_today->execute([$today]);
+            $completed_today = $stmt_completed_today->fetchColumn();
+
+            // 5. Toplam tamamlanan quest sayısı
+            $stmt_total_completed = $this->pdo->query("SELECT COUNT(*) FROM user_quests WHERE is_completed = 1");
+            $total_completed = $stmt_total_completed->fetchColumn();
+
+            // 6. Quest tiplerine göre dağılım
+            $stmt_types = $this->pdo->query("
+                SELECT type, COUNT(*) as count
+                FROM quests
+                WHERE is_active = 1
+                GROUP BY type
+            ");
+            $quest_types = $stmt_types->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'total_quests' => $total_quests,
+                    'active_quests' => $active_quests,
+                    'assigned_today' => $assigned_today,
+                    'completed_today' => $completed_today,
+                    'total_completed' => $total_completed,
+                    'quest_types' => $quest_types
+                ]
+            ];
+        } catch (Exception $e) {
+            error_log("getQuestStats error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Quest istatistikleri alınamadı: ' . $e->getMessage()];
+        }
+    }
 }
