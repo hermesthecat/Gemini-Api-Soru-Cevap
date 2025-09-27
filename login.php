@@ -1,5 +1,24 @@
 <?php
 require_once 'config.php';
+
+// Maintenance mode kontrolü (giriş yapmamış kullanıcılar için)
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'maintenance_mode'");
+    $stmt->execute();
+    $maintenance_mode = $stmt->fetchColumn();
+
+    // Eğer maintenance mode aktifse maintenance sayfasına yönlendir
+    if ($maintenance_mode == '1') {
+        header('Location: ' . DOMAIN . 'maintenance.php');
+        exit();
+    }
+} catch (PDOException $e) {
+    error_log("Maintenance mode check error: " . $e->getMessage());
+}
+
 include 'header.php';
 ?>
 

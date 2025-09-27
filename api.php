@@ -37,6 +37,32 @@ try {
     exit();
 }
 
+// --- Maintenance Mode Kontrolü ---
+try {
+    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'maintenance_mode'");
+    $stmt->execute();
+    $maintenance_mode = $stmt->fetchColumn();
+
+    // Eğer maintenance mode aktifse ve kullanıcı admin değilse API'yi engelle
+    // Sadece login, register ve check_session işlemlerine izin ver
+    $allowed_actions_during_maintenance = ['login', 'register', 'check_session'];
+
+    if ($maintenance_mode == '1' && !in_array($action, $allowed_actions_during_maintenance)) {
+        $user_role = $_SESSION['role'] ?? 'user';
+        if ($user_role !== 'admin') {
+            http_response_code(503); // Service Unavailable
+            echo json_encode([
+                'success' => false,
+                'message' => 'Site bakım modunda. Lütfen daha sonra tekrar deneyin.',
+                'maintenance_mode' => true
+            ]);
+            exit();
+        }
+    }
+} catch (PDOException $e) {
+    error_log("Maintenance mode check error in API: " . $e->getMessage());
+}
+
 // --- Gelen Veri ---
 $request_data = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $request_data['action'] ?? $_GET['action'] ?? null;
