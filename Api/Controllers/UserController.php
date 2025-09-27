@@ -97,8 +97,8 @@ class UserController
                     $login_streak = 1;
                 }
 
-                // Ödülü hesapla (10 jeton + seri başına 5, en fazla 50)
-                $reward_coins = min(50, 10 + ($login_streak * 5));
+                // Ödülü hesapla (250 jeton + seri başına 5, en fazla 300)
+                $reward_coins = min(300, 250 + ($login_streak * 5));
 
                 // Veritabanını güncelle
                 $this->pdo->prepare("UPDATE users SET last_login_date = ?, login_streak = ? WHERE id = ?")
