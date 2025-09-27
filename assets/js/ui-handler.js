@@ -512,6 +512,15 @@ const ui = (() => {
             scoreCell.className = 'px-6 py-4';
             scoreCell.textContent = user.score || 0;
 
+            const coinsCell = document.createElement('td');
+            coinsCell.className = 'px-6 py-4';
+            coinsCell.innerHTML = `
+                <span class="inline-flex items-center space-x-1">
+                    <i class="fas fa-coins text-yellow-500"></i>
+                    <span>${user.coins || 0}</span>
+                </span>
+            `;
+
             const roleCell = document.createElement('td');
             roleCell.className = 'px-6 py-4';
             roleCell.innerHTML = `
@@ -535,6 +544,7 @@ const ui = (() => {
 
             tr.appendChild(userCell);
             tr.appendChild(scoreCell);
+            tr.appendChild(coinsCell);
             tr.appendChild(roleCell);
             tr.appendChild(dateCell);
             tr.appendChild(actionsCell);
