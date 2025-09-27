@@ -183,7 +183,6 @@ const adminQuestHandler = (() => {
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                        <i class="${questTypeInfo.icon} mr-2 ${questTypeInfo.color}"></i>
                         <div>
                             <div class="text-sm font-medium text-gray-900 dark:text-white">${quest.name}</div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">${quest.quest_key}</div>
@@ -229,40 +228,30 @@ const adminQuestHandler = (() => {
         switch (type) {
             case 'solve_category':
                 return {
-                    icon: 'fas fa-book',
-                    color: 'text-blue-500',
                     bgColor: 'bg-blue-100',
                     textColor: 'text-blue-800',
                     typeName: 'Kategori'
                 };
             case 'solve_difficulty':
                 return {
-                    icon: 'fas fa-star',
-                    color: 'text-purple-500',
                     bgColor: 'bg-purple-100',
                     textColor: 'text-purple-800',
                     typeName: 'Zorluk'
                 };
             case 'consecutive_days':
                 return {
-                    icon: 'fas fa-calendar-day',
-                    color: 'text-orange-500',
                     bgColor: 'bg-orange-100',
                     textColor: 'text-orange-800',
                     typeName: 'Giriş Serisi'
                 };
             case 'win_duels':
                 return {
-                    icon: 'fas fa-sword',
-                    color: 'text-red-500',
                     bgColor: 'bg-red-100',
                     textColor: 'text-red-800',
                     typeName: 'Düello'
                 };
             default:
                 return {
-                    icon: 'fas fa-tasks',
-                    color: 'text-gray-500',
                     bgColor: 'bg-gray-100',
                     textColor: 'text-gray-800',
                     typeName: 'Genel'

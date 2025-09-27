@@ -917,7 +917,6 @@ const ui = (() => {
             questEl.innerHTML = `
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <i class="${questTypeInfo.icon} mr-2 ${questTypeInfo.color}"></i>
                         <span class="font-semibold text-sm text-gray-700 dark:text-gray-200">${quest.name}</span>
                     </div>
                     ${isCompleted
@@ -942,36 +941,26 @@ const ui = (() => {
         // Quest key'e göre tip bilgilerini döndür
         if (questKey.includes('login_streak') || questKey.includes('consecutive_days')) {
             return {
-                icon: 'fas fa-calendar-day',
-                color: 'text-orange-500',
                 progressColor: 'bg-orange-500',
                 type: 'Giriş Serisi'
             };
         } else if (questKey.includes('win_duels') || questKey.includes('duel')) {
             return {
-                icon: 'fas fa-sword',
-                color: 'text-red-500',
                 progressColor: 'bg-red-500',
                 type: 'Düello'
             };
         } else if (questKey.includes('solve_category')) {
             return {
-                icon: 'fas fa-book',
-                color: 'text-blue-500',
                 progressColor: 'bg-blue-500',
                 type: 'Kategori'
             };
         } else if (questKey.includes('solve_difficulty')) {
             return {
-                icon: 'fas fa-star',
-                color: 'text-purple-500',
                 progressColor: 'bg-purple-500',
                 type: 'Zorluk'
             };
         } else {
             return {
-                icon: 'fas fa-tasks',
-                color: 'text-gray-500',
                 progressColor: 'bg-blue-600',
                 type: 'Genel'
             };
