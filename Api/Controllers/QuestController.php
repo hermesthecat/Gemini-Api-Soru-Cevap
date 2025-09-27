@@ -50,23 +50,90 @@ class QuestController
 
     /**
      * Bir kullanıcıya belirtilen sayıda rastgele yeni görev atar.
+     * PERFORMANCE FIX: ORDER BY RAND() yerine offset-based selection kullanır
      */
     private function assignNewQuests($user_id, $date, $count = 2)
     {
-        // Atanabilecek tüm görevleri al
-        $stmt = $this->pdo->prepare("SELECT * FROM quests ORDER BY RAND() LIMIT " . intval($count));
-        $stmt->execute();
-        $available_quests = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Performance optimized quest selection
+        $available_quests = $this->getRandomQuestsOptimized($user_id, $date, $count);
+
+        if (empty($available_quests)) {
+            error_log("No available quests found for user $user_id on $date");
+            return;
+        }
 
         $stmt_insert = $this->pdo->prepare(
             "INSERT INTO user_quests (user_id, quest_key, goal, assigned_date) VALUES (?, ?, ?, ?)"
         );
 
         foreach ($available_quests as $quest) {
-            // Aynı görevin tekrar atanmasını önlemek için ON DUPLICATE KEY IGNORE kullanılabilir,
-            // ama günlük atama yaptığımız için şimdilik gerekmeyebilir.
-            $stmt_insert->execute([$user_id, $quest['quest_key'], $quest['default_goal'], $date]);
+            try {
+                $stmt_insert->execute([$user_id, $quest['quest_key'], $quest['default_goal'], $date]);
+            } catch (PDOException $e) {
+                // Duplicate quest assignment koruması
+                if ($e->getCode() != 23000) { // Duplicate entry error değilse
+                    error_log("Quest assignment error: " . $e->getMessage());
+                }
+            }
         }
+    }
+
+    /**
+     * Performance optimized quest selection - ORDER BY RAND() yerine offset-based
+     */
+    private function getRandomQuestsOptimized($user_id, $date, $count = 2)
+    {
+        // 1. Kullanıcının son 7 gün içinde aldığı quest'leri exclude et
+        $stmt_recent = $this->pdo->prepare("
+            SELECT DISTINCT quest_key
+            FROM user_quests
+            WHERE user_id = ? AND assigned_date >= DATE_SUB(?, INTERVAL 7 DAY)
+        ");
+        $stmt_recent->execute([$user_id, $date]);
+        $recent_quests = $stmt_recent->fetchAll(PDO::FETCH_COLUMN);
+
+        // 2. Available quest'lerin sayısını al
+        $exclude_list = !empty($recent_quests) ? "'" . implode("','", $recent_quests) . "'" : "''";
+        $count_query = "SELECT COUNT(*) FROM quests WHERE quest_key NOT IN ($exclude_list)";
+        $total_available = $this->pdo->query($count_query)->fetchColumn();
+
+        if ($total_available < $count) {
+            // Yeterli quest yoksa tüm quest'lerden seç
+            $total_available = $this->pdo->query("SELECT COUNT(*) FROM quests")->fetchColumn();
+            $exclude_list = "''";
+        }
+
+        if ($total_available == 0) {
+            return [];
+        }
+
+        // 3. Hash-based deterministic selection (aynı kullanıcı aynı gün aynı quest'leri alır)
+        $seed = crc32($user_id . $date);
+        mt_srand($seed);
+
+        $selected_offsets = [];
+        $max_attempts = min($count * 3, $total_available); // Infinite loop koruması
+
+        for ($attempt = 0; $attempt < $max_attempts && count($selected_offsets) < $count; $attempt++) {
+            $offset = mt_rand(0, $total_available - 1);
+            if (!in_array($offset, $selected_offsets)) {
+                $selected_offsets[] = $offset;
+            }
+        }
+
+        // 4. Offset'lerle quest'leri çek
+        $quests = [];
+        $base_query = "SELECT * FROM quests WHERE quest_key NOT IN ($exclude_list) LIMIT 1 OFFSET ?";
+        $stmt = $this->pdo->prepare($base_query);
+
+        foreach ($selected_offsets as $offset) {
+            $stmt->execute([$offset]);
+            if ($quest = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $quests[] = $quest;
+            }
+        }
+
+        return $quests;
     }
 
     /**
