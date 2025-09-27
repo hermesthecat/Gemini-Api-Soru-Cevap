@@ -22,7 +22,7 @@ class DuelController
         $opponent_id = $data['opponent_id'] ?? 0;
         $category = $data['category'] ?? 'genel_kultur';
         $difficulty = $data['difficulty'] ?? 'orta';
-        $question_count = 5; // Her düello 5 sorudan oluşacak
+        $question_count = intval($data['question_count'] ?? 5); // Kullanıcı seçimli soru sayısı
 
         if ($opponent_id == 0 || $challenger_id == $opponent_id) {
             return ['success' => false, 'message' => 'Geçersiz rakip seçimi.'];

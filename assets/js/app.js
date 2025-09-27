@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         duelOpponentName: document.getElementById('duel-opponent-name'),
         duelCategorySelect: document.getElementById('duel-category-select'),
         duelDifficultySelect: document.getElementById('duel-difficulty-select'),
+        duelQuestionCountSelect: document.getElementById('duel-question-count-select'),
         duelSendChallengeBtn: document.getElementById('duel-send-challenge-btn'),
         // Düello Listesi
         duelsList: document.getElementById('duels-list'),

@@ -89,6 +89,17 @@
                         <option value="zor">Zor (15 Jeton)</option>
                     </select>
                 </div>
+
+                <div class="mb-4">
+                    <label for="duel-question-count-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Soru Sayısı</label>
+                    <select id="duel-question-count-select" class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="5" selected>5 Soru</option>
+                        <option value="10">10 Soru</option>
+                        <option value="15">15 Soru</option>
+                        <option value="20">20 Soru</option>
+                        <option value="25">25 Soru</option>
+                    </select>
+                </div>
             </div>
             <button id="duel-send-challenge-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Düello Daveti Gönder</button>
         </div>

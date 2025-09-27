@@ -10,14 +10,11 @@ Bu bölüm, gelecek geliştirme döngüleri için planlanan özellikleri ve iyil
 
 ### 1. Oyun Deneyimi ve Çeşitlilik
 
-- [ ] **Farklı Soru Tipleri:** Resimli, sesli veya sıralama bazlı sorular gibi yeni formatlar ekleyerek oyun çeşitliliğini artır.
 - [ ] **Turnuva Modu:** Haftalık veya aylık periyotlarla düzenlenen, özel ödüllere sahip turnuvalar oluştur.
-- [ ] **Özelleştirilebilir Oyunlar:** Kullanıcıların soru sayısı, kategori, zorluk ve süre limiti gibi ayarları belirleyerek kendi özel oyunlarını oluşturup arkadaşlarıyla paylaşabilmesi.
 - [ ] **Soru Kalitesi Geribildirimi:** Kullanıcıların soruları (1-5 yıldız) oylayabilmesi veya hatalı/kalitesiz soruları raporlayabilmesi için bir mekanizma ekle.
 
 ### 2. Sosyal Özellikler ve Etkileşim
 
-- [ ] **Gerçek Zamanlı Bildirimler:** Arkadaşlık isteği, düello daveti gibi olaylar için anlık bildirim sistemi (WebSocket veya Server-Sent Events ile).
 - [ ] **Gelişmiş Kullanıcı Profilleri:** Diğer kullanıcıların ziyaret edebileceği, daha detaylı istatistikler ve kazanılan başarımların sergilendiği herkese açık profil sayfaları.
 - [ ] **Takım/Klan Sistemi:** Kullanıcıların takımlar oluşturarak takım bazlı liderlik tablolarında ve turnuvalarda yarışabilmesi.
 
@@ -43,7 +40,6 @@ Bu bölüm, projenin uzun vadeli sağlığı ve ölçeklenebilirliği için daha
 
 - [ ] **Frontend Refactoring:** `ui-handler.js` gibi büyük dosyaları daha küçük, yönetilebilir bileşenlere ayır.
 - [ ] **API Dokümantasyonu:** Projenin API'si için Swagger/OpenAPI gibi standartlarda bir dokümantasyon oluştur.
-- [ ] **Test Altyapısı:** PHPUnit (backend) ve Jest (frontend) gibi araçlarla birim ve entegrasyon testleri ekle.
 - [ ] **Asenkron İşlemler:** E-posta gönderme veya karmaşık rapor oluşturma gibi uzun süren işlemler için bir "queue" (kuyruk) sistemi kur.
 
 ---

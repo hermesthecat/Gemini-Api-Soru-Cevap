@@ -79,12 +79,14 @@ const friendsHandler = (() => {
         const opponentId = dom.duelSendChallengeBtn.dataset.opponentId;
         const category = dom.duelCategorySelect.value;
         const difficulty = dom.duelDifficultySelect.value;
+        const questionCount = dom.duelQuestionCountSelect.value;
 
         ui.showLoading(true);
         const result = await api.call('duel_create', {
             opponent_id: opponentId,
             category: category,
-            difficulty: difficulty
+            difficulty: difficulty,
+            question_count: questionCount
         }, 'POST', false); // showLoading'i manuel yöneteceğiz
         ui.showLoading(false);
 
