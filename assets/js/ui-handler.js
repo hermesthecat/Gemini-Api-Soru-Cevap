@@ -908,12 +908,18 @@ const ui = (() => {
             const progressPercent = quest.goal > 0 ? (quest.progress / quest.goal) * 100 : 0;
             const isCompleted = parseInt(quest.is_completed) === 1;
 
+            // Quest type'a göre icon ve renk belirleme
+            const questTypeInfo = getQuestTypeInfo(quest.quest_key);
+
             const questEl = document.createElement('div');
             questEl.className = `p-3 rounded-lg ${isCompleted ? 'bg-green-50 dark:bg-green-900/40' : 'bg-gray-100 dark:bg-gray-800/60'}`;
 
             questEl.innerHTML = `
                 <div class="flex items-center justify-between">
-                    <span class="font-semibold text-sm text-gray-700 dark:text-gray-200">${quest.name}</span>
+                    <div class="flex items-center">
+                        <i class="${questTypeInfo.icon} mr-2 ${questTypeInfo.color}"></i>
+                        <span class="font-semibold text-sm text-gray-700 dark:text-gray-200">${quest.name}</span>
+                    </div>
                     ${isCompleted
                     ? `<span class="text-green-500 font-bold flex items-center text-sm"><i class="fas fa-check-circle mr-1"></i> Tamamlandı!</span>`
                     : `<span class="text-xs font-medium text-gray-500 dark:text-gray-400">${quest.progress} / ${quest.goal}</span>`
@@ -921,11 +927,55 @@ const ui = (() => {
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">${quest.description}</p>
                 <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                    <div class="${questTypeInfo.progressColor} h-2 rounded-full transition-all duration-500" style="width: ${progressPercent}%"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-xs">
+                    <span class="text-gray-500 dark:text-gray-400">${questTypeInfo.type}</span>
+                    <span class="text-blue-600 dark:text-blue-400 font-medium">+${quest.reward_points} Puan & +${quest.reward_coins} Jeton</span>
                 </div>
             `;
             dom.dailyQuestsList.appendChild(questEl);
         });
+    };
+
+    const getQuestTypeInfo = (questKey) => {
+        // Quest key'e göre tip bilgilerini döndür
+        if (questKey.includes('login_streak') || questKey.includes('consecutive_days')) {
+            return {
+                icon: 'fas fa-calendar-day',
+                color: 'text-orange-500',
+                progressColor: 'bg-orange-500',
+                type: 'Giriş Serisi'
+            };
+        } else if (questKey.includes('win_duels') || questKey.includes('duel')) {
+            return {
+                icon: 'fas fa-sword',
+                color: 'text-red-500',
+                progressColor: 'bg-red-500',
+                type: 'Düello'
+            };
+        } else if (questKey.includes('solve_category')) {
+            return {
+                icon: 'fas fa-book',
+                color: 'text-blue-500',
+                progressColor: 'bg-blue-500',
+                type: 'Kategori'
+            };
+        } else if (questKey.includes('solve_difficulty')) {
+            return {
+                icon: 'fas fa-star',
+                color: 'text-purple-500',
+                progressColor: 'bg-purple-500',
+                type: 'Zorluk'
+            };
+        } else {
+            return {
+                icon: 'fas fa-tasks',
+                color: 'text-gray-500',
+                progressColor: 'bg-blue-600',
+                type: 'Genel'
+            };
+        }
     };
 
     const renderShop = (items) => {

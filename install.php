@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.7.0'; // Current schema version
+$current_version = '1.8.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -470,6 +470,10 @@ try {
       $migrations_to_run[] = '1.7.0';
     }
 
+    if (versionCompare($installed_version, '1.8.0') < 0) {
+      $migrations_to_run[] = '1.8.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -502,6 +506,9 @@ try {
             break;
           case '1.7.0':
             migration_1_7_0($pdo);
+            break;
+          case '1.8.0':
+            migration_1_8_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1118,5 +1125,91 @@ function migration_1_7_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.7.0 başarısız: " . $e->getMessage());
+  }
+}
+
+// Migration 1.8.0: Quest system improvements - Login streak tracking ve yeni quest types
+function migration_1_8_0($pdo) {
+  echo "→ Migration 1.8.0: Quest sistem iyileştirmeleri - Login streak tracking ve yeni quest types ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // 1. Login streak tracking için users tablosuna sütunlar ekle
+    echo "  Users tablosuna login streak tracking sütunları ekleniyor...\n";
+
+    // MySQL IF NOT EXISTS syntax farklı, bu yüzden manuel kontrol edelim
+    $columns_to_add = [
+      'last_login_date' => 'ALTER TABLE users ADD COLUMN last_login_date DATE DEFAULT NULL',
+      'current_login_streak' => 'ALTER TABLE users ADD COLUMN current_login_streak INT DEFAULT 0',
+      'longest_login_streak' => 'ALTER TABLE users ADD COLUMN longest_login_streak INT DEFAULT 0'
+    ];
+
+    foreach ($columns_to_add as $column => $sql) {
+      try {
+        $check = $pdo->query("SHOW COLUMNS FROM users LIKE '$column'")->rowCount();
+        if ($check == 0) {
+          $pdo->exec($sql);
+          echo "    ✓ $column sütunu eklendi\n";
+        } else {
+          echo "    - $column sütunu zaten mevcut\n";
+        }
+      } catch (PDOException $e) {
+        echo "    ⚠ $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+      }
+    }
+
+    // 2. Yeni quest types için test data ekle
+    echo "  Yeni quest types için test veriler ekleniyor...\n";
+
+    $new_quests = [
+      ['login_streak_3', 'Düzenli Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 3, 50, 30],
+      ['login_streak_7', 'Kararlı Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 7, 150, 100],
+      ['login_streak_14', 'Adanmış Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 14, 300, 200],
+      ['win_duels_1', 'Düello Ustası', 'Bugün {goal} düello kazan', 'win_duels', NULL, 1, 75, 50],
+      ['win_duels_3', 'Düello Şampiyonu', 'Bugün {goal} düello kazan', 'win_duels', NULL, 3, 200, 150],
+      ['win_duels_5', 'Düello Efsanesi', 'Bugün {goal} düello kazan', 'win_duels', NULL, 5, 400, 300]
+    ];
+
+    $stmt = $pdo->prepare("INSERT IGNORE INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+    $added_count = 0;
+    foreach ($new_quests as $quest) {
+      $stmt->execute($quest);
+      if ($stmt->rowCount() > 0) {
+        $added_count++;
+      }
+    }
+
+    echo "    ✓ $added_count yeni quest eklendi\n";
+
+    // 3. Performance indexleri ekle
+    echo "  Performance indexleri ekleniyor...\n";
+
+    $indexes = [
+      "CREATE INDEX IF NOT EXISTS idx_users_login_streak ON users (current_login_streak DESC)",
+      "CREATE INDEX IF NOT EXISTS idx_users_last_login ON users (last_login_date)",
+      "CREATE INDEX IF NOT EXISTS idx_duels_winner_date ON duels (winner_id, created_at)",
+      "CREATE INDEX IF NOT EXISTS idx_duels_completed_date ON duels (status, created_at)"
+    ];
+
+    foreach ($indexes as $index_sql) {
+      try {
+        $pdo->exec($index_sql);
+      } catch (PDOException $e) {
+        // Index zaten varsa hata vermez
+      }
+    }
+
+    echo "    ✓ Performance indexleri eklendi\n";
+
+    $pdo->commit();
+    echo "  ✓ Quest sistem iyileştirmeleri başarıyla tamamlandı!\n";
+
+    markMigrationComplete($pdo, '1.8.0', 'Added login streak tracking and new quest types (consecutive_days, win_duels) with performance optimizations');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.8.0 başarısız: " . $e->getMessage());
   }
 }

@@ -145,11 +145,19 @@ class QuestController
         $today = date('Y-m-d');
         $newly_completed_quests = [];
 
+        // Special handling for consecutive_days ve win_duels quest types
+        if ($type === 'consecutive_days') {
+            return self::checkConsecutiveDaysQuests($pdo, $user_id, $today);
+        } elseif ($type === 'win_duels') {
+            return self::checkWinDuelsQuests($pdo, $user_id, $today);
+        }
+
+        // Standard quest progress update (solve_category, solve_difficulty)
         $sql = "
             UPDATE user_quests uq
             JOIN quests q ON uq.quest_key = q.quest_key
             SET uq.progress = uq.progress + 1
-            WHERE uq.user_id = ? 
+            WHERE uq.user_id = ?
               AND uq.assigned_date = ?
               AND uq.is_completed = FALSE
               AND q.type = ?
@@ -213,5 +221,193 @@ class QuestController
         }
 
         return $newly_completed_quests;
+    }
+
+    /**
+     * Consecutive days quest tracking - Login streak bazlı
+     */
+    private static function checkConsecutiveDaysQuests($pdo, $user_id, $today)
+    {
+        // Kullanıcının current login streak'ini al
+        $stmt = $pdo->prepare("SELECT current_login_streak FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $current_streak = $stmt->fetchColumn() ?: 0;
+
+        // Bugünün consecutive_days quest'lerini kontrol et
+        $stmt_quests = $pdo->prepare("
+            SELECT uq.quest_key, uq.goal, q.reward_points, q.reward_coins, q.name
+            FROM user_quests uq
+            JOIN quests q ON uq.quest_key = q.quest_key
+            WHERE uq.user_id = ?
+              AND uq.assigned_date = ?
+              AND uq.is_completed = FALSE
+              AND q.type = 'consecutive_days'
+        ");
+        $stmt_quests->execute([$user_id, $today]);
+        $quests = $stmt_quests->fetchAll(PDO::FETCH_ASSOC);
+
+        $completed_quests = [];
+
+        foreach ($quests as $quest) {
+            // Progress'i current streak ile güncelle
+            $new_progress = min($current_streak, $quest['goal']); // Goal'i aşmasın
+
+            $stmt_update = $pdo->prepare("
+                UPDATE user_quests
+                SET progress = ?
+                WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
+            ");
+            $stmt_update->execute([$new_progress, $user_id, $quest['quest_key'], $today]);
+
+            // Goal'e ulaştıysa quest'i complete et
+            if ($current_streak >= $quest['goal']) {
+                $completed = self::completeQuest($pdo, $user_id, $quest['quest_key'], $today, $quest);
+                if ($completed) {
+                    $completed_quests[] = $completed;
+                }
+            }
+        }
+
+        return $completed_quests;
+    }
+
+    /**
+     * Win duels quest tracking - Günlük düello kazanma sayısı
+     */
+    private static function checkWinDuelsQuests($pdo, $user_id, $today)
+    {
+        // Bugün kazanılan düello sayısını hesapla
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) FROM duels
+            WHERE status = 'completed'
+              AND winner_id = ?
+              AND DATE(created_at) = ?
+        ");
+        $stmt->execute([$user_id, $today]);
+        $wins_today = $stmt->fetchColumn() ?: 0;
+
+        // Bugünün win_duels quest'lerini kontrol et
+        $stmt_quests = $pdo->prepare("
+            SELECT uq.quest_key, uq.goal, q.reward_points, q.reward_coins, q.name
+            FROM user_quests uq
+            JOIN quests q ON uq.quest_key = q.quest_key
+            WHERE uq.user_id = ?
+              AND uq.assigned_date = ?
+              AND uq.is_completed = FALSE
+              AND q.type = 'win_duels'
+        ");
+        $stmt_quests->execute([$user_id, $today]);
+        $quests = $stmt_quests->fetchAll(PDO::FETCH_ASSOC);
+
+        $completed_quests = [];
+
+        foreach ($quests as $quest) {
+            // Progress'i bugünkü win count ile güncelle
+            $new_progress = min($wins_today, $quest['goal']); // Goal'i aşmasın
+
+            $stmt_update = $pdo->prepare("
+                UPDATE user_quests
+                SET progress = ?
+                WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
+            ");
+            $stmt_update->execute([$new_progress, $user_id, $quest['quest_key'], $today]);
+
+            // Goal'e ulaştıysa quest'i complete et
+            if ($wins_today >= $quest['goal']) {
+                $completed = self::completeQuest($pdo, $user_id, $quest['quest_key'], $today, $quest);
+                if ($completed) {
+                    $completed_quests[] = $completed;
+                }
+            }
+        }
+
+        return $completed_quests;
+    }
+
+    /**
+     * Quest completion helper - Rewards verme ve marking complete
+     */
+    private static function completeQuest($pdo, $user_id, $quest_key, $today, $quest_data)
+    {
+        try {
+            $pdo->beginTransaction();
+
+            // Quest'i complete olarak işaretle
+            $stmt_complete = $pdo->prepare("
+                UPDATE user_quests
+                SET is_completed = TRUE, completed_at = CURRENT_TIMESTAMP
+                WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
+            ");
+            $stmt_complete->execute([$user_id, $quest_key, $today]);
+
+            // Rewards'ları ver
+            $stmt_points = $pdo->prepare("UPDATE leaderboard SET score = score + ? WHERE user_id = ?");
+            $stmt_points->execute([$quest_data['reward_points'], $user_id]);
+
+            $stmt_coins = $pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
+            $stmt_coins->execute([$quest_data['reward_coins'], $user_id]);
+
+            $pdo->commit();
+
+            // Session güncelle
+            if (isset($_SESSION['user_coins'])) {
+                $_SESSION['user_coins'] += $quest_data['reward_coins'];
+            }
+
+            return [
+                'name' => $quest_data['name'],
+                'reward_points' => $quest_data['reward_points'],
+                'reward_coins' => $quest_data['reward_coins']
+            ];
+
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            error_log("Quest completion error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Login streak güncelleme - UserController'dan çağrılacak
+     */
+    public static function updateLoginStreak($pdo, $user_id)
+    {
+        $today = date('Y-m-d');
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+        $stmt = $pdo->prepare("SELECT last_login_date, current_login_streak FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) return 0;
+
+        $last_login = $user['last_login_date'];
+        $current_streak = $user['current_login_streak'] ?: 0;
+
+        if ($last_login === $today) {
+            // Bugün zaten giriş yapılmış
+            return $current_streak;
+        } elseif ($last_login === $yesterday) {
+            // Dün giriş yapılmış, streak devam ediyor
+            $new_streak = $current_streak + 1;
+        } else {
+            // Streak kırılmış, yeniden başla
+            $new_streak = 1;
+        }
+
+        // User login data güncelle
+        $update_stmt = $pdo->prepare("
+            UPDATE users
+            SET last_login_date = ?,
+                current_login_streak = ?,
+                longest_login_streak = GREATEST(longest_login_streak, ?)
+            WHERE id = ?
+        ");
+        $update_stmt->execute([$today, $new_streak, $new_streak, $user_id]);
+
+        // Login streak quest'lerini kontrol et
+        self::checkAndUpdateQuestProgress($pdo, $user_id, 'consecutive_days');
+
+        return $new_streak;
     }
 }
