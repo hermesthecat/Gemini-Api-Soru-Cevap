@@ -38,14 +38,26 @@ class UserController
             return ['success' => false, 'message' => 'Bu kullanıcı adı zaten alınmış.'];
         }
 
-        // Hoş geldin bonusunu settings'den al
-        $stmt = $this->pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'welcome_bonus'");
+        // Hoş geldin bonuslarını settings'den al
+        $stmt = $this->pdo->prepare("
+            SELECT setting_key, setting_value
+            FROM settings
+            WHERE setting_key IN ('welcome_bonus', 'welcome_lifeline_fifty_fifty', 'welcome_lifeline_extra_time', 'welcome_lifeline_pass')
+        ");
         $stmt->execute();
-        $welcome_bonus = (int)($stmt->fetchColumn() ?: 100); // Default 100 jeton
+        $welcome_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $welcome_bonus = (int)($welcome_settings['welcome_bonus'] ?? 100);
+        $welcome_fifty_fifty = (int)($welcome_settings['welcome_lifeline_fifty_fifty'] ?? 3);
+        $welcome_extra_time = (int)($welcome_settings['welcome_lifeline_extra_time'] ?? 3);
+        $welcome_pass = (int)($welcome_settings['welcome_lifeline_pass'] ?? 3);
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $this->pdo->prepare("INSERT INTO users (username, password, coins) VALUES (?, ?, ?)");
-        $stmt->execute([$username, $hashed_password, $welcome_bonus]);
+        $stmt = $this->pdo->prepare("
+            INSERT INTO users (username, password, coins, lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->execute([$username, $hashed_password, $welcome_bonus, $welcome_fifty_fifty, $welcome_extra_time, $welcome_pass]);
         $user_id = $this->pdo->lastInsertId();
 
 

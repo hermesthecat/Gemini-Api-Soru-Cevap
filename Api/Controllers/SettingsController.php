@@ -59,7 +59,8 @@ class SettingsController
         $valid_keys = [
             'gemini_model', 'site_name', 'registration_enabled', 'timezone_setting',
             'login_base_reward', 'login_max_reward', 'login_streak_bonus',
-            'maintenance_mode', 'quest_refresh_time', 'welcome_bonus'
+            'maintenance_mode', 'quest_refresh_time', 'welcome_bonus',
+            'welcome_lifeline_fifty_fifty', 'welcome_lifeline_extra_time', 'welcome_lifeline_pass'
         ];
 
         $this->pdo->beginTransaction();
@@ -91,7 +92,7 @@ class SettingsController
                         if (empty($value)) {
                             $value = 'Europe/Istanbul';
                         }
-                    } elseif (in_array($key, ['login_base_reward', 'login_max_reward', 'login_streak_bonus', 'quest_refresh_time', 'welcome_bonus'])) {
+                    } elseif (in_array($key, ['login_base_reward', 'login_max_reward', 'login_streak_bonus', 'quest_refresh_time', 'welcome_bonus', 'welcome_lifeline_fifty_fifty', 'welcome_lifeline_extra_time', 'welcome_lifeline_pass'])) {
                         $value = (int)$value;
                         if ($value < 0) {
                             if ($key === 'login_base_reward') $value = 10;
@@ -99,6 +100,9 @@ class SettingsController
                             elseif ($key === 'login_streak_bonus') $value = 5;
                             elseif ($key === 'quest_refresh_time') $value = 24;
                             elseif ($key === 'welcome_bonus') $value = 100;
+                            elseif ($key === 'welcome_lifeline_fifty_fifty') $value = 3;
+                            elseif ($key === 'welcome_lifeline_extra_time') $value = 3;
+                            elseif ($key === 'welcome_lifeline_pass') $value = 3;
                         }
                         $value = (string)$value;
                     }

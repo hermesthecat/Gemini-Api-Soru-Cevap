@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.14.0'; // Current schema version
+$current_version = '1.15.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -542,6 +542,9 @@ try {
             break;
           case '1.14.0':
             migration_1_14_0($pdo);
+            break;
+          case '1.15.0':
+            migration_1_15_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1516,5 +1519,41 @@ function migration_1_14_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.14.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.15.0: Add welcome lifeline settings
+ */
+function migration_1_15_0($pdo) {
+  echo "-> Migration 1.15.0: welcome lifeline ayarlarini ekleme...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // Welcome lifeline settings'lerini ekle
+    $lifeline_settings = [
+      ['welcome_lifeline_fifty_fifty', '3', 'Yeni kullanıcılara kayıt sırasında verilecek 50-50 joker sayısı'],
+      ['welcome_lifeline_extra_time', '3', 'Yeni kullanıcılara kayıt sırasında verilecek ek süre joker sayısı'],
+      ['welcome_lifeline_pass', '3', 'Yeni kullanıcılara kayıt sırasında verilecek pas geç joker sayısı']
+    ];
+
+    $stmt = $pdo->prepare("
+      INSERT INTO settings (setting_key, setting_value, description)
+      VALUES (?, ?, ?)
+      ON DUPLICATE KEY UPDATE description = VALUES(description)
+    ");
+
+    foreach ($lifeline_settings as $setting) {
+      $stmt->execute($setting);
+      echo "   {$setting[0]} ayari eklendi (default: {$setting[1]})\n";
+    }
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.15.0', 'Added welcome lifeline settings for new user registration bonuses');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.15.0 basarisiz: " . $e->getMessage());
   }
 }

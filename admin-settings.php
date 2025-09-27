@@ -260,6 +260,51 @@ include 'header.php';
                                     >
                                     <p class="mt-1 text-xs text-gray-500">Yeni kullanıcılara kayıt sırasında verilecek jeton miktarı</p>
                                 </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="welcome-lifeline-fifty-fifty" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            50-50 Joker Bonusu
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="welcome-lifeline-fifty-fifty"
+                                            name="welcome_lifeline_fifty_fifty"
+                                            min="0"
+                                            placeholder="3"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                        >
+                                        <p class="mt-1 text-xs text-gray-500">Yeni kullanıcıya verilecek 50-50 joker sayısı</p>
+                                    </div>
+                                    <div>
+                                        <label for="welcome-lifeline-extra-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Ek Süre Joker Bonusu
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="welcome-lifeline-extra-time"
+                                            name="welcome_lifeline_extra_time"
+                                            min="0"
+                                            placeholder="3"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                        >
+                                        <p class="mt-1 text-xs text-gray-500">Yeni kullanıcıya verilecek ek süre joker sayısı</p>
+                                    </div>
+                                    <div>
+                                        <label for="welcome-lifeline-pass" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            Pas Geç Joker Bonusu
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="welcome-lifeline-pass"
+                                            name="welcome_lifeline_pass"
+                                            min="0"
+                                            placeholder="3"
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                        >
+                                        <p class="mt-1 text-xs text-gray-500">Yeni kullanıcıya verilecek pas geç joker sayısı</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
