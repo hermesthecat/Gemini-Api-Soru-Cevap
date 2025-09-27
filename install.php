@@ -365,7 +365,6 @@ try {
 
   // Varsayılan ayarları ekle
   $default_settings = [
-    ['gemini_api_key', '', 'Google Gemini API anahtarı'],
     ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
     ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
     ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],
@@ -797,7 +796,6 @@ function migration_1_1_0($pdo) {
 
   // Varsayılan ayarları ekle
   $default_settings = [
-    ['gemini_api_key', '', 'Google Gemini API anahtarı'],
     ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
     ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
     ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],

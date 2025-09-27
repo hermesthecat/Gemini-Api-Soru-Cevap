@@ -53,4 +53,16 @@ include 'header.php';
 
     </div>
 
+<script>
+// Friends sayfası yüklendiğinde içeriği yükle
+document.addEventListener('DOMContentLoaded', () => {
+    // Friends handler'ı başlatmak için kısa bir bekleme
+    setTimeout(() => {
+        if (typeof friendsHandler !== 'undefined') {
+            friendsHandler.updateAll();
+        }
+    }, 100);
+});
+</script>
+
 <?php include 'footer.php'; ?>

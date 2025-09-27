@@ -61,9 +61,6 @@ Projeyi yerel makinenizde veya bir web sunucusunda çalıştırmak için aşağ�
     define('DB_PASS', '');     // Veritabanı şifreniz
     define('DB_NAME', 'ai_quiz'); // Kullanmak istediğiniz veritabanı adı
 
-    // Google Gemini API Anahtarı
-    // https://aistudio.google.com/app/apikey adresinden alabilirsiniz.
-    define('GEMINI_API_KEY', 'SIZIN_API_ANAHTARINIZ');
     ```
 
 3. **Veritabanını ve Tabloları Kurun:**

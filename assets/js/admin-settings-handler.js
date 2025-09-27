@@ -56,11 +56,6 @@ const adminSettingsHandler = (() => {
     };
 
     const populateForm = (settings) => {
-        // Gemini API Key
-        const geminiApiKeyInput = document.getElementById('gemini-api-key');
-        if (geminiApiKeyInput && settings.gemini_api_key) {
-            geminiApiKeyInput.value = settings.gemini_api_key.value || '';
-        }
 
         // Gemini Model
         const geminiModelInput = document.getElementById('gemini-model');

@@ -129,19 +129,21 @@ class FriendsController
         $current_user_id = $_SESSION['user_id'];
 
         $stmt = $this->pdo->prepare("
-            SELECT 
-                u.id, 
-                u.username, 
+            SELECT
+                u.id,
+                u.username,
                 u.avatar,
-                l.score,
+                COALESCE(l.score, 0) as score,
+                (SELECT COUNT(*) + 1 FROM leaderboard l2 WHERE l2.score > COALESCE(l.score, 0)) as global_rank,
                 (SELECT f.id FROM friends f WHERE (f.user_one_id = u.id AND f.user_two_id = ?) OR (f.user_one_id = ? AND f.user_two_id = u.id)) as friendship_id
             FROM users u
-            JOIN leaderboard l ON u.id = l.user_id
+            LEFT JOIN leaderboard l ON u.id = l.user_id
             WHERE EXISTS (
                 SELECT 1 FROM friends f
                 WHERE ((f.user_one_id = u.id AND f.user_two_id = ?) OR (f.user_one_id = ? AND f.user_two_id = u.id))
                   AND f.status = 'accepted'
             )
+            ORDER BY COALESCE(l.score, 0) DESC
         ");
         $stmt->execute([$current_user_id, $current_user_id, $current_user_id, $current_user_id]);
 

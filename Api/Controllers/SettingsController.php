@@ -56,7 +56,7 @@ class SettingsController
         }
 
         // Valid setting keys
-        $valid_keys = ['gemini_api_key', 'gemini_model', 'site_name', 'registration_enabled', 'timezone_setting'];
+        $valid_keys = ['gemini_model', 'site_name', 'registration_enabled', 'timezone_setting'];
 
         $this->pdo->beginTransaction();
         try {

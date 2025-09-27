@@ -99,7 +99,9 @@ const friendsHandler = (() => {
         const result = await api.call('duel_get_duels', {}, 'POST', false);
         if (result.success) {
             const currentUser = appState.get('currentUser');
-            ui.renderDuelsList(result.data, currentUser.id);
+            if (currentUser && currentUser.id) {
+                ui.renderDuelsList(result.data, currentUser.id);
+            }
         }
     };
 
@@ -186,6 +188,14 @@ const friendsHandler = (() => {
 
     return {
         init,
-        updateAll
+        updateAll,
+        searchUsers,
+        sendRequest,
+        updatePendingRequests,
+        respondToRequest,
+        updateFriendsList,
+        removeFriend,
+        updateDuelsList,
+        respondToDuel
     };
 })(); 

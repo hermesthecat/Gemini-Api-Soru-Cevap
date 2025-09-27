@@ -592,9 +592,15 @@ const ui = (() => {
         users.forEach(user => {
             const userEl = document.createElement('div');
             userEl.className = 'flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
+
+            const initial = user.username ? user.username.charAt(0).toUpperCase() : '?';
+            const avatarColors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+            const colorIndex = user.username.charCodeAt(0) % avatarColors.length;
+            const avatarColor = avatarColors[colorIndex];
+
             userEl.innerHTML = `
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">${user.username.charAt(0).toUpperCase()}</div>
+                    <div class="w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white font-bold text-sm">${initial}</div>
                     <span class="font-semibold text-gray-700 dark:text-gray-300">${user.username}</span>
                 </div>
                 <button data-user-id="${user.id}" class="add-friend-btn text-sm bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded-lg transition-colors">
@@ -614,8 +620,17 @@ const ui = (() => {
         requests.forEach(req => {
             const reqEl = document.createElement('div');
             reqEl.className = 'flex items-center justify-between p-2';
+
+            const initial = req.username ? req.username.charAt(0).toUpperCase() : '?';
+            const avatarColors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+            const colorIndex = req.username.charCodeAt(0) % avatarColors.length;
+            const avatarColor = avatarColors[colorIndex];
+
             reqEl.innerHTML = `
-                <span class="font-semibold text-gray-700 dark:text-gray-300">${req.username}</span>
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white font-bold text-sm">${initial}</div>
+                    <span class="font-semibold text-gray-700 dark:text-gray-300">${req.username}</span>
+                </div>
                 <div class="space-x-2">
                     <button data-request-id="${req.request_id}" data-action="accept" class="request-action-btn text-sm bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded-lg transition-colors" title="Kabul Et">
                         <i class="fas fa-check"></i>
@@ -635,15 +650,29 @@ const ui = (() => {
         dom.friendsList.innerHTML = '';
         dom.noFriends.classList.toggle('hidden', friends.length > 0);
 
-        friends.forEach(friend => {
+        friends.forEach((friend, index) => {
             const friendEl = document.createElement('div');
             friendEl.className = 'flex items-center justify-between p-2 even:bg-gray-50 dark:even:bg-gray-700/50 rounded-lg';
+            const initial = friend.username ? friend.username.charAt(0).toUpperCase() : '?';
+            const avatarColors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500', 'bg-yellow-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500'];
+            const colorIndex = friend.username.charCodeAt(0) % avatarColors.length;
+            const avatarColor = avatarColors[colorIndex];
+            const rank = index + 1;
+
             friendEl.innerHTML = `
                 <div class="flex items-center space-x-3">
-                     <img src="assets/images/avatars/${friend.avatar}" alt="${friend.username}" class="w-10 h-10 rounded-full">
+                    <div class="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-bold text-sm">
+                        ${rank}
+                    </div>
+                    <div class="w-10 h-10 ${avatarColor} rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        ${initial}
+                    </div>
                     <div class="flex flex-col">
                         <span class="font-semibold text-gray-800 dark:text-gray-200">${friend.username}</span>
-                        <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-blue-500">Puan: ${friend.score}</span>
+                            <span class="text-xs text-purple-500">Genel: #${friend.global_rank}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="space-x-2">
@@ -662,12 +691,15 @@ const ui = (() => {
     const populateDuelCategories = () => {
         if (!dom.duelCategorySelect) return;
         dom.duelCategorySelect.innerHTML = '';
-        for (const key of Object.keys(appData.categories)) {
+        const categories = appState.get('categories');
+        if (!categories) return;
+
+        categories.forEach(category => {
             const option = document.createElement('option');
-            option.value = key;
-            option.textContent = key.charAt(0).toUpperCase() + key.slice(1);
+            option.value = category.category_key;
+            option.textContent = category.category_name;
             dom.duelCategorySelect.appendChild(option);
-        }
+        });
     };
 
     const showDuelModal = (show, opponent = {}) => {
