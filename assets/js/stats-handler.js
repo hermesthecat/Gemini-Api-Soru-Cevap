@@ -68,8 +68,10 @@ const statsHandler = (() => {
     return {
         init,
         updateAll,
+        updateLeaderboard,
         startLeaderboardUpdates,
         stopLeaderboardUpdates,
         updateUserData,
+        updateAchievements,
     };
 })(); 

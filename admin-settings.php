@@ -129,6 +129,19 @@ include 'header.php';
                                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     >
                                 </div>
+                                <div>
+                                    <label for="timezone-setting" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Zaman Dilimi (UTC)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="timezone-setting"
+                                        name="timezone_setting"
+                                        placeholder="Europe/Istanbul"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                    <p class="mt-1 text-xs text-gray-500">Örnek: Europe/Istanbul, America/New_York, Asia/Tokyo, UTC</p>
+                                </div>
                             </div>
                         </div>
 
@@ -180,7 +193,13 @@ include 'header.php';
                         </div>
                         <div>
                             <span class="text-gray-500">Timezone:</span>
-                            <span class="text-gray-900 dark:text-white font-mono"><?php echo date_default_timezone_get(); ?></span>
+                            <span class="text-gray-900 dark:text-white font-mono"><?php
+                                $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+                                $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'timezone_setting'");
+                                $stmt->execute();
+                                $timezone = $stmt->fetchColumn();
+                                echo $timezone ?: 'Europe/Istanbul';
+                            ?></span>
                         </div>
                         <div>
                             <span class="text-gray-500">Server Time:</span>

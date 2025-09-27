@@ -184,4 +184,168 @@ class AdminController
             ]
         ];
     }
+
+    /**
+     * Mağaza istatistiklerini getirir
+     */
+    public function getShopStats()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        // ShopController'dan fiyatları al
+        require_once 'ShopController.php';
+        $shopController = new ShopController($this->pdo);
+        $shopItems = $shopController->getShopItems();
+
+        if (!$shopItems['success']) {
+            return ['success' => false, 'message' => 'Mağaza verileri alınamadı'];
+        }
+
+        // Purchase_logs tablosu yoksa oluştur (geçici)
+        // Bu normalde migration'da olmalı ama hızlı test için burada ekliyoruz
+        $this->pdo->exec("
+            CREATE TABLE IF NOT EXISTS purchase_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                item_type VARCHAR(50) NOT NULL,
+                item_price INT NOT NULL,
+                purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        ");
+
+        // Toplam satış sayısı
+        $stmt = $this->pdo->query("SELECT COUNT(*) FROM purchase_logs");
+        $total_sales = $stmt->fetchColumn();
+
+        // Toplam gelir
+        $stmt = $this->pdo->query("SELECT SUM(item_price) FROM purchase_logs");
+        $total_revenue = $stmt->fetchColumn() ?: 0;
+
+        // En popüler joker
+        $stmt = $this->pdo->query("
+            SELECT item_type, COUNT(*) as count
+            FROM purchase_logs
+            GROUP BY item_type
+            ORDER BY count DESC
+            LIMIT 1
+        ");
+        $most_popular_result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $most_popular = $most_popular_result ? $this->getJokerDisplayName($most_popular_result['item_type']) : 'Henüz satış yok';
+
+        // Joker türüne göre detaylı istatistikler
+        $stmt = $this->pdo->query("
+            SELECT
+                item_type,
+                COUNT(*) as sales_count,
+                SUM(item_price) as total_revenue,
+                AVG(item_price) as avg_price,
+                COUNT(*) / (DATEDIFF(CURDATE(), MIN(purchase_date)) + 1) as daily_avg
+            FROM purchase_logs
+            GROUP BY item_type
+            ORDER BY sales_count DESC
+        ");
+        $detailed_stats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Joker adlarını düzenle
+        foreach ($detailed_stats as &$stat) {
+            $stat['item_display_name'] = $this->getJokerDisplayName($stat['item_type']);
+        }
+
+        // Son satışlar (10 adet)
+        $stmt = $this->pdo->query("
+            SELECT
+                u.username,
+                pl.item_type,
+                pl.item_price,
+                pl.purchase_date
+            FROM purchase_logs pl
+            JOIN users u ON pl.user_id = u.id
+            ORDER BY pl.purchase_date DESC
+            LIMIT 10
+        ");
+        $recent_sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Son satışların joker adlarını düzenle
+        foreach ($recent_sales as &$sale) {
+            $sale['item_display_name'] = $this->getJokerDisplayName($sale['item_type']);
+        }
+
+        return [
+            'success' => true,
+            'data' => [
+                'total_sales' => $total_sales,
+                'total_revenue' => $total_revenue,
+                'most_popular' => $most_popular,
+                'detailed_stats' => $detailed_stats,
+                'recent_sales' => $recent_sales,
+                'current_prices' => $shopItems['data']
+            ]
+        ];
+    }
+
+    /**
+     * Mağaza fiyatlarını günceller
+     */
+    public function updateShopPrices($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $prices = $data['prices'] ?? [];
+
+        if (empty($prices) || !is_array($prices)) {
+            return ['success' => false, 'message' => 'Geçersiz fiyat verisi'];
+        }
+
+        // Geçerli joker türleri
+        $valid_types = ['fiftyFifty', 'extraTime', 'pass'];
+
+        // ShopController dosyasını oku ve fiyatları güncelle
+        $shop_file = __DIR__ . '/ShopController.php';
+        $content = file_get_contents($shop_file);
+
+        if (!$content) {
+            return ['success' => false, 'message' => 'ShopController dosyası okunamadı'];
+        }
+
+        $updated_count = 0;
+        foreach ($prices as $type => $price) {
+            if (in_array($type, $valid_types) && is_numeric($price) && $price > 0 && $price <= 1000) {
+                // Regex ile fiyatı güncelle
+                $pattern = "/'{$type}'\s*=>\s*\d+/";
+                $replacement = "'{$type}' => " . intval($price);
+                $content = preg_replace($pattern, $replacement, $content);
+                $updated_count++;
+            }
+        }
+
+        if ($updated_count > 0) {
+            // Dosyayı yaz
+            if (file_put_contents($shop_file, $content)) {
+                return [
+                    'success' => true,
+                    'message' => "{$updated_count} fiyat başarıyla güncellendi",
+                    'updated_count' => $updated_count
+                ];
+            } else {
+                return ['success' => false, 'message' => 'Dosya yazma hatası'];
+            }
+        } else {
+            return ['success' => false, 'message' => 'Güncellenecek geçerli fiyat bulunamadı'];
+        }
+    }
+
+    /**
+     * Joker türünü kullanıcı dostu isime çevirir
+     */
+    private function getJokerDisplayName($item_type)
+    {
+        $names = [
+            'fiftyFifty' => '50/50 Joker',
+            'extraTime' => '+15 Saniye',
+            'pass' => 'Soruyu Geç'
+        ];
+
+        return $names[$item_type] ?? $item_type;
+    }
 }

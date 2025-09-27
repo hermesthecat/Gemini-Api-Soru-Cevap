@@ -94,6 +94,8 @@ try {
         'admin_create_announcement' => [$adminController, 'createAnnouncement', true, true],
         'admin_delete_announcement' => [$adminController, 'deleteAnnouncement', true, true],
         'admin_get_advanced_stats' => [$adminController, 'getAdvancedStats', false, true],
+        'admin_get_shop_stats' => [$adminController, 'getShopStats', false, true],
+        'admin_update_shop_prices' => [$adminController, 'updateShopPrices', true, true],
 
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],

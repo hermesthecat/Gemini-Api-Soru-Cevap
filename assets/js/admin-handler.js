@@ -101,6 +101,7 @@ const adminHandler = (() => {
     return {
         init,
         updateAll,
-        updateAdvancedStats
+        updateAdvancedStats,
+        loadAdvancedStats: updateAdvancedStats
     };
 })();

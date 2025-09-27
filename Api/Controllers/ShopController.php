@@ -4,7 +4,7 @@ class ShopController
 {
     private $pdo;
     private $item_prices = [
-        'fiftyFifty' => 75,
+        'fiftyFifty' => 80,
         'extraTime' => 50,
         'pass' => 100
     ];
@@ -80,6 +80,14 @@ class ShopController
             // Jokeri ekle
             $stmt_lifeline = $this->pdo->prepare("UPDATE leaderboard SET $lifeline_column = $lifeline_column + 1 WHERE user_id = ?");
             $stmt_lifeline->execute([$user_id]);
+
+            // Purchase log kaydı ekle
+            $stmt_log = $this->pdo->prepare("
+                INSERT INTO purchase_logs (user_id, item_type, item_price)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE user_id = user_id
+            ");
+            $stmt_log->execute([$user_id, $item_key, $price]);
 
             // Session'ı güncelle
             $_SESSION['user_coins'] -= $price;

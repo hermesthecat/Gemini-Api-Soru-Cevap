@@ -75,14 +75,14 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadLeaderboardStats() {
     try {
         // Toplam oyuncu sayısı
-        const usersResponse = await ApiHandler.makeRequest('admin_get_dashboard_data');
+        const usersResponse = await api.call('admin_get_dashboard_data', {}, 'POST', false);
         if (usersResponse.success) {
             document.getElementById('total-players').textContent = usersResponse.data.total_users || 0;
             document.getElementById('total-questions').textContent = usersResponse.data.total_questions || 0;
         }
 
         // Liderlik tablosundan ortalama puan hesapla
-        const leaderboardResponse = await ApiHandler.makeRequest('get_leaderboard');
+        const leaderboardResponse = await api.call('get_leaderboard', {}, 'POST', false);
         if (leaderboardResponse.success && leaderboardResponse.data.length > 0) {
             const totalScore = leaderboardResponse.data.reduce((sum, user) => sum + parseInt(user.score), 0);
             const avgScore = Math.round(totalScore / leaderboardResponse.data.length);

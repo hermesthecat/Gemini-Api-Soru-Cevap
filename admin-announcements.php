@@ -77,11 +77,8 @@ include 'header.php';
 <script>
 // Admin Duyuru sayfası yüklendiğinde içeriği yükle
 document.addEventListener('DOMContentLoaded', () => {
-    // Admin handler'ı yükle
+    // Announcement handler'ı yükle
     setTimeout(() => {
-        if (typeof adminHandler !== 'undefined') {
-            adminHandler.updateAnnouncementsList();
-        }
         if (typeof announcementHandler !== 'undefined') {
             announcementHandler.updateAnnouncementsList();
         }

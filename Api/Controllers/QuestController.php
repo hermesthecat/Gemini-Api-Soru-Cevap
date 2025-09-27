@@ -54,8 +54,8 @@ class QuestController
     private function assignNewQuests($user_id, $date, $count = 2)
     {
         // Atanabilecek tüm görevleri al
-        $stmt = $this->pdo->prepare("SELECT * FROM quests ORDER BY RAND() LIMIT ?");
-        $stmt->execute([$count]);
+        $stmt = $this->pdo->prepare("SELECT * FROM quests ORDER BY RAND() LIMIT " . intval($count));
+        $stmt->execute();
         $available_quests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $stmt_insert = $this->pdo->prepare(

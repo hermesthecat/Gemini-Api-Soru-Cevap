@@ -56,7 +56,7 @@ class SettingsController
         }
 
         // Valid setting keys
-        $valid_keys = ['gemini_api_key', 'gemini_model', 'site_name', 'registration_enabled'];
+        $valid_keys = ['gemini_api_key', 'gemini_model', 'site_name', 'registration_enabled', 'timezone_setting'];
 
         $this->pdo->beginTransaction();
         try {
@@ -81,6 +81,11 @@ class SettingsController
                         $value = trim($value);
                         if (empty($value)) {
                             $value = 'gemini-1.5-flash';
+                        }
+                    } elseif ($key === 'timezone_setting') {
+                        $value = trim($value);
+                        if (empty($value)) {
+                            $value = 'Europe/Istanbul';
                         }
                     }
 

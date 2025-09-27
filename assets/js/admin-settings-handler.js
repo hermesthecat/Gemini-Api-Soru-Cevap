@@ -82,6 +82,12 @@ const adminSettingsHandler = (() => {
         if (registrationCheckbox && settings.registration_enabled) {
             registrationCheckbox.checked = settings.registration_enabled.value === '1';
         }
+
+        // Timezone Setting
+        const timezoneInput = document.getElementById('timezone-setting');
+        if (timezoneInput && settings.timezone_setting) {
+            timezoneInput.value = settings.timezone_setting.value || 'Europe/Istanbul';
+        }
     };
 
     const handleSettingsSubmit = async (event) => {

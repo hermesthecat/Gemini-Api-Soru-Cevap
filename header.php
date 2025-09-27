@@ -4,9 +4,9 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Cache busting için 7 haneli random sayı üretici
+// Cache busting için timestamp kullan (güvenilir yenileme için)
 function getVersion() {
-    return mt_rand(1000000, 9999999);
+    return time();
 }
 $v = getVersion();
 ?>

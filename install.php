@@ -368,7 +368,8 @@ try {
     ['gemini_api_key', '', 'Google Gemini API anahtarı'],
     ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
     ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
-    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)']
+    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],
+    ['timezone_setting', 'Europe/Istanbul', 'Varsayılan zaman dilimi ayarı']
   ];
 
   $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
@@ -761,7 +762,8 @@ function migration_1_1_0($pdo) {
     ['gemini_api_key', '', 'Google Gemini API anahtarı'],
     ['gemini_model', 'gemini-1.5-flash', 'Kullanılacak Gemini model adı'],
     ['site_name', 'AI Soru Cevap Yarışması', 'Site başlığı'],
-    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)']
+    ['registration_enabled', '1', 'Yeni kullanıcı kaydı aktif mi (1: aktif, 0: pasif)'],
+    ['timezone_setting', 'Europe/Istanbul', 'Varsayılan zaman dilimi ayarı']
   ];
 
   $stmt_setting = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value, description) VALUES (?, ?, ?)");

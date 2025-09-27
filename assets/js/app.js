@@ -231,6 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 friendsHandler.updateAll();
                 questHandler.updateQuests();
                 announcementHandler.checkForAnnouncements();
+
+                // Shop sayfasındaysak mağazayı yükle
+                if (window.location.pathname.includes('shop.php')) {
+                    shopHandler.loadShop();
+                }
             }, 100);
         },
 
