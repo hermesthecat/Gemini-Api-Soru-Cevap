@@ -218,13 +218,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addEventListeners() {
             // Modüllerden gelen merkezi olayları dinle
-            document.addEventListener('loginSuccess', this.onLoginSuccess);
-            document.addEventListener('logoutSuccess', this.onLogout);
-            document.addEventListener('showAdminView', this.onShowAdminView);
-            document.addEventListener('showMainView', this.onShowMainView);
-            document.addEventListener('answerSubmitted', this.onAnswerSubmitted);
-            document.addEventListener('playSound', this.onPlaySound);
-            document.addEventListener('tabChanged', this.onTabChanged);
+            document.addEventListener('loginSuccess', this.onLoginSuccess.bind(this));
+            document.addEventListener('logoutSuccess', this.onLogout.bind(this));
+            document.addEventListener('showAdminView', this.onShowAdminView.bind(this));
+            document.addEventListener('showMainView', this.onShowMainView.bind(this));
+            document.addEventListener('answerSubmitted', this.onAnswerSubmitted.bind(this));
+            document.addEventListener('playSound', this.onPlaySound.bind(this));
+            document.addEventListener('tabChanged', this.onTabChanged.bind(this));
 
             dom.mainTabs?.addEventListener('click', (e) => {
                 const tabButton = e.target.closest('.main-tab-button');
@@ -259,9 +259,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Kullanıcının ana arayüzü görmesi için kısa bir gecikme ekle
                 setTimeout(() => {
                     const message = `🎉 Günlük giriş ödülünü topladın: +${daily_reward.coins_earned} Jeton! Serin ${daily_reward.streak} güne ulaştı!`;
-                    ui.showToast(message, 'success');
+                    if (window.ui && window.ui.showToast) {
+                        window.ui.showToast(message, 'success');
+                    }
                     // Ödül sesi çal
-                    this.onPlaySound({ detail: { sound: 'achievement' } });
+                    App.onPlaySound({ detail: { sound: 'achievement' } });
                 }, 1000); // 1 saniye gecikme
             }
 
@@ -313,8 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Diğer işlemlerin devam etmesi için modal gösterimini geciktir
                 setTimeout(async () => {
                     for (const achievement of new_achievements) {
-                        this.onPlaySound({ detail: { sound: 'achievement' } });
-                        await ui.showAchievementModal(achievement);
+                        App.onPlaySound({ detail: { sound: 'achievement' } });
+                        if (window.ui && window.ui.showAchievementModal) {
+                            await window.ui.showAchievementModal(achievement);
+                        }
                     }
                 }, 500); // 500ms gecikme
             }
@@ -344,4 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Uygulamayı Başlat
     App.init();
+
+    // Global erişim için
+    window.app = App;
 }); 

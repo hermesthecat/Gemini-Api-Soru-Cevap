@@ -303,6 +303,56 @@ class GameController
             }
         }
 
+        // İlk Adım, Puan Avcısı ve Gece Kuşu kontrolü
+        try {
+            // 1. İlk Adım - İlk doğru cevap
+            $stmt_first_correct = $this->pdo->prepare("SELECT SUM(correct_answers) as total_correct FROM user_stats WHERE user_id = ?");
+            $stmt_first_correct->execute([$user_id]);
+            $total_correct = $stmt_first_correct->fetchColumn() ?: 0;
+            if ($total_correct >= 1) {
+                $grant_achievement('ilk_adim');
+            }
+
+            // 2. Puan Avcısı - 1000 puan
+            $stmt_score = $this->pdo->prepare("SELECT score FROM leaderboard WHERE user_id = ?");
+            $stmt_score->execute([$user_id]);
+            $current_score = $stmt_score->fetchColumn() ?: 0;
+            if ($current_score >= 1000) {
+                $grant_achievement('puan_avcisi_1000');
+            }
+
+            // 3. Gece Kuşu - Gece saatlerinde oyun oynama (00:00-04:00)
+            $current_hour = (int)date('H');
+            if ($current_hour >= 0 && $current_hour <= 4) {
+                $grant_achievement('gece_kusu');
+            }
+
+            // 4. Meraklı - Tüm kategorilerde en az 1 soru çözmek
+            $stmt_categories = $this->pdo->prepare("SELECT COUNT(DISTINCT category) as unique_categories FROM user_stats WHERE user_id = ? AND total_questions > 0");
+            $stmt_categories->execute([$user_id]);
+            $unique_categories = $stmt_categories->fetchColumn() ?: 0;
+
+            // Toplam kategori sayısını al
+            $stmt_total_categories = $this->pdo->prepare("SELECT COUNT(*) FROM categories");
+            $stmt_total_categories->execute();
+            $total_categories = $stmt_total_categories->fetchColumn() ?: 0;
+
+            if ($unique_categories >= $total_categories && $total_categories > 0) {
+                $grant_achievement('merakli');
+            }
+
+            // 5. Koleksiyoncu - 10 başarım toplamak
+            $stmt_achievement_count = $this->pdo->prepare("SELECT COUNT(*) FROM user_achievements WHERE user_id = ?");
+            $stmt_achievement_count->execute([$user_id]);
+            $achievement_count = $stmt_achievement_count->fetchColumn() ?: 0;
+            if ($achievement_count >= 10) {
+                $grant_achievement('koleksiyoncu');
+            }
+        } catch (Exception $e) {
+            // Başarım kontrolünde hata olursa logla ama devam et
+            error_log("Achievement check error: " . $e->getMessage());
+        }
+
         // Kategori Uzmanı ve Kusursuz
         $stmt_cat = $this->pdo->prepare("SELECT correct_answers, total_questions FROM user_stats WHERE user_id = ? AND category = ?");
         $stmt_cat->execute([$user_id, $kategori]);

@@ -139,7 +139,9 @@ const game = {
             }, 3000);
         } else {
             if (result && result.message) {
-                this.ui.showToast(result.message, 'error');
+                if (window.ui && window.ui.showToast) {
+                    window.ui.showToast(result.message, 'error');
+                }
             }
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
@@ -159,7 +161,9 @@ const game = {
         if (result && result.success) {
             this.displayQuestion(result.data);
         } else if (result && result.message) {
-            this.ui.showToast(result.message, 'error');
+            if (window.ui && window.ui.showToast) {
+                window.ui.showToast(result.message, 'error');
+            }
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
         }
@@ -193,7 +197,9 @@ const game = {
                 if (result && result.success) {
                     this.displayQuestion(result.data);
                 } else if (result && result.message) {
-                    this.ui.showToast(result.message, 'error');
+                    if (window.ui && window.ui.showToast) {
+                        window.ui.showToast(result.message, 'error');
+                    }
                 }
             }
             });
