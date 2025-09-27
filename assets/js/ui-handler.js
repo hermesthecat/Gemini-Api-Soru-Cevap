@@ -929,7 +929,7 @@ const ui = (() => {
                 <h4 class="text-lg font-bold text-gray-800 dark:text-gray-100">${item.name}</h4>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 h-12">${item.description}</p>
                 <div class="mt-4 text-sm">
-                    Stok: <span class="font-bold text-gray-700 dark:text-gray-200">${item.current_stock}</span>
+                    Sahip Olduğunuz: <span class="font-bold text-gray-700 dark:text-gray-200">${item.current_stock}</span>
                 </div>
                 <button 
                     class="purchase-lifeline-btn mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"

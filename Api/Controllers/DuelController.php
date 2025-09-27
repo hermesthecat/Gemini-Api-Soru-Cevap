@@ -315,7 +315,7 @@ class DuelController
             if ($score > $opponent_score) {
                 $winner_id = $user_id;
                 // Kazanan jetonları alsın
-                $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
+                $stmt_add_coins = $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
                 $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
                 // Session'ı güncelle
                 if ($winner_id == $_SESSION['user_id']) {
@@ -324,7 +324,7 @@ class DuelController
             } else if ($opponent_score > $score) {
                 $winner_id = $is_challenger ? $duel['opponent_id'] : $duel['challenger_id'];
                 // Kazanan jetonları alsın
-                $stmt_add_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?");
+                $stmt_add_coins = $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
                 $stmt_add_coins->execute([$duel_win_coins, $winner_id]);
                 // Session'ı güncelle
                 if ($winner_id == $_SESSION['user_id']) {

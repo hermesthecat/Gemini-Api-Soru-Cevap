@@ -32,7 +32,7 @@ class ShopController
         $user_id = $_SESSION['user_id'];
 
         // Kullanıcının mevcut jokerlerini al
-        $stmt = $this->pdo->prepare("SELECT lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass FROM leaderboard WHERE user_id = ?");
+        $stmt = $this->pdo->prepare("SELECT lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass FROM users WHERE id = ?");
         $stmt->execute([$user_id]);
         $current_lifelines = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -73,18 +73,32 @@ class ShopController
         $user_id = $_SESSION['user_id'];
         $item_key = $data['item_key'] ?? '';
 
-        if (!array_key_exists($item_key, $this->item_prices)) {
+        $prices = $this->getItemPrices();
+
+        if (!array_key_exists($item_key, $prices)) {
             return ['success' => false, 'message' => 'Geçersiz ürün.'];
         }
 
-        $price = $this->item_prices[$item_key];
-        $lifeline_column = "lifeline_" . str_replace(['Fifty'], ['_fifty'], $item_key);
+        $price = $prices[$item_key];
+
+        // Map item keys to database column names
+        $lifeline_columns = [
+            'fiftyFifty' => 'lifeline_fifty_fifty',
+            'extraTime' => 'lifeline_extra_time',
+            'pass' => 'lifeline_pass'
+        ];
+
+        if (!isset($lifeline_columns[$item_key])) {
+            return ['success' => false, 'message' => 'Geçersiz ürün türü.'];
+        }
+
+        $lifeline_column = $lifeline_columns[$item_key];
 
 
         $this->pdo->beginTransaction();
         try {
             // Jetonu kontrol et ve düş
-            $stmt_coins = $this->pdo->prepare("UPDATE leaderboard SET coins = coins - ? WHERE user_id = ? AND coins >= ?");
+            $stmt_coins = $this->pdo->prepare("UPDATE users SET coins = coins - ? WHERE id = ? AND coins >= ?");
             $stmt_coins->execute([$price, $user_id, $price]);
 
             if ($stmt_coins->rowCount() === 0) {
@@ -93,7 +107,8 @@ class ShopController
             }
 
             // Jokeri ekle
-            $stmt_lifeline = $this->pdo->prepare("UPDATE leaderboard SET $lifeline_column = $lifeline_column + 1 WHERE user_id = ?");
+            $sql = "UPDATE users SET {$lifeline_column} = {$lifeline_column} + 1 WHERE id = ?";
+            $stmt_lifeline = $this->pdo->prepare($sql);
             $stmt_lifeline->execute([$user_id]);
 
             // Purchase log kaydı ekle
@@ -104,8 +119,12 @@ class ShopController
             ");
             $stmt_log->execute([$user_id, $item_key, $price]);
 
+            // Güncel coin balance'ı al
+            $stmt_balance = $this->pdo->prepare("SELECT coins FROM users WHERE id = ?");
+            $stmt_balance->execute([$user_id]);
+            $new_balance = $stmt_balance->fetchColumn();
+
             // Session'ı güncelle
-            $_SESSION['user_coins'] -= $price;
             if (!isset($_SESSION['lifelines'])) {
                 $_SESSION['lifelines'] = [];
             }
@@ -113,7 +132,7 @@ class ShopController
 
             $this->pdo->commit();
 
-            return ['success' => true, 'message' => 'Satın alma başarılı!', 'data' => ['new_coin_balance' => $_SESSION['user_coins']]];
+            return ['success' => true, 'message' => 'Satın alma başarılı!', 'data' => ['new_coin_balance' => $new_balance]];
         } catch (PDOException $e) {
             $this->pdo->rollBack();
             error_log("Purchase error: " . $e->getMessage());

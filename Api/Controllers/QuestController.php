@@ -118,15 +118,15 @@ class QuestController
                     SET is_completed = TRUE, completed_at = CURRENT_TIMESTAMP 
                     WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
                 ");
-                $stmt_add_rewards = $pdo->prepare("
-                    UPDATE leaderboard SET score = score + ?, coins = coins + ? WHERE user_id = ?
-                ");
+                $stmt_add_score = $pdo->prepare("UPDATE leaderboard SET score = score + ? WHERE user_id = ?");
+                $stmt_add_coins = $pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
 
                 foreach ($completed_quests as $quest) {
                     // Görevi tamamlandı olarak işaretle
                     $stmt_complete_quest->execute([$user_id, $quest['quest_key'], $today]);
                     // Ödül puanını ve jetonunu ekle
-                    $stmt_add_rewards->execute([$quest['reward_points'], $quest['reward_coins'], $user_id]);
+                    $stmt_add_score->execute([$quest['reward_points'], $user_id]);
+                    $stmt_add_coins->execute([$quest['reward_coins'], $user_id]);
 
                     // Session'ı güncelle
                     $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $quest['reward_coins'];

@@ -164,9 +164,12 @@ class GameController
 
             // Skoru ve jetonu güncelle (sadece doğru cevapta)
             if ($is_correct && ($puan > 0 || $coins_earned > 0)) {
-                $sql_score = "UPDATE leaderboard SET score = score + ?, coins = coins + ? WHERE user_id = ?";
-                $stmt_score = $this->pdo->prepare($sql_score);
-                $stmt_score->execute([$puan, $coins_earned, $user_id]);
+                // Puanı leaderboard'a, coin'i users'a ekle
+                $stmt_score = $this->pdo->prepare("UPDATE leaderboard SET score = score + ? WHERE user_id = ?");
+                $stmt_score->execute([$puan, $user_id]);
+
+                $stmt_coins = $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
+                $stmt_coins->execute([$coins_earned, $user_id]);
 
                 // Session'daki jeton miktarını da güncelle
                 $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $coins_earned;

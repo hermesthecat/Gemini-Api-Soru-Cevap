@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.3.0'; // Current schema version
+$current_version = '1.4.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -454,6 +454,10 @@ try {
       $migrations_to_run[] = '1.3.0';
     }
 
+    if (versionCompare($installed_version, '1.4.0') < 0) {
+      $migrations_to_run[] = '1.4.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tüm migration'lar güncel. Güncelleme gerekmiyor.\n";
     } else {
@@ -474,6 +478,9 @@ try {
             break;
           case '1.3.0':
             migration_1_3_0($pdo);
+            break;
+          case '1.4.0':
+            migration_1_4_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -835,4 +842,86 @@ function migration_1_3_0($pdo) {
   $pdo->exec("CREATE INDEX IF NOT EXISTS idx_users_created ON users (created_at)");
 
   markMigrationComplete($pdo, '1.3.0', 'Performance indexes added for query optimization');
+}
+
+function migration_1_4_0($pdo) {
+  echo "→ Migration 1.4.0: Database yapısı düzeltiliyor - coins ve lifelines users tablosuna taşınıyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // 1. users tablosuna yeni sütunları ekle
+    echo "  Users tablosuna coins ve lifeline sütunları ekleniyor...\n";
+    $pdo->exec("ALTER TABLE users
+                ADD COLUMN coins INT NOT NULL DEFAULT 100,
+                ADD COLUMN lifeline_fifty_fifty INT NOT NULL DEFAULT 1,
+                ADD COLUMN lifeline_extra_time INT NOT NULL DEFAULT 1,
+                ADD COLUMN lifeline_pass INT NOT NULL DEFAULT 1");
+
+    // 2. Mevcut verileri leaderboard'dan users'a kopyala
+    echo "  Mevcut veriler leaderboard'dan users tablosuna kopyalanıyor...\n";
+    $pdo->exec("UPDATE users u
+                INNER JOIN leaderboard l ON u.id = l.user_id
+                SET u.coins = l.coins,
+                    u.lifeline_fifty_fifty = l.lifeline_fifty_fifty,
+                    u.lifeline_extra_time = l.lifeline_extra_time,
+                    u.lifeline_pass = l.lifeline_pass");
+
+    // 3. Yeni kullanıcılar için leaderboard'da eksik kayıtları oluştur (güvenlik için)
+    echo "  Eksik leaderboard kayıtları kontrol ediliyor...\n";
+    $pdo->exec("INSERT IGNORE INTO leaderboard (user_id, score, coins, lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass)
+                SELECT id, 0, coins, lifeline_fifty_fifty, lifeline_extra_time, lifeline_pass
+                FROM users
+                WHERE id NOT IN (SELECT user_id FROM leaderboard)");
+
+    // 4. leaderboard tablosundan coins ve lifeline sütunlarını kaldır
+    echo "  Leaderboard tablosundan gereksiz sütunlar kaldırılıyor...\n";
+    $pdo->exec("ALTER TABLE leaderboard
+                DROP COLUMN coins,
+                DROP COLUMN lifeline_fifty_fifty,
+                DROP COLUMN lifeline_extra_time,
+                DROP COLUMN lifeline_pass");
+
+    // 5. purchase_logs tablosu varsa oluştur (ShopController'da kullanılıyor)
+    echo "  Purchase logs tablosu kontrol ediliyor...\n";
+    $pdo->exec("CREATE TABLE IF NOT EXISTS purchase_logs (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  user_id INT NOT NULL,
+                  item_type VARCHAR(50) NOT NULL,
+                  item_price INT NOT NULL,
+                  purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                  INDEX idx_purchase_user_date (user_id, purchase_date)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // 6. shop_settings tablosu varsa oluştur (admin shop için)
+    echo "  Shop settings tablosu kontrol ediliyor...\n";
+    $pdo->exec("CREATE TABLE IF NOT EXISTS shop_settings (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  setting_key VARCHAR(100) NOT NULL UNIQUE,
+                  setting_value TEXT NOT NULL,
+                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Varsayılan shop fiyatlarını ekle
+    $default_shop_settings = [
+      ['price_fifty_fifty', '95'],
+      ['price_extra_time', '50'],
+      ['price_pass', '50']
+    ];
+
+    $stmt = $pdo->prepare("INSERT IGNORE INTO shop_settings (setting_key, setting_value) VALUES (?, ?)");
+    foreach ($default_shop_settings as $setting) {
+      $stmt->execute($setting);
+    }
+
+    $pdo->commit();
+    echo "  ✓ Veritabanı yapısı başarıyla düzeltildi!\n";
+
+    markMigrationComplete($pdo, '1.4.0', 'Fixed database structure: moved coins and lifelines to users table');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.4.0 başarısız: " . $e->getMessage());
+  }
 }

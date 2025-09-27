@@ -45,7 +45,7 @@ class UserController
 
 
         // Yeni kullanıcı için leaderboard'a 0 skorla ekle
-        $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score, coins) VALUES (?, 0, 100)"); // 100 başlangıç jetonu
+        $stmt = $this->pdo->prepare("INSERT INTO leaderboard (user_id, score) VALUES (?, 0)"); // Leaderboard kaydı
         $stmt->execute([$user_id]);
 
         return ['success' => true, 'message' => 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.'];
@@ -105,7 +105,7 @@ class UserController
                 $this->pdo->prepare("UPDATE users SET last_login_date = ?, login_streak = ? WHERE id = ?")
                     ->execute([$today, $login_streak, $user['id']]);
 
-                $this->pdo->prepare("UPDATE leaderboard SET coins = coins + ? WHERE user_id = ?")
+                $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?")
                     ->execute([$reward_coins, $user['id']]);
 
                 // Kullanıcıya bilgi vermek için veriyi ayarla
