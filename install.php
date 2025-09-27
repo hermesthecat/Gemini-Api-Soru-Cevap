@@ -6,14 +6,14 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.9.0'; // Current schema version
+$current_version = '1.10.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
 echo "Hedef Version: $current_version\n\n";
 
 if ($fresh_install) {
-    echo "⚠️  UYARI: Fresh install modu tüm mevcut verileri silecek!\n";
+    echo "!  UYARI: Fresh install modu tum mevcut verileri silecek!\n";
     echo "Production ortamında kullanmayın. Devam etmek için 3 saniye bekleniyor...\n\n";
     sleep(3);
 }
@@ -67,7 +67,7 @@ try {
   function markMigrationComplete($pdo, $version, $description) {
     $stmt = $pdo->prepare("INSERT INTO schema_migrations (version, description) VALUES (?, ?) ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP");
     $stmt->execute([$version, $description]);
-    echo "✓ Migration $version tamamlandı: $description\n";
+    echo "+ Migration $version tamamlandi: $description\n";
   }
 
   function versionCompare($v1, $v2) {
@@ -429,7 +429,7 @@ try {
 
     // Fresh install tamamlandı, son versiyonu işaretle
     markMigrationComplete($pdo, $current_version, "Fresh install completed");
-    echo "\n✅ Fresh install başarıyla tamamlandı!\n";
+    echo "\n+ Fresh install başarıyla tamamlandı!\n";
   } else {
     // --- Safe Update: Sadece gerekli migration'ları çalıştır ---
     echo "Safe update modu - mevcut veriler korunacak.\n\n";
@@ -518,17 +518,17 @@ try {
       }
     }
 
-    echo "\n✅ Güncelleme başarıyla tamamlandı!\n";
+    echo "\n+ Güncelleme başarıyla tamamlandı!\n";
   }
 
 } catch (PDOException $e) {
-  die("❌ Kurulum/güncelleme sırasında hata: " . $e->getMessage());
+  die("! Kurulum/güncelleme sırasında hata: " . $e->getMessage());
 }
 
 // === MIGRATION FUNCTIONS ===
 
 function migration_1_0_0($pdo) {
-  echo "→ Migration 1.0.0: İlk tablo yapısı oluşturuluyor...\n";
+  echo "->  Migration 1.0.0: İlk tablo yapısı oluşturuluyor...\n";
 
   // users tablosu
   $pdo->exec("
@@ -773,7 +773,7 @@ function insertDefaultData($pdo) {
       $admin_id = $pdo->lastInsertId();
       $stmt = $pdo->prepare("INSERT IGNORE INTO leaderboard (user_id, score) VALUES (?, 0)");
       $stmt->execute([$admin_id]);
-      echo "→ Admin kullanıcısı oluşturuldu: '$admin_user' (Şifre: '$admin_pass')\n";
+      echo "->  Admin kullanıcısı oluşturuldu: '$admin_user' (Şifre: '$admin_pass')\n";
     }
   } catch (PDOException $e) {
     // Admin zaten mevcut, sorun değil
@@ -781,7 +781,7 @@ function insertDefaultData($pdo) {
 }
 
 function migration_1_1_0($pdo) {
-  echo "→ Migration 1.1.0: Site ayarları tablosu ekleniyor...\n";
+  echo "->  Migration 1.1.0: Site ayarları tablosu ekleniyor...\n";
 
   // Site ayarları tablosu
   $pdo->exec("
@@ -811,7 +811,7 @@ function migration_1_1_0($pdo) {
 }
 
 function migration_1_2_0($pdo) {
-  echo "→ Migration 1.2.0: API anahtarları tablosu ekleniyor...\n";
+  echo "->  Migration 1.2.0: API anahtarları tablosu ekleniyor...\n";
 
   // API anahtarları tablosu
   $pdo->exec("
@@ -831,7 +831,7 @@ function migration_1_2_0($pdo) {
 }
 
 function migration_1_3_0($pdo) {
-  echo "→ Migration 1.3.0: Performance indexleri ekleniyor...\n";
+  echo "->  Migration 1.3.0: Performance indexleri ekleniyor...\n";
 
   // Leaderboard performance indexleri
   echo "  Leaderboard indexleri...\n";
@@ -874,7 +874,7 @@ function migration_1_3_0($pdo) {
 }
 
 function migration_1_4_0($pdo) {
-  echo "→ Migration 1.4.0: Database yapısı düzeltiliyor - coins ve lifelines users tablosuna taşınıyor...\n";
+  echo "->  Migration 1.4.0: Database yapısı düzeltiliyor - coins ve lifelines users tablosuna taşınıyor...\n";
 
   try {
     $pdo->beginTransaction();
@@ -945,7 +945,7 @@ function migration_1_4_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  ✓ Veritabanı yapısı başarıyla düzeltildi!\n";
+    echo "  + Veritabanı yapısı başarıyla düzeltildi!\n";
 
     markMigrationComplete($pdo, '1.4.0', 'Fixed database structure: moved coins and lifelines to users table');
 
@@ -956,7 +956,7 @@ function migration_1_4_0($pdo) {
 }
 
 function migration_1_5_0($pdo) {
-  echo "→ Migration 1.5.0: Categories tablosu ekleniyor - soru kategorileri veritabanına taşınıyor...\n";
+  echo "->  Migration 1.5.0: Categories tablosu ekleniyor - soru kategorileri veritabanına taşınıyor...\n";
 
   try {
     $pdo->beginTransaction();
@@ -994,7 +994,7 @@ function migration_1_5_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  ✓ Categories sistemi başarıyla kuruldu!\n";
+    echo "  + Categories sistemi başarıyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.5.0', 'Added categories table for dynamic question categories');
 
@@ -1005,7 +1005,7 @@ function migration_1_5_0($pdo) {
 }
 
 function migration_1_6_0($pdo) {
-  echo "→ Migration 1.6.0: Categories tablosuna icon ve color sütunları ekleniyor...\n";
+  echo "->  Migration 1.6.0: Categories tablosuna icon ve color sütunları ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
@@ -1037,7 +1037,7 @@ function migration_1_6_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  ✓ Kategori icon ve renk sistemi başarıyla kuruldu!\n";
+    echo "  + Kategori icon ve renk sistemi başarıyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.6.0', 'Added icon and color columns to categories table with default styles');
 
@@ -1048,7 +1048,7 @@ function migration_1_6_0($pdo) {
 }
 
 function migration_1_7_0($pdo) {
-  echo "→ Migration 1.7.0: Achievement rules tablosu ekleniyor - dinamik başarım kuralları sistemi...\n";
+  echo "->  Migration 1.7.0: Achievement rules tablosu ekleniyor - dinamik başarım kuralları sistemi...\n";
 
   try {
     $pdo->beginTransaction();
@@ -1119,7 +1119,7 @@ function migration_1_7_0($pdo) {
     }
 
     $pdo->commit();
-    echo "  ✓ Achievement rules sistemi başarıyla kuruldu! " . count($achievement_rules) . " adet kural eklendi.\n";
+    echo "  + Achievement rules sistemi başarıyla kuruldu! " . count($achievement_rules) . " adet kural eklendi.\n";
 
     markMigrationComplete($pdo, '1.7.0', 'Added achievement_rules table for dynamic achievement tracking system');
 
@@ -1131,7 +1131,7 @@ function migration_1_7_0($pdo) {
 
 // Migration 1.8.0: Quest system improvements - Login streak tracking ve yeni quest types
 function migration_1_8_0($pdo) {
-  echo "→ Migration 1.8.0: Quest sistem iyileştirmeleri - Login streak tracking ve yeni quest types ekleniyor...\n";
+  echo "->  Migration 1.8.0: Quest sistem iyileştirmeleri - Login streak tracking ve yeni quest types ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
@@ -1151,12 +1151,12 @@ function migration_1_8_0($pdo) {
         $check = $pdo->query("SHOW COLUMNS FROM users LIKE '$column'")->rowCount();
         if ($check == 0) {
           $pdo->exec($sql);
-          echo "    ✓ $column sütunu eklendi\n";
+          echo "    + $column sütunu eklendi\n";
         } else {
           echo "    - $column sütunu zaten mevcut\n";
         }
       } catch (PDOException $e) {
-        echo "    ⚠ $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+        echo "    ! $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
       }
     }
 
@@ -1182,7 +1182,7 @@ function migration_1_8_0($pdo) {
       }
     }
 
-    echo "    ✓ $added_count yeni quest eklendi\n";
+    echo "    + $added_count yeni quest eklendi\n";
 
     // 3. Performance indexleri ekle
     echo "  Performance indexleri ekleniyor...\n";
@@ -1202,10 +1202,10 @@ function migration_1_8_0($pdo) {
       }
     }
 
-    echo "    ✓ Performance indexleri eklendi\n";
+    echo "    + Performance indexleri eklendi\n";
 
     $pdo->commit();
-    echo "  ✓ Quest sistem iyileştirmeleri başarıyla tamamlandı!\n";
+    echo "  + Quest sistem iyileştirmeleri başarıyla tamamlandı!\n";
 
     markMigrationComplete($pdo, '1.8.0', 'Added login streak tracking and new quest types (consecutive_days, win_duels) with performance optimizations');
 
@@ -1217,7 +1217,7 @@ function migration_1_8_0($pdo) {
 
 // Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi
 function migration_1_9_0($pdo) {
-  echo "→ Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi ekleniyor...\n";
+  echo "->  Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi ekleniyor...\n";
 
   try {
     $pdo->beginTransaction();
@@ -1250,7 +1250,7 @@ function migration_1_9_0($pdo) {
     ";
 
     $pdo->exec($sql);
-    echo "    ✓ quest_history tablosu oluşturuldu\n";
+    echo "    + quest_history tablosu oluşturuldu\n";
 
     // user_quests tablosuna completion tracking için sütunlar ekle
     echo "  user_quests tablosuna completion tracking sütunları ekleniyor...\n";
@@ -1265,12 +1265,12 @@ function migration_1_9_0($pdo) {
         $check = $pdo->query("SHOW COLUMNS FROM user_quests LIKE '$column'")->rowCount();
         if ($check == 0) {
           $pdo->exec($sql);
-          echo "    ✓ $column sütunu eklendi\n";
+          echo "    + $column sütunu eklendi\n";
         } else {
           echo "    - $column sütunu zaten mevcut\n";
         }
       } catch (PDOException $e) {
-        echo "    ⚠ $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+        echo "    ! $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
       }
     }
 
@@ -1302,15 +1302,47 @@ function migration_1_9_0($pdo) {
     $stmt = $pdo->prepare($migrate_sql);
     $stmt->execute();
     $migrated_count = $stmt->rowCount();
-    echo "    ✓ $migrated_count tamamlanmış quest history'ye aktarıldı\n";
+    echo "    + $migrated_count tamamlanmış quest history'ye aktarıldı\n";
 
     $pdo->commit();
-    echo "  ✓ Quest history tracking sistemi başarıyla kuruldu!\n";
+    echo "  + Quest history tracking sistemi başarıyla kuruldu!\n";
 
     markMigrationComplete($pdo, '1.9.0', 'Added quest_history table and completion tracking system for performance analytics');
 
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.9.0 başarısız: " . $e->getMessage());
+  }
+}
+
+function migration_1_10_0($pdo) {
+  echo "-> Migration 1.10.0: Duel Cancellation Support - Duello iptal ozelligi ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // duels tablosunun status enum'ına cancelled değerini ekle
+    echo "  duels tablosu status enum'ina 'cancelled' degeri ekleniyor...\n";
+
+    // Önce mevcut enum değerlerini kontrol et
+    $stmt = $pdo->query("SHOW COLUMNS FROM duels WHERE Field = 'status'");
+    $column_info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($column_info && strpos($column_info['Type'], 'cancelled') === false) {
+      $sql = "ALTER TABLE duels MODIFY status ENUM('pending','declined','active','challenger_completed','opponent_completed','completed','expired','cancelled') NOT NULL DEFAULT 'pending'";
+      $pdo->exec($sql);
+      echo "    + 'cancelled' degeri duels.status enum'ina eklendi\n";
+    } else {
+      echo "    - 'cancelled' degeri zaten mevcut\n";
+    }
+
+    $pdo->commit();
+    echo "  + Duello iptal ozelligi basariyla eklendi!\n";
+
+    markMigrationComplete($pdo, '1.10.0', 'Added cancelled status to duels table enum for duel cancellation feature');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.10.0 basarisiz: " . $e->getMessage());
   }
 }
