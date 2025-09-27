@@ -41,10 +41,31 @@ const announcementHandler = (() => {
 
     // --- Admin Functions ---
     const updateAnnouncementsList = async () => {
-        if (!appState.get('currentUser') || appState.get('currentUser').role !== 'admin') return;
-        const result = await api.call('admin_get_announcements', {}, 'POST', false);
-        if (result.success) {
-            ui.renderAdminAnnouncementsList(result.data);
+        console.log('updateAnnouncementsList çağrıldı');
+
+        const currentUser = appState.get('currentUser');
+        console.log('currentUser:', currentUser);
+
+        if (!currentUser || currentUser.role !== 'admin') {
+            console.log('Admin olmayan kullanıcı, çıkılıyor');
+            return;
+        }
+
+        console.log('Admin kullanıcı tespit edildi, API çağrısı yapılıyor...');
+
+        try {
+            const result = await api.call('admin_get_announcements', {}, 'POST', false);
+            console.log('API sonucu:', result);
+
+            if (result.success) {
+                console.log('API başarılı, veri sayısı:', result.data.length);
+                ui.renderAdminAnnouncementsList(result.data);
+                console.log('UI render tamamlandı');
+            } else {
+                console.error('API hatası:', result.message);
+            }
+        } catch (error) {
+            console.error('updateAnnouncementsList hatası:', error);
         }
     };
 

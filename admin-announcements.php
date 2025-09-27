@@ -77,24 +77,26 @@ include 'header.php';
 <script>
 // Admin Duyuru sayfası yüklendiğinde içeriği yükle
 document.addEventListener('DOMContentLoaded', () => {
-    // Announcement handler'ı yükle - daha uzun timeout
-    setTimeout(() => {
-        if (typeof announcementHandler !== 'undefined') {
-            console.log('Announcement handler bulundu, duyurular yükleniyor...');
-            announcementHandler.updateAnnouncementsList();
-        } else {
-            console.log('Announcement handler bulunamadı, tekrar deneniyor...');
-            // Eğer handler hala yüklenmemişse 500ms daha bekle
-            setTimeout(() => {
-                if (typeof announcementHandler !== 'undefined') {
-                    console.log('Announcement handler ikinci denemede bulundu');
-                    announcementHandler.updateAnnouncementsList();
-                } else {
-                    console.error('Announcement handler yüklenemedi');
-                }
-            }, 500);
+    const tryLoadAnnouncements = () => {
+        if (typeof announcementHandler === 'undefined') {
+            console.log('Announcement handler henüz yüklenmedi, bekleniyor...');
+            setTimeout(tryLoadAnnouncements, 200);
+            return;
         }
-    }, 200);
+
+        const currentUser = appState ? appState.get('currentUser') : null;
+        if (!currentUser) {
+            console.log('User state henüz yüklenmedi, bekleniyor...');
+            setTimeout(tryLoadAnnouncements, 200);
+            return;
+        }
+
+        console.log('Hem handler hem user state hazır, duyurular yükleniyor...', currentUser);
+        announcementHandler.updateAnnouncementsList();
+    };
+
+    // İlk deneme
+    setTimeout(tryLoadAnnouncements, 500);
 });
 </script>
 
