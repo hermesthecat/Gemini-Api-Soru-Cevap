@@ -115,28 +115,46 @@ function fetchAllQuestionsFromAI($geminiAPI, $needed_combinations) {
         return [];
     }
 
-    // JSON formatını hazırla
-    $prompt = "Lütfen aşağıdaki kategori ve zorluk seviyelerine göre çoktan seçmeli sorular oluştur. Her kombinasyon için 10'ar soru yeterli.\n\n";
+    // JSON formatını hazırla - Hem çoktan seçmeli hem doğru/yanlış
+    $prompt = "Lütfen aşağıdaki kategori ve zorluk seviyelerine göre karışık tipte sorular oluştur. Her kombinasyon için 5 çoktan seçmeli + 5 doğru/yanlış soru (toplam 10 soru).\n\n";
 
     // Kombinasyonları listeye
     foreach ($needed_combinations as $index => $combo) {
-        $prompt .= "- {$combo['category_name']} kategorisi, {$combo['difficulty']} seviye: 10 adet soru\n";
+        $prompt .= "- {$combo['category_name']} kategorisi, {$combo['difficulty']} seviye: 5 çoktan seçmeli + 5 doğru/yanlış soru\n";
     }
 
     $prompt .= "\nLütfen şu JSON formatını kullan:\n{\n";
     foreach ($needed_combinations as $index => $combo) {
         $safe_key = "combo_$index"; // Array index olarak kullanacağız
         $prompt .= "  \"$safe_key\": [\n";
+
+        // Çoktan seçmeli örnek
         $prompt .= "    {\n";
-        $prompt .= "      \"question\": \"Soru metni?\",\n";
-        $prompt .= "      \"options\": [\"A) Seçenek 1\", \"B) Seçenek 2\", \"C) Seçenek 3\", \"D) Seçenek 4\"],\n";
-        $prompt .= "      \"correct_answer\": \"A\",\n";
-        $prompt .= "      \"explanation\": \"Açıklama\"\n";
+        $prompt .= "      \"tip\": \"coktan_secmeli\",\n";
+        $prompt .= "      \"soru\": \"Soru metni?\",\n";
+        $prompt .= "      \"siklar\": {\"A\": \"Seçenek 1\", \"B\": \"Seçenek 2\", \"C\": \"Seçenek 3\", \"D\": \"Seçenek 4\"},\n";
+        $prompt .= "      \"dogru_cevap\": \"A\",\n";
+        $prompt .= "      \"aciklama\": \"Doğru cevap A'dır çünkü... Diğer seçenekler yanlıştır çünkü...\"\n";
+        $prompt .= "    },\n";
+
+        // Doğru/yanlış örnek
+        $prompt .= "    {\n";
+        $prompt .= "      \"tip\": \"dogru_yanlis\",\n";
+        $prompt .= "      \"soru\": \"Önerme cümlesi?\",\n";
+        $prompt .= "      \"dogru_cevap\": \"Doğru\",\n";
+        $prompt .= "      \"aciklama\": \"Bu önerme doğrudur çünkü... / Bu önerme yanlıştır çünkü...\"\n";
         $prompt .= "    }\n";
-        $prompt .= "    // ... 10 adet soru ({$combo['category_name']} - {$combo['difficulty']})\n";
+
+        $prompt .= "    // ... 10 adet soru toplam ({$combo['category_name']} - {$combo['difficulty']}: 5 çoktan seçmeli + 5 doğru/yanlış)\n";
         $prompt .= "  ]" . ($index < count($needed_combinations) - 1 ? "," : "") . "\n";
     }
-    $prompt .= "}\n\nSADECE JSON formatında yanıt ver, başka açıklama ekleme. Her kombinasyon için tam 10 adet farklı soru oluştur.";
+    $prompt .= "}\n\nÖNEMLİ KURALLAR:\n";
+    $prompt .= "1. SADECE JSON formatında yanıt ver, başka açıklama ekleme\n";
+    $prompt .= "2. Her kombinasyon için 5 çoktan seçmeli + 5 doğru/yanlış olmak üzere toplam 10 farklı soru oluştur\n";
+    $prompt .= "3. Doğru/yanlış sorularında 'dogru_cevap' sadece 'Doğru' veya 'Yanlış' olmalı\n";
+    $prompt .= "4. 'aciklama' alanı çok önemli: Hem doğru cevabı hem de neden diğer seçeneklerin yanlış olduğunu açıkla\n";
+    $prompt .= "5. Açıklama örneği: 'Doğru cevap B'dir çünkü Ankara 1923'ten beri başkenttir. A) İstanbul eski başkentti, C) İzmir liman şehri, D) Bursa tarihi şehirdir.'\n";
+    $prompt .= "6. Doğru/yanlış için: 'Bu ifade doğrudur çünkü [sebep] / Bu ifade yanlıştır çünkü [gerçek durum]'\n";
 
     try {
         logMessage("📝 Toplu soru prompt'u hazırlandı (" . strlen($prompt) . " karakter)");
@@ -226,41 +244,67 @@ $count adet farklı soru oluştur. SADECE JSON formatında yanıt ver, başka a�
 }
 
 /**
- * Soruları veritabanına kaydetme fonksiyonu
+ * Soruları veritabanına kaydetme fonksiyonu - Karışık tip desteği
  */
 function saveQuestionsToDatabase($pdo, $questions, $category, $difficulty) {
     $saved_count = 0;
 
     $stmt = $pdo->prepare("
         INSERT INTO questions (question_text, question_type, options, correct_answer, explanation, category, difficulty)
-        VALUES (?, 'coktan_secmeli', ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
 
     foreach ($questions as $question) {
         try {
-            // Veri doğrulama
-            if (empty($question['question']) || empty($question['options']) ||
-                empty($question['correct_answer']) || empty($question['explanation'])) {
-                logMessage("Eksik veri - soru atlandı");
+            // Temel veri doğrulama
+            if (empty($question['soru']) || empty($question['dogru_cevap']) ||
+                empty($question['aciklama']) || empty($question['tip'])) {
+                logMessage("Eksik temel veri - soru atlandı: " . json_encode($question, JSON_UNESCAPED_UNICODE));
                 continue;
             }
 
-            // Options'ı JSON olarak kaydet
-            $options_json = json_encode($question['options'], JSON_UNESCAPED_UNICODE);
+            $question_type = $question['tip']; // 'coktan_secmeli' veya 'dogru_yanlis'
+            $options_json = null;
+
+            // Soru tipine göre options işleme
+            if ($question_type === 'coktan_secmeli') {
+                // Çoktan seçmeli için şıkları kontrol et
+                if (empty($question['siklar']) || !is_array($question['siklar'])) {
+                    logMessage("Çoktan seçmeli soru için şıklar eksik - soru atlandı");
+                    continue;
+                }
+                // Şıkları GameController formatına çevir: ["A) Seçenek", "B) Seçenek", ...]
+                $formatted_options = [];
+                foreach ($question['siklar'] as $key => $value) {
+                    $formatted_options[] = "$key) $value";
+                }
+                $options_json = json_encode($formatted_options, JSON_UNESCAPED_UNICODE);
+            } else {
+                // Doğru/yanlış için options null
+                $options_json = null;
+
+                // Doğru cevap kontrolü
+                if (!in_array($question['dogru_cevap'], ['Doğru', 'Yanlış'])) {
+                    logMessage("Doğru/yanlış soru için geçersiz cevap: " . $question['dogru_cevap']);
+                    continue;
+                }
+            }
 
             $stmt->execute([
-                $question['question'],
+                $question['soru'],
+                $question_type,
                 $options_json,
-                $question['correct_answer'],
-                $question['explanation'],
+                $question['dogru_cevap'],
+                $question['aciklama'],
                 $category,
                 $difficulty
             ]);
 
             $saved_count++;
+            logMessage("✅ Kaydedildi: " . substr($question['soru'], 0, 50) . "... ($question_type)");
 
         } catch (PDOException $e) {
-            logMessage("Veritabanı hatası: " . $e->getMessage());
+            logMessage("❌ Veritabanı hatası: " . $e->getMessage());
         }
     }
 
