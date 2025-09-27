@@ -110,7 +110,7 @@ const adminSettingsHandler = (() => {
             ui.showLoading('Ayarlar kaydediliyor...');
             const result = await api.call('update_settings', { settings });
 
-            ui.hideLoading();
+            ui.showLoading(false);
             ui.showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
@@ -120,7 +120,7 @@ const adminSettingsHandler = (() => {
                 }, 1000);
             }
         } catch (error) {
-            ui.hideLoading();
+            ui.showLoading(false);
             console.error('Settings update error:', error);
             ui.showToast('Ayarlar kaydedilirken hata oluştu', 'error');
         }

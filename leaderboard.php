@@ -74,20 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // Liderlik tablosu istatistiklerini yükle
 async function loadLeaderboardStats() {
     try {
-        // Toplam oyuncu sayısı
-        const usersResponse = await api.call('admin_get_dashboard_data', {}, 'POST', false);
-        if (usersResponse.success) {
-            document.getElementById('total-players').textContent = usersResponse.data.total_users || 0;
-            document.getElementById('total-questions').textContent = usersResponse.data.total_questions || 0;
+        // Liderlik tablosundan toplam oyuncu sayısını al
+        const leaderboardResponse = await api.call('get_leaderboard', {}, 'POST', false);
+        if (leaderboardResponse.success) {
+            document.getElementById('total-players').textContent = leaderboardResponse.data.length || 0;
+
+            // Ortalama puan hesapla
+            if (leaderboardResponse.data.length > 0) {
+                const totalScore = leaderboardResponse.data.reduce((sum, user) => sum + parseInt(user.score), 0);
+                const avgScore = Math.round(totalScore / leaderboardResponse.data.length);
+                document.getElementById('avg-score').textContent = avgScore;
+            }
         }
 
-        // Liderlik tablosundan ortalama puan hesapla
-        const leaderboardResponse = await api.call('get_leaderboard', {}, 'POST', false);
-        if (leaderboardResponse.success && leaderboardResponse.data.length > 0) {
-            const totalScore = leaderboardResponse.data.reduce((sum, user) => sum + parseInt(user.score), 0);
-            const avgScore = Math.round(totalScore / leaderboardResponse.data.length);
-            document.getElementById('avg-score').textContent = avgScore;
-        }
+        // Total questions - set a placeholder value since we don't have direct access
+        document.getElementById('total-questions').textContent = '-';
     } catch (error) {
         console.log('İstatistikler yüklenirken hata:', error);
     }

@@ -54,5 +54,9 @@ const settingsHandler = (() => {
         dom.soundToggle?.addEventListener('click', toggleSound);
     };
 
-    return { init };
+    return {
+        init,
+        toggleTheme,
+        toggleSound
+    };
 })(); 

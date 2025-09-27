@@ -16,6 +16,11 @@ const auth = {
             });
 
             if (result && result.success) {
+                // CSRF token'ı hemen set et
+                if (result.data && result.data.csrf_token && window.appState) {
+                    window.appState.set('csrfToken', result.data.csrf_token);
+                }
+
                 this.ui.showToast('Giriş başarılı, hoş geldiniz!', 'success');
                 // Başarılı girişi ana uygulamaya bildir
                 document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result }));

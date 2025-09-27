@@ -11,7 +11,7 @@ class AdminController
 
     private function checkAdmin()
     {
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             http_response_code(403); // Forbidden
             return ['success' => false, 'message' => 'Bu alana erişim yetkiniz yok.'];
         }

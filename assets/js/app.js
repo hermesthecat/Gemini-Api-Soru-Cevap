@@ -195,8 +195,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         onLoginSuccess(e) {
             const { data: userData, daily_reward } = e.detail;
+
+            // CSRF token'ı hemen güncelle (login response'dan gelen yeni token)
+            if (userData.csrf_token) {
+                window.CSRF_TOKEN = userData.csrf_token;
+                appState.set('csrfToken', userData.csrf_token);
+            }
+
             appState.set('currentUser', { id: userData.id, username: userData.username, role: userData.role });
-            appState.set('csrfToken', userData.csrf_token);
             appState.set('lifelines', userData.lifelines);
 
             // MPA'da her sayfa kendi UI'ını yönetir
@@ -216,12 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Ödül sesi çal
                     this.onPlaySound({ detail: { sound: 'achievement' } });
                 }, 1000); // 1 saniye gecikme
-            }
-
-            // User data'yı AppState'e aktar
-            if (window.USER_DATA && window.CSRF_TOKEN) {
-                appState.set('currentUser', window.USER_DATA);
-                appState.set('csrfToken', window.CSRF_TOKEN);
             }
 
             // Token set edildikten sonra update işlemlerini başlat

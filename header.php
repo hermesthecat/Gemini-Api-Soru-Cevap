@@ -19,6 +19,11 @@ $v = getVersion();
     <title><?php echo SITE_NAME; ?></title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css?v=<?php echo $v; ?>">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,6 +34,12 @@ $v = getVersion();
         } else {
             document.documentElement.classList.remove('dark')
         }
+
+        // CSRF token'ı erken set et (auth_check.php'den geliyorsa)
+        <?php if (isset($user_data) && isset($user_data['csrf_token'])): ?>
+        window.CSRF_TOKEN = '<?php echo $user_data['csrf_token']; ?>';
+        window.USER_DATA = <?php echo json_encode($user_data); ?>;
+        <?php endif; ?>
     </script>
 </head>
 

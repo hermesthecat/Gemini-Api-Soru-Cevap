@@ -227,6 +227,14 @@
     <!-- Main Application -->
     <script src="assets/js/app.js?v=<?php echo $v; ?>"></script>
 
+    <!-- User Data ve CSRF Token'ı JavaScript'e aktar -->
+    <?php if (isset($user_data)): ?>
+    <script>
+        window.USER_DATA = <?php echo json_encode($user_data); ?>;
+        window.CSRF_TOKEN = '<?php echo $user_data['csrf_token']; ?>';
+    </script>
+    <?php endif; ?>
+
     <!-- Audio Elements (disabled - no sound files) -->
     <audio id="correct-sound" preload="none">
         <!-- <source src="assets/sounds/correct.mp3" type="audio/mpeg"> -->
