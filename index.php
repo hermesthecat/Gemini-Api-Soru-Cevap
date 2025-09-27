@@ -140,9 +140,6 @@ include 'header.php';
             <span class="text-2xl font-semibold" id="loading-text">Yükleniyor...</span>
         </div>
     </div>
-    <div id="notification-toast" class="hidden fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg text-sm">
-        <p id="notification-text"></p>
-    </div>
 
     <!-- Başarım Kazanıldı Modalı -->
     <div id="achievement-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0">

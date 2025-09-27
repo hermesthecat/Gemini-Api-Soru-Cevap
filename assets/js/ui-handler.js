@@ -39,12 +39,12 @@ const ui = (() => {
         // Yeni renk sınıfını ekle
         dom.notificationToast.classList.add(colorClasses[type] || colorClasses.info);
 
-        dom.notificationToast.classList.remove('hidden');
-        dom.notificationToast.classList.add('animate-toast-in');
+        dom.notificationToast.classList.remove('hidden', 'translate-x-full');
+        dom.notificationToast.classList.add('animate-toast-in', 'translate-x-0');
 
         setTimeout(() => {
-            dom.notificationToast.classList.remove('animate-toast-in');
-            dom.notificationToast.classList.add('hidden');
+            dom.notificationToast.classList.remove('animate-toast-in', 'translate-x-0');
+            dom.notificationToast.classList.add('hidden', 'translate-x-full');
         }, 3000);
     };
 

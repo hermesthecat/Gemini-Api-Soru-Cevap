@@ -409,4 +409,208 @@ class DataController
             return ['success' => false, 'message' => 'Başarım ilerlemesi alınamadı: ' . $e->getMessage()];
         }
     }
+
+    /**
+     * Kullanıcının quest geçmişini getir
+     */
+    public function getUserQuestHistory()
+    {
+        try {
+            $user_id = $_SESSION['user_id'];
+            $limit = isset($_POST['limit']) ? max(1, min(100, (int)$_POST['limit'])) : 20;
+            $offset = isset($_POST['offset']) ? max(0, (int)$_POST['offset']) : 0;
+
+            // Quest history'yi al - son tamamlananlar önce
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    qh.*,
+                    DATE_FORMAT(qh.completed_date, '%d.%m.%Y %H:%i') as completed_date_formatted,
+                    DATE_FORMAT(qh.assigned_date, '%d.%m.%Y') as assigned_date_formatted,
+                    CASE
+                        WHEN qh.completion_time_minutes IS NOT NULL
+                            THEN CONCAT(
+                                FLOOR(qh.completion_time_minutes / 60), 'h ',
+                                qh.completion_time_minutes % 60, 'm'
+                            )
+                        ELSE 'Bilinmiyor'
+                    END as completion_time_formatted,
+                    CASE qh.quest_type
+                        WHEN 'solve_category' THEN 'Kategori'
+                        WHEN 'solve_difficulty' THEN 'Zorluk'
+                        WHEN 'consecutive_days' THEN 'Giriş Serisi'
+                        WHEN 'win_duels' THEN 'Düello'
+                        ELSE 'Genel'
+                    END as quest_type_name
+                FROM quest_history qh
+                WHERE qh.user_id = ?
+                ORDER BY qh.completed_date DESC
+                LIMIT " . intval($limit) . " OFFSET " . intval($offset) . "
+            ");
+            $stmt->execute([$user_id]);
+            $history = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Toplam kayıt sayısını al
+            $stmt_count = $this->pdo->prepare("SELECT COUNT(*) FROM quest_history WHERE user_id = ?");
+            $stmt_count->execute([$user_id]);
+            $total_count = $stmt_count->fetchColumn();
+
+            // Kullanıcı istatistikleri
+            $stmt_stats = $this->pdo->prepare("
+                SELECT
+                    COUNT(*) as total_completed,
+                    SUM(reward_points) as total_points_earned,
+                    SUM(reward_coins) as total_coins_earned,
+                    AVG(completion_time_minutes) as avg_completion_time,
+                    MIN(completion_time_minutes) as fastest_completion,
+                    MAX(completion_time_minutes) as slowest_completion,
+                    COUNT(DISTINCT quest_type) as unique_quest_types,
+                    COUNT(DISTINCT DATE(assigned_date)) as active_days
+                FROM quest_history
+                WHERE user_id = ? AND completion_time_minutes IS NOT NULL
+            ");
+            $stmt_stats->execute([$user_id]);
+            $stats = $stmt_stats->fetch(PDO::FETCH_ASSOC);
+
+            // Quest type bazında performans
+            $stmt_type_stats = $this->pdo->prepare("
+                SELECT
+                    quest_type,
+                    COUNT(*) as count,
+                    AVG(completion_time_minutes) as avg_time,
+                    SUM(reward_points) as total_points,
+                    CASE quest_type
+                        WHEN 'solve_category' THEN 'Kategori'
+                        WHEN 'solve_difficulty' THEN 'Zorluk'
+                        WHEN 'consecutive_days' THEN 'Giriş Serisi'
+                        WHEN 'win_duels' THEN 'Düello'
+                        ELSE 'Genel'
+                    END as type_name
+                FROM quest_history
+                WHERE user_id = ?
+                GROUP BY quest_type
+                ORDER BY count DESC
+            ");
+            $stmt_type_stats->execute([$user_id]);
+            $type_stats = $stmt_type_stats->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'history' => $history,
+                    'pagination' => [
+                        'total' => (int)$total_count,
+                        'limit' => $limit,
+                        'offset' => $offset,
+                        'has_more' => ($offset + $limit) < $total_count
+                    ],
+                    'stats' => $stats,
+                    'type_stats' => $type_stats
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("Quest history error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Quest geçmişi alınamadı: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Admin için quest history istatistikleri
+     */
+    public function getQuestHistoryStats()
+    {
+        try {
+            // Günlük quest tamamlama trendleri (son 30 gün)
+            $stmt_daily = $this->pdo->prepare("
+                SELECT
+                    DATE(completed_date) as date,
+                    COUNT(*) as completed_count,
+                    COUNT(DISTINCT user_id) as unique_users,
+                    AVG(completion_time_minutes) as avg_time
+                FROM quest_history
+                WHERE completed_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                GROUP BY DATE(completed_date)
+                ORDER BY date DESC
+                LIMIT 30
+            ");
+            $stmt_daily->execute();
+            $daily_trends = $stmt_daily->fetchAll(PDO::FETCH_ASSOC);
+
+            // Quest type bazında genel performans
+            $stmt_types = $this->pdo->prepare("
+                SELECT
+                    quest_type,
+                    COUNT(*) as total_completed,
+                    COUNT(DISTINCT user_id) as unique_users,
+                    AVG(completion_time_minutes) as avg_completion_time,
+                    MIN(completion_time_minutes) as fastest_time,
+                    MAX(completion_time_minutes) as slowest_time,
+                    SUM(reward_points) as total_points_given,
+                    SUM(reward_coins) as total_coins_given,
+                    CASE quest_type
+                        WHEN 'solve_category' THEN 'Kategori'
+                        WHEN 'solve_difficulty' THEN 'Zorluk'
+                        WHEN 'consecutive_days' THEN 'Giriş Serisi'
+                        WHEN 'win_duels' THEN 'Düello'
+                        ELSE 'Genel'
+                    END as type_name
+                FROM quest_history
+                WHERE completion_time_minutes IS NOT NULL
+                GROUP BY quest_type
+                ORDER BY total_completed DESC
+            ");
+            $stmt_types->execute();
+            $type_performance = $stmt_types->fetchAll(PDO::FETCH_ASSOC);
+
+            // En aktif kullanıcılar (quest completion bazında)
+            $stmt_top_users = $this->pdo->prepare("
+                SELECT
+                    u.username,
+                    COUNT(qh.id) as completed_quests,
+                    AVG(qh.completion_time_minutes) as avg_time,
+                    SUM(qh.reward_points) as total_points,
+                    SUM(qh.reward_coins) as total_coins,
+                    MAX(qh.completed_date) as last_completion
+                FROM quest_history qh
+                JOIN users u ON qh.user_id = u.id
+                WHERE qh.completed_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                GROUP BY qh.user_id, u.username
+                ORDER BY completed_quests DESC
+                LIMIT 10
+            ");
+            $stmt_top_users->execute();
+            $top_users = $stmt_top_users->fetchAll(PDO::FETCH_ASSOC);
+
+            // Genel istatistikler
+            $stmt_general = $this->pdo->prepare("
+                SELECT
+                    COUNT(*) as total_completed,
+                    COUNT(DISTINCT user_id) as total_unique_users,
+                    AVG(completion_time_minutes) as overall_avg_time,
+                    SUM(reward_points) as total_points_distributed,
+                    SUM(reward_coins) as total_coins_distributed,
+                    COUNT(DISTINCT DATE(completed_date)) as active_days,
+                    MIN(completed_date) as first_completion,
+                    MAX(completed_date) as last_completion
+                FROM quest_history
+                WHERE completion_time_minutes IS NOT NULL
+            ");
+            $stmt_general->execute();
+            $general_stats = $stmt_general->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'daily_trends' => $daily_trends,
+                    'type_performance' => $type_performance,
+                    'top_users' => $top_users,
+                    'general_stats' => $general_stats
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("Quest history stats error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Quest istatistikleri alınamadı: ' . $e->getMessage()];
+        }
+    }
 }

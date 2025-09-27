@@ -31,7 +31,7 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="notification-toast" class="fixed top-4 right-4 max-w-xs bg-white dark:bg-gray-800 border-l-4 border-blue-500 text-gray-900 dark:text-gray-100 p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+    <div id="notification-toast" class="hidden fixed top-8 right-4 max-w-xs bg-white dark:bg-gray-800 border-l-4 border-blue-500 text-gray-900 dark:text-gray-100 p-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
         <div class="flex">
             <div class="flex-shrink-0">
                 <i class="fas fa-info-circle text-blue-500"></i>

@@ -351,4 +351,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global erişim için
     window.app = App;
+    window.ui = ui;
 }); 

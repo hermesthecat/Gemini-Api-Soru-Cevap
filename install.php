@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.8.0'; // Current schema version
+$current_version = '1.9.0'; // Current schema version
 
 echo "=== AI Bilgi Yarışması Veritabanı Kurulum/Güncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tüm veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -509,6 +509,9 @@ try {
             break;
           case '1.8.0':
             migration_1_8_0($pdo);
+            break;
+          case '1.9.0':
+            migration_1_9_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1211,5 +1214,105 @@ function migration_1_8_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.8.0 başarısız: " . $e->getMessage());
+  }
+}
+
+// Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi
+function migration_1_9_0($pdo) {
+  echo "→ Migration 1.9.0: Quest History Tracking - Quest geçmişi ve performans analizi ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // Quest history tablosu oluştur
+    echo "  quest_history tablosu oluşturuluyor...\n";
+
+    $sql = "
+      CREATE TABLE IF NOT EXISTS `quest_history` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_id` INT NOT NULL,
+        `quest_key` VARCHAR(50) NOT NULL,
+        `quest_name` VARCHAR(255) NOT NULL,
+        `quest_type` VARCHAR(50) NOT NULL,
+        `assigned_date` DATE NOT NULL,
+        `completed_date` DATETIME NOT NULL,
+        `goal` INT NOT NULL,
+        `achieved` INT NOT NULL,
+        `reward_points` INT DEFAULT 0,
+        `reward_coins` INT DEFAULT 0,
+        `completion_time_minutes` INT DEFAULT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_user_id` (`user_id`),
+        INDEX `idx_quest_key` (`quest_key`),
+        INDEX `idx_assigned_date` (`assigned_date`),
+        INDEX `idx_completed_date` (`completed_date`),
+        INDEX `idx_quest_type` (`quest_type`),
+        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ";
+
+    $pdo->exec($sql);
+    echo "    ✓ quest_history tablosu oluşturuldu\n";
+
+    // user_quests tablosuna completion tracking için sütunlar ekle
+    echo "  user_quests tablosuna completion tracking sütunları ekleniyor...\n";
+
+    $columns_to_add = [
+      'start_time' => 'ALTER TABLE user_quests ADD COLUMN start_time DATETIME DEFAULT NULL',
+      'completion_time' => 'ALTER TABLE user_quests ADD COLUMN completion_time DATETIME DEFAULT NULL'
+    ];
+
+    foreach ($columns_to_add as $column => $sql) {
+      try {
+        $check = $pdo->query("SHOW COLUMNS FROM user_quests LIKE '$column'")->rowCount();
+        if ($check == 0) {
+          $pdo->exec($sql);
+          echo "    ✓ $column sütunu eklendi\n";
+        } else {
+          echo "    - $column sütunu zaten mevcut\n";
+        }
+      } catch (PDOException $e) {
+        echo "    ⚠ $column sütunu eklenirken hata: " . $e->getMessage() . "\n";
+      }
+    }
+
+    // Mevcut tamamlanmış questleri history'ye aktar (varsa)
+    echo "  Mevcut tamamlanmış questler history'ye aktarılıyor...\n";
+
+    $migrate_sql = "
+      INSERT INTO quest_history (
+        user_id, quest_key, quest_name, quest_type, assigned_date,
+        completed_date, goal, achieved, reward_points, reward_coins
+      )
+      SELECT
+        uq.user_id,
+        uq.quest_key,
+        q.name,
+        q.type,
+        uq.assigned_date,
+        COALESCE(uq.completion_time, NOW()),
+        uq.goal,
+        uq.progress,
+        q.reward_points,
+        q.reward_coins
+      FROM user_quests uq
+      JOIN quests q ON uq.quest_key = q.quest_key
+      WHERE uq.is_completed = TRUE
+      ON DUPLICATE KEY UPDATE id = id
+    ";
+
+    $stmt = $pdo->prepare($migrate_sql);
+    $stmt->execute();
+    $migrated_count = $stmt->rowCount();
+    echo "    ✓ $migrated_count tamamlanmış quest history'ye aktarıldı\n";
+
+    $pdo->commit();
+    echo "  ✓ Quest history tracking sistemi başarıyla kuruldu!\n";
+
+    markMigrationComplete($pdo, '1.9.0', 'Added quest_history table and completion tracking system for performance analytics');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.9.0 başarısız: " . $e->getMessage());
   }
 }

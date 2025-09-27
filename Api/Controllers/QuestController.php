@@ -20,7 +20,7 @@ class QuestController
 
         // Bugün için atanmış görev var mı kontrol et
         $stmt = $this->pdo->prepare("
-            SELECT uq.quest_key, q.name, q.description_template, q.target, uq.progress, uq.goal, uq.is_completed, q.reward_points
+            SELECT uq.quest_key, q.name, q.description_template, q.target, uq.progress, uq.goal, uq.is_completed, q.reward_points, q.reward_coins
             FROM user_quests uq
             JOIN quests q ON uq.quest_key = q.quest_key
             WHERE uq.user_id = ? AND uq.assigned_date = ?
@@ -63,7 +63,7 @@ class QuestController
         }
 
         $stmt_insert = $this->pdo->prepare(
-            "INSERT INTO user_quests (user_id, quest_key, goal, assigned_date) VALUES (?, ?, ?, ?)"
+            "INSERT INTO user_quests (user_id, quest_key, goal, assigned_date, start_time) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)"
         );
 
         foreach ($available_quests as $quest) {
@@ -189,19 +189,44 @@ class QuestController
             $pdo->beginTransaction();
             try {
                 $stmt_complete_quest = $pdo->prepare("
-                    UPDATE user_quests 
-                    SET is_completed = TRUE, completed_at = CURRENT_TIMESTAMP 
+                    UPDATE user_quests
+                    SET is_completed = TRUE, completion_time = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
                 ");
                 $stmt_add_score = $pdo->prepare("UPDATE leaderboard SET score = score + ? WHERE user_id = ?");
                 $stmt_add_coins = $pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
 
+                // Quest history için prepared statement
+                $stmt_add_history = $pdo->prepare("
+                    INSERT INTO quest_history (
+                        user_id, quest_key, quest_name, quest_type, assigned_date,
+                        completed_date, goal, achieved, reward_points, reward_coins,
+                        completion_time_minutes
+                    ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)
+                ");
+
                 foreach ($completed_quests as $quest) {
                     // Görevi tamamlandı olarak işaretle
                     $stmt_complete_quest->execute([$user_id, $quest['quest_key'], $today]);
+
                     // Ödül puanını ve jetonunu ekle
                     $stmt_add_score->execute([$quest['reward_points'], $user_id]);
                     $stmt_add_coins->execute([$quest['reward_coins'], $user_id]);
+
+                    // Quest history'ye kaydet
+                    $completion_time_minutes = self::calculateCompletionTime($pdo, $user_id, $quest['quest_key'], $today);
+                    $stmt_add_history->execute([
+                        $user_id,
+                        $quest['quest_key'],
+                        $quest['name'],
+                        $quest['type'],
+                        $today,
+                        $quest['goal'],
+                        $quest['progress'], // achieved value
+                        $quest['reward_points'],
+                        $quest['reward_coins'],
+                        $completion_time_minutes
+                    ]);
 
                     // Session'ı güncelle
                     $_SESSION['user_coins'] = ($_SESSION['user_coins'] ?? 0) + $quest['reward_coins'];
@@ -409,5 +434,34 @@ class QuestController
         self::checkAndUpdateQuestProgress($pdo, $user_id, 'consecutive_days');
 
         return $new_streak;
+    }
+
+    /**
+     * Quest completion time hesaplama - start_time ile completion_time arasındaki dakika farkı
+     */
+    private static function calculateCompletionTime($pdo, $user_id, $quest_key, $assigned_date)
+    {
+        try {
+            $stmt = $pdo->prepare("
+                SELECT
+                    start_time,
+                    completion_time,
+                    TIMESTAMPDIFF(MINUTE, start_time, completion_time) as minutes_diff
+                FROM user_quests
+                WHERE user_id = ? AND quest_key = ? AND assigned_date = ?
+            ");
+            $stmt->execute([$user_id, $quest_key, $assigned_date]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result && $result['start_time'] && $result['completion_time']) {
+                return max(1, (int)$result['minutes_diff']); // En az 1 dakika
+            }
+
+            // Eğer start_time yoksa veya hesaplanamıyorsa null döndür
+            return null;
+        } catch (PDOException $e) {
+            error_log("Completion time calculation error: " . $e->getMessage());
+            return null;
+        }
     }
 }
