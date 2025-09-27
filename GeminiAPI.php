@@ -114,6 +114,10 @@ class GeminiAPI
         ]);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30 second timeout
 
+        // SSL settings for local development
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
