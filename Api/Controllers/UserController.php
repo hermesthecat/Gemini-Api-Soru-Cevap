@@ -61,7 +61,7 @@ class UserController
             return ['success' => false, 'message' => 'Kullanıcı adı ve şifre boş olamaz.'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.last_login_date, u.login_streak, u.coins, u.lifeline_fifty_fifty, u.lifeline_extra_time, u.lifeline_pass
+        $stmt = $this->pdo->prepare("SELECT u.id, u.username, u.password, u.role, u.failed_login_attempts, u.last_login_attempt, u.last_login_date, u.current_login_streak, u.coins, u.lifeline_fifty_fifty, u.lifeline_extra_time, u.lifeline_pass
             FROM users u
             WHERE u.username = ?");
         $stmt->execute([$username]);
@@ -82,39 +82,11 @@ class UserController
             }
 
             // --- Günlük Giriş Ödülü Mantığı ---
-            $today = date('Y-m-d');
-            $last_login_date = $user['last_login_date'];
-            $login_streak = $user['login_streak'];
-            $daily_reward = null;
+            $daily_reward = $this->processLoginReward($user['id'], $user['last_login_date'], $user['current_login_streak']);
 
-            if ($last_login_date != $today) {
-                $yesterday = date('Y-m-d', strtotime('-1 day'));
-                if ($last_login_date == $yesterday) {
-                    // Streak devam ediyor
-                    $login_streak++;
-                } else {
-                    // Streak kırıldı veya ilk giriş
-                    $login_streak = 1;
-                }
-
-                // Ödülü hesapla (250 jeton + seri başına 5, en fazla 300)
-                $reward_coins = min(300, 250 + ($login_streak * 5));
-
-                // Veritabanını güncelle
-                $this->pdo->prepare("UPDATE users SET last_login_date = ?, login_streak = ? WHERE id = ?")
-                    ->execute([$today, $login_streak, $user['id']]);
-
-                $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?")
-                    ->execute([$reward_coins, $user['id']]);
-
-                // Kullanıcıya bilgi vermek için veriyi ayarla
-                $daily_reward = [
-                    'coins_earned' => $reward_coins,
-                    'streak' => $login_streak
-                ];
-
-                // Yanıtta ve session'da kullanılacak jeton miktarını güncelle
-                $user['coins'] += $reward_coins;
+            // Eğer ödül varsa, coin miktarını güncelle
+            if ($daily_reward) {
+                $user['coins'] += $daily_reward['coins_earned'];
             }
 
             if ($user && password_verify($password, $user['password'])) {
@@ -189,6 +161,61 @@ class UserController
         } else {
             return ['success' => false, 'message' => 'Oturum bulunamadı.'];
         }
+    }
+
+    /**
+     * Günlük giriş ödülü işleme - Settings kullanarak dinamik hesaplama
+     */
+    private function processLoginReward($user_id, $last_login_date, $current_streak)
+    {
+        $today = date('Y-m-d');
+
+        // Bugün zaten giriş yapıldıysa ödül yok
+        if ($last_login_date === $today) {
+            return null;
+        }
+
+        // QuestController ile streak güncelleme (bu current_login_streak'i günceller ve quest sistemi tetikler)
+        require_once __DIR__ . '/QuestController.php';
+        $new_streak = QuestController::updateLoginStreak($this->pdo, $user_id);
+
+        // Settings'den ödül parametrelerini al
+        $settings = $this->getLoginRewardSettings();
+
+        // Ödül hesapla: base + (streak * bonus), max'a kadar
+        $reward_coins = min(
+            $settings['max_reward'],
+            $settings['base_reward'] + (($new_streak - 1) * $settings['streak_bonus'])
+        );
+
+        // Coin ödülü ver
+        $stmt = $this->pdo->prepare("UPDATE users SET coins = coins + ? WHERE id = ?");
+        $stmt->execute([$reward_coins, $user_id]);
+
+        return [
+            'coins_earned' => $reward_coins,
+            'streak' => $new_streak
+        ];
+    }
+
+    /**
+     * Login reward settings'lerini getir
+     */
+    private function getLoginRewardSettings()
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT setting_key, setting_value
+            FROM settings
+            WHERE setting_key IN ('login_base_reward', 'login_max_reward', 'login_streak_bonus')
+        ");
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        return [
+            'base_reward' => (int)($results['login_base_reward'] ?? 10),
+            'max_reward' => (int)($results['login_max_reward'] ?? 50),
+            'streak_bonus' => (int)($results['login_streak_bonus'] ?? 5)
+        ];
     }
 
 }
