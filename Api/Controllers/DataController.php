@@ -175,6 +175,82 @@ class DataController
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
+    public function getCombinedAchievements()
+    {
+        if (!isset($_SESSION['user_id'])) {
+            return ['success' => false, 'message' => 'Kullanıcı oturumu bulunamadı.'];
+        }
+
+        $user_id = $_SESSION['user_id'];
+
+        try {
+            // 1. Tüm başarımları ve kullanıcının durumunu al
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    a.achievement_key,
+                    a.name,
+                    a.description,
+                    a.icon,
+                    a.color,
+                    ua.achieved_at
+                FROM achievements a
+                LEFT JOIN user_achievements ua ON a.achievement_key = ua.achievement_key AND ua.user_id = ?
+                ORDER BY
+                    CASE WHEN ua.achieved_at IS NOT NULL THEN 0 ELSE 1 END,
+                    ua.achieved_at DESC,
+                    a.name ASC
+            ");
+            $stmt->execute([$user_id]);
+            $achievements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // 2. Progress verilerini al
+            $progressResponse = $this->getAchievementProgress();
+            $progressData = $progressResponse['success'] ? $progressResponse['data'] : [];
+
+            // 3. Başarımları kombine et
+            $combinedAchievements = [];
+
+            foreach ($achievements as $achievement) {
+                $achievement_key = $achievement['achievement_key'];
+                $isEarned = !empty($achievement['achieved_at']);
+
+                $combinedAchievement = [
+                    'achievement_key' => $achievement_key,
+                    'name' => $achievement['name'],
+                    'description' => $achievement['description'],
+                    'icon' => $achievement['icon'],
+                    'color' => $achievement['color'],
+                    'earned' => $isEarned,
+                    'achieved_at' => $achievement['achieved_at']
+                ];
+
+                // Eğer kazanılmamışsa progress bilgisini ekle
+                if (!$isEarned) {
+                    // İlk 5 tracking başarımı için progress bilgisi var
+                    $trackingAchievements = ['ilk_adim', 'puan_avcisi_1000', 'gece_kusu', 'merakli', 'koleksiyoncu'];
+
+                    if (in_array($achievement_key, $trackingAchievements) && isset($progressData[$achievement_key])) {
+                        $progress = $progressData[$achievement_key];
+                        $combinedAchievement['progress'] = [
+                            'current' => $progress['current'],
+                            'target' => $progress['target'],
+                            'percentage' => round(($progress['current'] / $progress['target']) * 100),
+                            'hint' => $progress['hint'] ?? ''
+                        ];
+                    }
+                }
+
+                $combinedAchievements[] = $combinedAchievement;
+            }
+
+            return ['success' => true, 'data' => $combinedAchievements];
+
+        } catch (Exception $e) {
+            error_log("Combined achievements error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Başarımlar alınamadı: ' . $e->getMessage()];
+        }
+    }
+
     public function getAchievementProgress()
     {
         if (!isset($_SESSION['user_id'])) {

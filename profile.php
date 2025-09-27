@@ -36,22 +36,13 @@ include 'header.php';
                     </div>
                 </div>
 
-                <!-- Başarım İlerlemesi -->
-                <div id="achievement-progress-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h2 class="text-xl font-semibold mb-4 dark:text-white">Başarım İlerlemesi</h2>
-                    <div id="achievement-progress-list" class="space-y-4">
-                        <!-- JS ile doldurulacak -->
-                    </div>
-                    <p id="no-progress-message" class="text-gray-500 dark:text-gray-400 text-center py-4">İlerleme yükleniyor...</p>
-                </div>
-
-                <!-- Kazanılan Rozetler -->
+                <!-- Başarımlar -->
                 <div id="achievements-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h2 class="text-xl font-semibold mb-4 dark:text-white">Kazanılan Rozetler</h2>
+                    <h2 class="text-xl font-semibold mb-4 dark:text-white">Başarımlar</h2>
                     <div id="achievements-list" class="space-y-4">
                         <!-- JS ile doldurulacak -->
                     </div>
-                    <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Henüz kazanılmış rozet yok.</p>
+                    <p id="no-achievements-message" class="text-gray-500 dark:text-gray-400 text-center py-4">Başarımlar yükleniyor...</p>
                 </div>
             </div>
         </div>
@@ -73,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof statsHandler !== 'undefined' && typeof api !== 'undefined') {
                 console.log('JavaScript modülleri yüklendi, stats güncelleniyor...');
                 statsHandler.updateUserData();
-                statsHandler.updateAchievements();
-                statsHandler.updateAchievementProgress();
+                statsHandler.updateCombinedAchievements();
             } else {
                 console.log('JavaScript modülleri henüz hazır değil, tekrar deneniyor...');
                 setTimeout(loadStats, 200);
