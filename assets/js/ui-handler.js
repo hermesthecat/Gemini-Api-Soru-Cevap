@@ -715,11 +715,17 @@ const ui = (() => {
             dom.duelModal.classList.remove('hidden');
             setTimeout(() => {
                 dom.duelModal.classList.remove('opacity-0');
-                dom.duelModal.querySelector('#duel-modal-content').classList.remove('scale-95');
+                const modalContent = dom.duelModal.querySelector('#duel-modal-content');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95');
+                }
             }, 10);
         } else {
             dom.duelModal.classList.add('opacity-0');
-            dom.duelModal.querySelector('#duel-modal-content').classList.add('scale-95');
+            const modalContent = dom.duelModal.querySelector('#duel-modal-content');
+            if (modalContent) {
+                modalContent.classList.add('scale-95');
+            }
             setTimeout(() => {
                 dom.duelModal.classList.add('hidden');
             }, 300);

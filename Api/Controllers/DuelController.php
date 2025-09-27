@@ -28,20 +28,18 @@ class DuelController
             return ['success' => false, 'message' => 'Geçersiz rakip seçimi.'];
         }
 
-        // 1. GameController'dan statik olarak prompt'u al
-        $prompt = GameController::generatePrompt('coktan_secmeli', $category, $difficulty, $question_count);
+        // 1. Önce veritabanından sorular almaya çalış
+        $sorular = $this->getDuelQuestionsFromDatabase($category, $difficulty, $question_count);
 
-        $yanit = $this->gemini->soruSor($prompt);
-        if (!$yanit) {
-            return ['success' => false, 'message' => "Düello soruları oluşturulamadı. API'den yanıt alınamadı."];
+        // 2. Yeterli soru yoksa AI'dan tamamla
+        if (count($sorular) < $question_count) {
+            $kalan_soru = $question_count - count($sorular);
+            $ai_sorular = $this->getDuelQuestionsFromAI($category, $difficulty, $kalan_soru);
+            $sorular = array_merge($sorular, $ai_sorular);
         }
 
-        $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
-        $sorular = json_decode($temiz_yanit, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($sorular) || count($sorular) === 0) {
-            error_log("Invalid JSON for Duel from Gemini: " . $temiz_yanit);
-            return ['success' => false, 'message' => 'API\'den gelen soru formatı geçersiz veya eksik.'];
+        if (count($sorular) === 0) {
+            return ['success' => false, 'message' => "Düello soruları oluşturulamadı."];
         }
 
         // 2. Düelloyu veritabanına kaydet
@@ -341,5 +339,83 @@ class DuelController
         $stmt_update->execute([$score, $new_status, $winner_id, $duel_id]);
 
         return ['new_status' => $new_status, 'my_score' => $score];
+    }
+
+    /**
+     * Veritabanından düello soruları alır
+     */
+    private function getDuelQuestionsFromDatabase($category, $difficulty, $count)
+    {
+        try {
+            // Category name'den category_key'i al
+            $stmt = $this->pdo->prepare("SELECT category_key FROM categories WHERE category_name = ?");
+            $stmt->execute([$category]);
+            $category_key = $stmt->fetchColumn();
+
+            if (!$category_key) {
+                return []; // Kategori bulunamadı
+            }
+
+            $stmt = $this->pdo->prepare("
+                SELECT id, question_text, options, correct_answer, explanation
+                FROM questions
+                WHERE category = ? AND difficulty = ?
+                ORDER BY RAND()
+                LIMIT ?
+            ");
+            $stmt->execute([$category_key, $difficulty, $count]);
+            $db_questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $formatted_questions = [];
+            foreach ($db_questions as $q) {
+                $options = json_decode($q['options'], true);
+                $formatted_questions[] = [
+                    'tip' => 'coktan_secmeli',
+                    'soru' => $q['question_text'],
+                    'siklar' => $options,
+                    'dogru_cevap' => $q['correct_answer'],
+                    'aciklama' => $q['explanation'],
+                    'source' => 'database'
+                ];
+            }
+
+            return $formatted_questions;
+        } catch (PDOException $e) {
+            error_log("Database question fetch error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * AI'dan düello soruları üretir
+     */
+    private function getDuelQuestionsFromAI($category, $difficulty, $count)
+    {
+        try {
+            $prompt = GameController::generatePrompt('coktan_secmeli', $category, $difficulty, $count);
+            $yanit = $this->gemini->soruSor($prompt);
+
+            if (!$yanit) {
+                return [];
+            }
+
+            $temiz_yanit = preg_replace('/^```json\s*|\s*```$/', '', trim($yanit));
+            $sorular = json_decode($temiz_yanit, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($sorular)) {
+                error_log("Invalid JSON for Duel from Gemini: " . $temiz_yanit);
+                return [];
+            }
+
+            // Source bilgisini ekle
+            foreach ($sorular as &$soru) {
+                $soru['source'] = 'ai';
+            }
+
+            return $sorular;
+        } catch (Exception $e) {
+            error_log("AI question generation error: " . $e->getMessage());
+            return [];
+        }
     }
 }
