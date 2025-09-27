@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.10.0'; // Current schema version
+$current_version = '1.12.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -473,6 +473,22 @@ try {
       $migrations_to_run[] = '1.8.0';
     }
 
+    if (versionCompare($installed_version, '1.9.0') < 0) {
+      $migrations_to_run[] = '1.9.0';
+    }
+
+    if (versionCompare($installed_version, '1.10.0') < 0) {
+      $migrations_to_run[] = '1.10.0';
+    }
+
+    if (versionCompare($installed_version, '1.11.0') < 0) {
+      $migrations_to_run[] = '1.11.0';
+    }
+
+    if (versionCompare($installed_version, '1.12.0') < 0) {
+      $migrations_to_run[] = '1.12.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tum migration'lar guncel. Guncelleme gerekmiyor.\n";
     } else {
@@ -514,6 +530,12 @@ try {
             break;
           case '1.10.0':
             migration_1_10_0($pdo);
+            break;
+          case '1.11.0':
+            migration_1_11_0($pdo);
+            break;
+          case '1.12.0':
+            migration_1_12_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1347,5 +1369,86 @@ function migration_1_10_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.10.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+function migration_1_11_0($pdo) {
+  echo "-> Migration 1.11.0: Config ve Settings tablolarini birlestirilmesi - Config tablosu kaldiriliyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // Once config tablosundaki verileri kontrol et
+    $config_check = $pdo->query("SHOW TABLES LIKE 'config'")->rowCount();
+    if ($config_check == 0) {
+      echo "    + Config tablosu bulunamadi, migration atlanıyor\n";
+      $pdo->commit();
+      markMigrationComplete($pdo, '1.11.0', 'Config table merge skipped - table not found');
+      return;
+    }
+
+    // Config tablosundaki verileri al
+    $stmt = $pdo->query("SELECT config_key, config_value, description FROM config");
+    $config_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!empty($config_data)) {
+      echo "    + Config tablosundan " . count($config_data) . " ayar settings tablosuna tasiniyor...\n";
+
+      $stmt_insert = $pdo->prepare("
+        INSERT IGNORE INTO settings (setting_key, setting_value, description)
+        VALUES (?, ?, ?)
+      ");
+
+      foreach ($config_data as $config) {
+        $stmt_insert->execute([
+          $config['config_key'],
+          $config['config_value'],
+          $config['description']
+        ]);
+        echo "      + {$config['config_key']}: {$config['config_value']}\n";
+      }
+    }
+
+    // Config tablosunu sil
+    echo "    + Config tablosu siliniyor...\n";
+    $pdo->exec("DROP TABLE IF EXISTS config");
+    echo "    + Config tablosu basariyla silindi\n";
+
+    $pdo->commit();
+    echo "  + Settings ve config tablolari basariyla birlestirildi!\n";
+
+    markMigrationComplete($pdo, '1.11.0', 'Merged config table into settings table and removed config table');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.11.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+function migration_1_12_0($pdo) {
+  echo "-> Migration 1.12.0: app_name ayarinin kaldirılması - Gereksiz ayar temizleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // app_name ayarını sil (zaten manuel olarak silinmişse hata vermez)
+    $stmt = $pdo->prepare("DELETE FROM settings WHERE setting_key = 'app_name'");
+    $stmt->execute();
+    $deleted_count = $stmt->rowCount();
+
+    if ($deleted_count > 0) {
+      echo "    + app_name ayari settings tablosundan silindi\n";
+    } else {
+      echo "    + app_name ayari zaten mevcut degil, migration atlanıyor\n";
+    }
+
+    $pdo->commit();
+    echo "  + app_name ayari temizleme islemi tamamlandi!\n";
+
+    markMigrationComplete($pdo, '1.12.0', 'Removed redundant app_name setting from settings table');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.12.0 basarisiz: " . $e->getMessage());
   }
 }

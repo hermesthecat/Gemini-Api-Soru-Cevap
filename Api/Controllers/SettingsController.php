@@ -56,7 +56,11 @@ class SettingsController
         }
 
         // Valid setting keys
-        $valid_keys = ['gemini_model', 'site_name', 'registration_enabled', 'timezone_setting'];
+        $valid_keys = [
+            'gemini_model', 'site_name', 'registration_enabled', 'timezone_setting',
+            'login_base_reward', 'login_max_reward', 'login_streak_bonus',
+            'maintenance_mode', 'max_daily_questions', 'quest_refresh_time'
+        ];
 
         $this->pdo->beginTransaction();
         try {
@@ -70,8 +74,8 @@ class SettingsController
             foreach ($settings as $key => $value) {
                 if (in_array($key, $valid_keys)) {
                     // Validate specific settings
-                    if ($key === 'registration_enabled') {
-                        $value = in_array($value, ['0', '1', 0, 1]) ? (string)$value : '1';
+                    if ($key === 'registration_enabled' || $key === 'maintenance_mode') {
+                        $value = in_array($value, ['0', '1', 0, 1]) ? (string)$value : '0';
                     } elseif ($key === 'site_name') {
                         $value = trim($value);
                         if (empty($value)) {
@@ -87,6 +91,16 @@ class SettingsController
                         if (empty($value)) {
                             $value = 'Europe/Istanbul';
                         }
+                    } elseif (in_array($key, ['login_base_reward', 'login_max_reward', 'login_streak_bonus', 'max_daily_questions', 'quest_refresh_time'])) {
+                        $value = (int)$value;
+                        if ($value < 1) {
+                            if ($key === 'login_base_reward') $value = 10;
+                            elseif ($key === 'login_max_reward') $value = 50;
+                            elseif ($key === 'login_streak_bonus') $value = 5;
+                            elseif ($key === 'max_daily_questions') $value = 100;
+                            elseif ($key === 'quest_refresh_time') $value = 24;
+                        }
+                        $value = (string)$value;
                     }
 
                     $stmt->execute([$value, $key]);

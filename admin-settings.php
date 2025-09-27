@@ -112,9 +112,9 @@ include 'header.php';
                             </div>
                         </div>
 
-                        <!-- Site Ayarları -->
+                        <!-- Uygulama Ayarları -->
                         <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">🌐 Site Ayarları</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">🏠 Uygulama Ayarları</h3>
 
                             <div class="space-y-4">
                                 <div>
@@ -131,7 +131,7 @@ include 'header.php';
                                 </div>
                                 <div>
                                     <label for="timezone-setting" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Zaman Dilimi (UTC)
+                                        Zaman Dilimi
                                     </label>
                                     <input
                                         type="text"
@@ -141,6 +141,102 @@ include 'header.php';
                                         class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
                                     >
                                     <p class="mt-1 text-xs text-gray-500">Örnek: Europe/Istanbul, America/New_York, Asia/Tokyo, UTC</p>
+                                </div>
+                                <div class="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="maintenance-mode"
+                                        name="maintenance_mode"
+                                        value="1"
+                                        class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700"
+                                    >
+                                    <label for="maintenance-mode" class="ml-2 block text-sm text-gray-900 dark:text-white">
+                                        Bakım modu etkin (site geçici olarak kapatılır)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Giriş Ödül Sistemi -->
+                        <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">💰 Giriş Ödül Sistemi</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="login-base-reward" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Günlük Giriş Base Ödülü (coin)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="login-base-reward"
+                                        name="login_base_reward"
+                                        min="1"
+                                        placeholder="10"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                </div>
+                                <div>
+                                    <label for="login-max-reward" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Maksimum Günlük Giriş Ödülü (coin)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="login-max-reward"
+                                        name="login_max_reward"
+                                        min="1"
+                                        placeholder="50"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                </div>
+                                <div>
+                                    <label for="login-streak-bonus" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Günlük Streak Bonusu (coin)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="login-streak-bonus"
+                                        name="login_streak_bonus"
+                                        min="1"
+                                        placeholder="5"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                    <p class="mt-1 text-xs text-gray-500">Her ardışık gün için eklenecek bonus miktar</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Oyun Ayarları -->
+                        <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">🎮 Oyun Ayarları</h3>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="max-daily-questions" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Günlük Maksimum Soru Sayısı
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="max-daily-questions"
+                                        name="max_daily_questions"
+                                        min="1"
+                                        placeholder="100"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                    <p class="mt-1 text-xs text-gray-500">Bir kullanıcının günde çözebileceği maksimum soru sayısı</p>
+                                </div>
+                                <div>
+                                    <label for="quest-refresh-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Görev Yenilenme Süresi (saat)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        id="quest-refresh-time"
+                                        name="quest_refresh_time"
+                                        min="1"
+                                        placeholder="24"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
+                                    >
+                                    <p class="mt-1 text-xs text-gray-500">Günlük görevlerin ne kadar sürede yenilendiği</p>
                                 </div>
                             </div>
                         </div>
