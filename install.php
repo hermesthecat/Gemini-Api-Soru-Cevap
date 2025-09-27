@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.12.0'; // Current schema version
+$current_version = '1.13.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -536,6 +536,9 @@ try {
             break;
           case '1.12.0':
             migration_1_12_0($pdo);
+            break;
+          case '1.13.0':
+            migration_1_13_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1450,5 +1453,33 @@ function migration_1_12_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.12.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.13.0: Remove max_daily_questions setting
+ */
+function migration_1_13_0($pdo) {
+  echo "-> Migration 1.13.0: max_daily_questions ayarini kaldirma...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // max_daily_questions setting'ini sil
+    $stmt = $pdo->prepare("DELETE FROM settings WHERE setting_key = 'max_daily_questions'");
+    $stmt->execute();
+
+    if ($stmt->rowCount() > 0) {
+      echo "   max_daily_questions ayari silindi\n";
+    } else {
+      echo "   max_daily_questions ayari zaten mevcut degil\n";
+    }
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.13.0', 'Removed max_daily_questions setting from settings table');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.13.0 basarisiz: " . $e->getMessage());
   }
 }

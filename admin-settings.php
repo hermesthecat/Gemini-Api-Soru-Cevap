@@ -211,20 +211,6 @@ include 'header.php';
 
                             <div class="space-y-4">
                                 <div>
-                                    <label for="max-daily-questions" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Günlük Maksimum Soru Sayısı
-                                    </label>
-                                    <input
-                                        type="number"
-                                        id="max-daily-questions"
-                                        name="max_daily_questions"
-                                        min="1"
-                                        placeholder="100"
-                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm dark:bg-gray-700 dark:text-white"
-                                    >
-                                    <p class="mt-1 text-xs text-gray-500">Bir kullanıcının günde çözebileceği maksimum soru sayısı</p>
-                                </div>
-                                <div>
                                     <label for="quest-refresh-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         Görev Yenilenme Süresi (saat)
                                     </label>
