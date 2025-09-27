@@ -253,27 +253,27 @@ try {
   // --- Basarim Verilerini Veritabanina Ekle ---
   echo "\nBasarim verileri veritabanina ekleniyor...\n";
   $achievements_data = [
-    ['ilk_adim', 'Ilk Adim', 'Ilk sorunu dogru cevapladin, tebrikler!', 'fa-shoe-prints', 'green'],
-    ['hiz_tutkunu', 'Hiz Tutkunu', 'Bir soruyu 5 saniyeden kisa surede dogru cevapladin!', 'fa-bolt', 'blue'],
-    ['seri_galibi_10', 'Seri Galibi', 'Ust uste 10 soruyu dogru cevapladin!', 'fa-trophy', 'yellow'],
-    ['seri_galibi_25', 'Yenilmez', 'Inanilmaz! 25 soruyu art arda dogru bildin!', 'fa-crown', 'red'],
-    ['merakli', 'Merakli', 'Tum kategorilerden en az bir soru cevapladin!', 'fa-compass', 'purple'],
-    ['puan_avcisi_1000', 'Puan Avcisi', 'Toplamda 1000 puana ulastin!', 'fa-star', 'yellow'],
-    ['gece_kusu', 'Gece Kusu', 'Gece 00:00 - 04:00 arasi soru cozdun!', 'fa-moon', 'indigo'],
-    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu dogru cevapladin!', 'fa-user-secret', 'gray'],
-    ['koleksiyoncu', 'Koleksiyoncu', '10 farkli basarim rozeti topladin!', 'fa-gem', 'pink'],
-    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya dogru cevap verdin!', 'fa-history', 'blue'],
-    ['kusursuz_tarih', 'Kusursuz Tarihci', 'Tarih kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-scroll', 'blue'],
-    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya dogru cevap verdin!', 'fa-futbol', 'green'],
-    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-running', 'green'],
-    ['uzman_bilim', 'Bilim Kasifi', 'Bilim kategorisinde 20 soruya dogru cevap verdin!', 'fa-atom', 'purple'],
-    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-flask', 'purple'],
-    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya dogru cevap verdin!', 'fa-palette', 'yellow'],
-    ['kusursuz_sanat', 'Kusursuz Sanatci', 'Sanat kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
-    ['uzman_cografya', 'Dunya Gezgini', 'Cografya kategorisinde 20 soruya dogru cevap verdin!', 'fa-globe-americas', 'red'],
-    ['kusursuz_cografya', 'Kusursuz Kasif', 'Cografya kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
-    ['uzman_genel kultur', 'Her Seyi Bilen', 'Genel Kultur kategorisinde 20 soruya dogru cevap verdin!', 'fa-brain', 'indigo'],
-    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kultur kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-lightbulb', 'indigo']
+    ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
+    ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
+    ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
+    ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
+    ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
+    ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
+    ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
+    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
+    ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
+    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
+    ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
+    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
+    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
+    ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
+    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
+    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
+    ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
+    ['uzman_cografya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
+    ['kusursuz_cografya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
+    ['uzman_genel kultur', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
+    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
   ];
 
   $stmt_ach_insert = $pdo->prepare("INSERT INTO achievements (achievement_key, name, description, icon, color) VALUES (?, ?, ?, ?, ?)");
@@ -285,11 +285,11 @@ try {
   // --- Gorev Verilerini Veritabanina Ekle ---
   echo "\nGorev verileri veritabanina ekleniyor...\n";
   $quests_data = [
-    ['solve_5_tarih', 'Tarihci', '{goal} tarih sorusu coz', 'solve_category', 'tarih', 5, 25, 25],
-    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu coz', 'solve_category', 'spor', 5, 25, 25],
-    ['solve_5_bilim', 'Kasif', '{goal} bilim sorusu coz', 'solve_category', 'bilim', 5, 25, 25],
-    ['solve_3_zor', 'Gozu Pek', '{goal} zor soru coz', 'solve_difficulty', 'zor', 3, 50, 50],
-    ['solve_10_orta', 'Istikrarli', '{goal} orta soru coz', 'solve_difficulty', 'orta', 10, 30, 40]
+    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25, 25],
+    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25, 25],
+    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50, 50],
+    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30, 40]
   ];
 
   $stmt_quest_insert = $pdo->prepare("INSERT INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -512,6 +512,9 @@ try {
           case '1.9.0':
             migration_1_9_0($pdo);
             break;
+          case '1.10.0':
+            migration_1_10_0($pdo);
+            break;
           default:
             echo "Bilinmeyen migration version: $version\n";
         }
@@ -718,27 +721,27 @@ function createAnnouncementTables($pdo) {
 function insertDefaultData($pdo) {
   // Basarim verilerini ekle
   $achievements_data = [
-    ['ilk_adim', 'Ilk Adim', 'Ilk sorunu dogru cevapladin, tebrikler!', 'fa-shoe-prints', 'green'],
-    ['hiz_tutkunu', 'Hiz Tutkunu', 'Bir soruyu 5 saniyeden kisa surede dogru cevapladin!', 'fa-bolt', 'blue'],
-    ['seri_galibi_10', 'Seri Galibi', 'Ust uste 10 soruyu dogru cevapladin!', 'fa-trophy', 'yellow'],
-    ['seri_galibi_25', 'Yenilmez', 'Inanilmaz! 25 soruyu art arda dogru bildin!', 'fa-crown', 'red'],
-    ['merakli', 'Merakli', 'Tum kategorilerden en az bir soru cevapladin!', 'fa-compass', 'purple'],
-    ['puan_avcisi_1000', 'Puan Avcisi', 'Toplamda 1000 puana ulastin!', 'fa-star', 'yellow'],
-    ['gece_kusu', 'Gece Kusu', 'Gece 00:00 - 04:00 arasi soru cozdun!', 'fa-moon', 'indigo'],
-    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu dogru cevapladin!', 'fa-user-secret', 'gray'],
-    ['koleksiyoncu', 'Koleksiyoncu', '10 farkli basarim rozeti topladin!', 'fa-gem', 'pink'],
-    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya dogru cevap verdin!', 'fa-history', 'blue'],
-    ['kusursuz_tarih', 'Kusursuz Tarihci', 'Tarih kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-scroll', 'blue'],
-    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya dogru cevap verdin!', 'fa-futbol', 'green'],
-    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-running', 'green'],
-    ['uzman_bilim', 'Bilim Kasifi', 'Bilim kategorisinde 20 soruya dogru cevap verdin!', 'fa-atom', 'purple'],
-    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-flask', 'purple'],
-    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya dogru cevap verdin!', 'fa-palette', 'yellow'],
-    ['kusursuz_sanat', 'Kusursuz Sanatci', 'Sanat kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
-    ['uzman_cografya', 'Dunya Gezgini', 'Cografya kategorisinde 20 soruya dogru cevap verdin!', 'fa-globe-americas', 'red'],
-    ['kusursuz_cografya', 'Kusursuz Kasif', 'Cografya kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
-    ['uzman_genel kultur', 'Her Seyi Bilen', 'Genel Kultur kategorisinde 20 soruya dogru cevap verdin!', 'fa-brain', 'indigo'],
-    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kultur kategorisinde %100 basariya ulastin (min. 10 soru)!', 'fa-lightbulb', 'indigo']
+    ['ilk_adim', 'İlk Adım', 'İlk sorunu doğru cevapladın, tebrikler!', 'fa-shoe-prints', 'green'],
+    ['hiz_tutkunu', 'Hız Tutkunu', 'Bir soruyu 5 saniyeden kısa sürede doğru cevapladın!', 'fa-bolt', 'blue'],
+    ['seri_galibi_10', 'Seri Galibi', 'Üst üste 10 soruyu doğru cevapladın!', 'fa-trophy', 'yellow'],
+    ['seri_galibi_25', 'Yenilmez', 'İnanılmaz! 25 soruyu art arda doğru bildin!', 'fa-crown', 'red'],
+    ['merakli', 'Meraklı', 'Tüm kategorilerden en az bir soru cevapladın!', 'fa-compass', 'purple'],
+    ['puan_avcisi_1000', 'Puan Avcısı', 'Toplamda 1000 puana ulaştın!', 'fa-star', 'yellow'],
+    ['gece_kusu', 'Gece Kuşu', 'Gece 00:00 - 04:00 arası soru çözdün!', 'fa-moon', 'indigo'],
+    ['zorlu_rakip', 'Zorlu Rakip', 'Zor seviyede 10 soruyu doğru cevapladın!', 'fa-user-secret', 'gray'],
+    ['koleksiyoncu', 'Koleksiyoncu', '10 farklı başarım rozeti topladın!', 'fa-gem', 'pink'],
+    ['uzman_tarih', 'Tarih Kurdu', 'Tarih kategorisinde 20 soruya doğru cevap verdin!', 'fa-history', 'blue'],
+    ['kusursuz_tarih', 'Kusursuz Tarihçi', 'Tarih kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-scroll', 'blue'],
+    ['uzman_spor', 'Spor Gurusu', 'Spor kategorisinde 20 soruya doğru cevap verdin!', 'fa-futbol', 'green'],
+    ['kusursuz_spor', 'Kusursuz Atlet', 'Spor kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-running', 'green'],
+    ['uzman_bilim', 'Bilim Kaşifi', 'Bilim kategorisinde 20 soruya doğru cevap verdin!', 'fa-atom', 'purple'],
+    ['kusursuz_bilim', 'Kusursuz Bilgin', 'Bilim kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-flask', 'purple'],
+    ['uzman_sanat', 'Sanat Faresi', 'Sanat kategorisinde 20 soruya doğru cevap verdin!', 'fa-palette', 'yellow'],
+    ['kusursuz_sanat', 'Kusursuz Sanatçı', 'Sanat kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-paint-brush', 'yellow'],
+    ['uzman_cografya', 'Dünya Gezgini', 'Coğrafya kategorisinde 20 soruya doğru cevap verdin!', 'fa-globe-americas', 'red'],
+    ['kusursuz_cografya', 'Kusursuz Kaşif', 'Coğrafya kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-map-marked-alt', 'red'],
+    ['uzman_genel kultur', 'Her Şeyi Bilen', 'Genel Kültür kategorisinde 20 soruya doğru cevap verdin!', 'fa-brain', 'indigo'],
+    ['kusursuz_genel kultur', 'Kusursuz Dahi', 'Genel Kültür kategorisinde %100 başarıya ulaştın (min. 10 soru)!', 'fa-lightbulb', 'indigo']
   ];
 
   $stmt_ach_insert = $pdo->prepare("INSERT IGNORE INTO achievements (achievement_key, name, description, icon, color) VALUES (?, ?, ?, ?, ?)");
@@ -748,11 +751,11 @@ function insertDefaultData($pdo) {
 
   // Gorev verilerini ekle
   $quests_data = [
-    ['solve_5_tarih', 'Tarihci', '{goal} tarih sorusu coz', 'solve_category', 'tarih', 5, 25, 25],
-    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu coz', 'solve_category', 'spor', 5, 25, 25],
-    ['solve_5_bilim', 'Kasif', '{goal} bilim sorusu coz', 'solve_category', 'bilim', 5, 25, 25],
-    ['solve_3_zor', 'Gozu Pek', '{goal} zor soru coz', 'solve_difficulty', 'zor', 3, 50, 50],
-    ['solve_10_orta', 'Istikrarli', '{goal} orta soru coz', 'solve_difficulty', 'orta', 10, 30, 40]
+    ['solve_5_tarih', 'Tarihçi', '{goal} tarih sorusu çöz', 'solve_category', 'tarih', 5, 25, 25],
+    ['solve_5_spor', 'Sporcu', '{goal} spor sorusu çöz', 'solve_category', 'spor', 5, 25, 25],
+    ['solve_5_bilim', 'Kaşif', '{goal} bilim sorusu çöz', 'solve_category', 'bilim', 5, 25, 25],
+    ['solve_3_zor', 'Gözü Pek', '{goal} zor soru çöz', 'solve_difficulty', 'zor', 3, 50, 50],
+    ['solve_10_orta', 'İstikrarlı', '{goal} orta soru çöz', 'solve_difficulty', 'orta', 10, 30, 40]
   ];
 
   $stmt_quest_insert = $pdo->prepare("INSERT IGNORE INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -1164,12 +1167,12 @@ function migration_1_8_0($pdo) {
     echo "  Yeni quest types icin test veriler ekleniyor...\n";
 
     $new_quests = [
-      ['login_streak_3', 'Duzenli Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 3, 50, 30],
-      ['login_streak_7', 'Kararli Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 7, 150, 100],
-      ['login_streak_14', 'Adanmis Oyuncu', '{goal} gun ust uste giris yap', 'consecutive_days', NULL, 14, 300, 200],
-      ['win_duels_1', 'Duello Ustasi', 'Bugun {goal} duello kazan', 'win_duels', NULL, 1, 75, 50],
-      ['win_duels_3', 'Duello Sampiyonu', 'Bugun {goal} duello kazan', 'win_duels', NULL, 3, 200, 150],
-      ['win_duels_5', 'Duello Efsanesi', 'Bugun {goal} duello kazan', 'win_duels', NULL, 5, 400, 300]
+      ['login_streak_3', 'Düzenli Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 3, 50, 30],
+      ['login_streak_7', 'Kararlı Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 7, 150, 100],
+      ['login_streak_14', 'Adanmış Oyuncu', '{goal} gün üst üste giriş yap', 'consecutive_days', NULL, 14, 300, 200],
+      ['win_duels_1', 'Düello Ustası', 'Bugün {goal} düello kazan', 'win_duels', NULL, 1, 75, 50],
+      ['win_duels_3', 'Düello Şampiyonu', 'Bugün {goal} düello kazan', 'win_duels', NULL, 3, 200, 150],
+      ['win_duels_5', 'Düello Efsanesi', 'Bugün {goal} düello kazan', 'win_duels', NULL, 5, 400, 300]
     ];
 
     $stmt = $pdo->prepare("INSERT IGNORE INTO quests (quest_key, name, description_template, type, target, default_goal, reward_points, reward_coins) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
