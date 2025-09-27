@@ -955,4 +955,346 @@ class AdminController
             return ['success' => false, 'message' => 'Quest istatistikleri alınamadı: ' . $e->getMessage()];
         }
     }
+
+    // =============== QUESTION MANAGEMENT METHODS ===============
+
+    /**
+     * Get reported questions for admin review
+     */
+    public function getReportedQuestions($data = [])
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $limit = min((int)($data['limit'] ?? 20), 100);
+        $offset = max((int)($data['offset'] ?? 0), 0);
+        $status = $data['status'] ?? 'all'; // all, pending, reviewed
+
+        try {
+            $where_clause = "WHERE qr.report_reason IS NOT NULL";
+            $params = [];
+
+            if ($status === 'pending') {
+                $where_clause .= " AND q.id NOT IN (SELECT question_id FROM question_reviews WHERE status = 'reviewed')";
+            } elseif ($status === 'reviewed') {
+                $where_clause .= " AND q.id IN (SELECT question_id FROM question_reviews WHERE status = 'reviewed')";
+            }
+
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    q.id,
+                    q.question_text,
+                    q.category,
+                    q.difficulty,
+                    q.usage_count,
+                    q.created_at as question_created_at,
+                    COUNT(qr.id) as report_count,
+                    AVG(qr.rating) as average_rating,
+                    GROUP_CONCAT(DISTINCT qr.report_reason) as report_reasons,
+                    GROUP_CONCAT(DISTINCT CONCAT(u.username, ': ', qr.feedback) SEPARATOR ' | ') as feedback_summary,
+                    MAX(qr.created_at) as last_report_date
+                FROM questions q
+                JOIN question_ratings qr ON q.id = qr.question_id
+                LEFT JOIN users u ON qr.user_id = u.id
+                $where_clause
+                GROUP BY q.id
+                HAVING report_count > 0
+                ORDER BY last_report_date DESC, report_count DESC
+                LIMIT $limit OFFSET $offset
+            ");
+            $stmt->execute($params);
+            $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get total count
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(DISTINCT q.id)
+                FROM questions q
+                JOIN question_ratings qr ON q.id = qr.question_id
+                $where_clause
+            ");
+            $stmt->execute($params);
+            $total_count = $stmt->fetchColumn();
+
+            return [
+                'success' => true,
+                'data' => [
+                    'questions' => $questions,
+                    'total_count' => (int)$total_count,
+                    'limit' => $limit,
+                    'offset' => $offset,
+                    'has_more' => ($offset + $limit) < $total_count
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("getReportedQuestions error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Raporlanan sorular alınırken hata oluştu.'];
+        }
+    }
+
+    /**
+     * Get detailed information about a specific question including all ratings
+     */
+    public function getQuestionDetails($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $question_id = (int)($data['question_id'] ?? 0);
+
+        if ($question_id <= 0) {
+            return ['success' => false, 'message' => 'Geçersiz soru ID.'];
+        }
+
+        try {
+            // Get question details
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    id,
+                    question_text,
+                    question_type,
+                    options,
+                    correct_answer,
+                    explanation,
+                    category,
+                    difficulty,
+                    usage_count,
+                    created_at,
+                    updated_at
+                FROM questions
+                WHERE id = ?
+            ");
+            $stmt->execute([$question_id]);
+            $question = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$question) {
+                return ['success' => false, 'message' => 'Soru bulunamadı.'];
+            }
+
+            // Get all ratings and feedback
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    qr.id,
+                    qr.rating,
+                    qr.feedback,
+                    qr.report_reason,
+                    qr.created_at,
+                    u.username
+                FROM question_ratings qr
+                JOIN users u ON qr.user_id = u.id
+                WHERE qr.question_id = ?
+                ORDER BY qr.created_at DESC
+            ");
+            $stmt->execute([$question_id]);
+            $ratings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Get rating statistics
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    COUNT(*) as total_ratings,
+                    AVG(rating) as average_rating,
+                    COUNT(CASE WHEN report_reason IS NOT NULL THEN 1 END) as report_count,
+                    GROUP_CONCAT(DISTINCT report_reason) as unique_report_reasons
+                FROM question_ratings
+                WHERE question_id = ?
+            ");
+            $stmt->execute([$question_id]);
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Get usage analytics
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    COUNT(*) as total_answers,
+                    SUM(CASE WHEN is_correct = 1 THEN 1 ELSE 0 END) as correct_answers,
+                    AVG(answer_time_seconds) as average_time
+                FROM question_analytics
+                WHERE question_id = ?
+            ");
+            $stmt->execute([$question_id]);
+            $analytics = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'question' => $question,
+                    'ratings' => $ratings,
+                    'statistics' => [
+                        'total_ratings' => (int)$stats['total_ratings'],
+                        'average_rating' => $stats['total_ratings'] > 0 ? round((float)$stats['average_rating'], 2) : 0,
+                        'report_count' => (int)$stats['report_count'],
+                        'unique_report_reasons' => $stats['unique_report_reasons'] ? explode(',', $stats['unique_report_reasons']) : [],
+                        'total_answers' => (int)$analytics['total_answers'],
+                        'correct_answers' => (int)$analytics['correct_answers'],
+                        'success_rate' => $analytics['total_answers'] > 0 ? round(($analytics['correct_answers'] / $analytics['total_answers']) * 100, 2) : 0,
+                        'average_time' => $analytics['average_time'] ? round((float)$analytics['average_time'], 2) : 0
+                    ]
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("getQuestionDetails error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Soru detayları alınırken hata oluştu.'];
+        }
+    }
+
+    /**
+     * Review a question (mark as reviewed, hide, or delete)
+     */
+    public function reviewQuestion($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $question_id = (int)($data['question_id'] ?? 0);
+        $action = $data['action'] ?? ''; // reviewed, hidden, deleted
+        $admin_notes = trim($data['admin_notes'] ?? '');
+
+        if ($question_id <= 0) {
+            return ['success' => false, 'message' => 'Geçersiz soru ID.'];
+        }
+
+        $valid_actions = ['reviewed', 'hidden', 'deleted'];
+        if (!in_array($action, $valid_actions)) {
+            return ['success' => false, 'message' => 'Geçersiz işlem.'];
+        }
+
+        try {
+            $this->pdo->beginTransaction();
+
+            // Check if question exists
+            $stmt = $this->pdo->prepare("SELECT id FROM questions WHERE id = ?");
+            $stmt->execute([$question_id]);
+            if (!$stmt->fetch()) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Soru bulunamadı.'];
+            }
+
+            if ($action === 'deleted') {
+                // Delete the question and all related data
+                $stmt = $this->pdo->prepare("DELETE FROM question_ratings WHERE question_id = ?");
+                $stmt->execute([$question_id]);
+
+                $stmt = $this->pdo->prepare("DELETE FROM question_analytics WHERE question_id = ?");
+                $stmt->execute([$question_id]);
+
+                $stmt = $this->pdo->prepare("DELETE FROM questions WHERE id = ?");
+                $stmt->execute([$question_id]);
+
+                $message = 'Soru başarıyla silindi.';
+            } else {
+                // Add or update question review record
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO question_reviews (question_id, admin_id, status, admin_notes, reviewed_at)
+                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON DUPLICATE KEY UPDATE
+                        admin_id = VALUES(admin_id),
+                        status = VALUES(status),
+                        admin_notes = VALUES(admin_notes),
+                        reviewed_at = CURRENT_TIMESTAMP
+                ");
+                $stmt->execute([$question_id, $_SESSION['user_id'], $action, $admin_notes]);
+
+                $message = $action === 'reviewed' ? 'Soru incelendi olarak işaretlendi.' : 'Soru gizlendi.';
+            }
+
+            $this->pdo->commit();
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'question_id' => $question_id,
+                    'action' => $action
+                ]
+            ];
+
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            error_log("reviewQuestion error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Soru işlenirken hata oluştu.'];
+        }
+    }
+
+    /**
+     * Get question management statistics
+     */
+    public function getQuestionStats()
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        try {
+            // Total questions
+            $stmt = $this->pdo->query("SELECT COUNT(*) FROM questions");
+            $total_questions = $stmt->fetchColumn();
+
+            // Questions with reports
+            $stmt = $this->pdo->query("
+                SELECT COUNT(DISTINCT question_id)
+                FROM question_ratings
+                WHERE report_reason IS NOT NULL
+            ");
+            $reported_questions = $stmt->fetchColumn();
+
+            // Questions by category
+            $stmt = $this->pdo->query("
+                SELECT category, COUNT(*) as count
+                FROM questions
+                GROUP BY category
+                ORDER BY count DESC
+            ");
+            $by_category = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Questions by difficulty
+            $stmt = $this->pdo->query("
+                SELECT difficulty, COUNT(*) as count
+                FROM questions
+                GROUP BY difficulty
+                ORDER BY FIELD(difficulty, 'kolay', 'orta', 'zor')
+            ");
+            $by_difficulty = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Rating statistics
+            $stmt = $this->pdo->query("
+                SELECT
+                    COUNT(*) as total_ratings,
+                    AVG(rating) as average_rating,
+                    COUNT(CASE WHEN rating <= 2 THEN 1 END) as low_ratings
+                FROM question_ratings
+            ");
+            $rating_stats = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Most reported questions
+            $stmt = $this->pdo->query("
+                SELECT
+                    q.id,
+                    q.question_text,
+                    q.category,
+                    COUNT(qr.id) as report_count
+                FROM questions q
+                JOIN question_ratings qr ON q.id = qr.question_id
+                WHERE qr.report_reason IS NOT NULL
+                GROUP BY q.id
+                ORDER BY report_count DESC
+                LIMIT 5
+            ");
+            $most_reported = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'totals' => [
+                        'total_questions' => (int)$total_questions,
+                        'reported_questions' => (int)$reported_questions,
+                        'total_ratings' => (int)$rating_stats['total_ratings'],
+                        'low_ratings' => (int)$rating_stats['low_ratings']
+                    ],
+                    'average_rating' => $rating_stats['total_ratings'] > 0 ? round((float)$rating_stats['average_rating'], 2) : 0,
+                    'by_category' => $by_category,
+                    'by_difficulty' => $by_difficulty,
+                    'most_reported' => $most_reported
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("getQuestionStats error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Soru istatistikleri alınırken hata oluştu.'];
+        }
+    }
 }

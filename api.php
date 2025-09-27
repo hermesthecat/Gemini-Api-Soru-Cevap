@@ -20,6 +20,7 @@ require_once 'Api/Controllers/DataController.php';
 require_once 'Api/Controllers/FriendsController.php';
 require_once 'Api/Controllers/DuelController.php';
 require_once 'Api/Controllers/QuestController.php';
+require_once 'Api/Controllers/QuestionsController.php';
 require_once 'Api/Controllers/ShopController.php';
 require_once 'Api/Controllers/SettingsController.php';
 
@@ -85,6 +86,7 @@ $dataController = new DataController($pdo);
 $friendsController = new FriendsController($pdo);
 $duelController = new DuelController($pdo, $geminiApi);
 $questController = new QuestController($pdo);
+$questionsController = new QuestionsController($pdo);
 $shopController = new ShopController($pdo);
 $settingsController = new SettingsController($pdo);
 
@@ -152,6 +154,12 @@ try {
         'admin_delete_quest' => [$adminController, 'deleteQuest', true, true],
         'admin_get_quest_stats' => [$adminController, 'getQuestStats', false, true],
 
+        // Question Management
+        'admin_get_reported_questions' => [$adminController, 'getReportedQuestions', false, true],
+        'admin_get_question_details' => [$adminController, 'getQuestionDetails', true, true],
+        'admin_review_question' => [$adminController, 'reviewQuestion', true, true],
+        'admin_get_question_stats' => [$adminController, 'getQuestionStats', false, true],
+
         // Friends Routes
         'friends_search_users' => [$friendsController, 'searchUsers', true, true],
         'friends_send_request' => [$friendsController, 'sendRequest', true, true],
@@ -171,6 +179,12 @@ try {
         // Quest Routes
         'get_daily_quests' => [$questController, 'getDailyQuests', false, true],
         'refresh_quests' => [$questController, 'refreshQuests', false, true],
+
+        // Question Rating Routes
+        'submit_question_rating' => [$questionsController, 'submitQuestionRating', true, true],
+        'get_question_rating' => [$questionsController, 'getQuestionRating', true, false],
+        'report_question' => [$questionsController, 'reportQuestion', true, true],
+        'get_user_rating_history' => [$questionsController, 'getUserRatingHistory', false, true],
 
         // Shop Routes
         'get_shop_items' => [$shopController, 'getShopItems', false, true],

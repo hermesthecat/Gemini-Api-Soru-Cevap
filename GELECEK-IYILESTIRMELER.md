@@ -2,8 +2,6 @@
 
 Bu belge, AI Bilgi Yarışması projesinin gelecekteki gelişim yönünü ve potansiyel özelliklerini özetlemektedir.
 
-*Son güncelleme: 2025-01-13*
-
 ---
 
 ## 🚀 Yüksek Öncelik (1-2 Ay İçinde)

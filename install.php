@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.15.0'; // Current schema version
+$current_version = '1.16.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -489,6 +489,22 @@ try {
       $migrations_to_run[] = '1.12.0';
     }
 
+    if (versionCompare($installed_version, '1.13.0') < 0) {
+      $migrations_to_run[] = '1.13.0';
+    }
+
+    if (versionCompare($installed_version, '1.14.0') < 0) {
+      $migrations_to_run[] = '1.14.0';
+    }
+
+    if (versionCompare($installed_version, '1.15.0') < 0) {
+      $migrations_to_run[] = '1.15.0';
+    }
+
+    if (versionCompare($installed_version, '1.16.0') < 0) {
+      $migrations_to_run[] = '1.16.0';
+    }
+
     if (empty($migrations_to_run)) {
       echo "Tum migration'lar guncel. Guncelleme gerekmiyor.\n";
     } else {
@@ -545,6 +561,9 @@ try {
             break;
           case '1.15.0':
             migration_1_15_0($pdo);
+            break;
+          case '1.16.0':
+            migration_1_16_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1555,5 +1574,42 @@ function migration_1_15_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.15.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.16.0: Add question_reviews table for admin question management
+ */
+function migration_1_16_0($pdo) {
+  echo "-> Migration 1.16.0: question_reviews tablosu ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // question_reviews tablosunu oluştur
+    $pdo->exec("
+      CREATE TABLE IF NOT EXISTS question_reviews (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        question_id INT NOT NULL,
+        admin_id INT NOT NULL,
+        status ENUM('reviewed', 'hidden', 'deleted') NOT NULL,
+        admin_notes TEXT,
+        reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE,
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_question_review (question_id),
+        INDEX idx_status (status),
+        INDEX idx_reviewed_at (reviewed_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+
+    echo "   question_reviews tablosu basariyla olusturuldu\n";
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.16.0', 'Added question_reviews table for admin question management workflow');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.16.0 basarisiz: " . $e->getMessage());
   }
 }
