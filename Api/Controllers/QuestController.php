@@ -123,11 +123,10 @@ class QuestController
 
         // 4. Offset'lerle quest'leri çek
         $quests = [];
-        $base_query = "SELECT * FROM quests WHERE quest_key NOT IN ($exclude_list) LIMIT 1 OFFSET ?";
-        $stmt = $this->pdo->prepare($base_query);
 
         foreach ($selected_offsets as $offset) {
-            $stmt->execute([$offset]);
+            $query = "SELECT * FROM quests WHERE quest_key NOT IN ($exclude_list) LIMIT 1 OFFSET " . intval($offset);
+            $stmt = $this->pdo->query($query);
             if ($quest = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $quests[] = $quest;
             }
@@ -528,17 +527,17 @@ class QuestController
         $stmt->execute([$user_id, $date]);
         $recent_quests = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-        // Uygun quest'leri bul
-        $exclude_clause = empty($recent_quests) ? '' : 'AND quest_key NOT IN (' . str_repeat('?,', count($recent_quests) - 1) . '?)';
+        // Uygun quest'leri bul - String interpolation ile
+        $exclude_clause = empty($recent_quests) ? '' : 'AND quest_key NOT IN (\'' . implode('\',\'', $recent_quests) . '\')';
 
-        $stmt = $this->pdo->prepare("
+        $query = "
             SELECT quest_key, default_goal
             FROM quests
             WHERE is_active = TRUE {$exclude_clause}
             ORDER BY RAND()
-            LIMIT {$needed_count}
-        ");
-        $stmt->execute($recent_quests);
+            LIMIT " . intval($needed_count);
+
+        $stmt = $this->pdo->query($query);
         $available_quests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($available_quests)) {
