@@ -5,12 +5,40 @@ const questHandler = (() => {
         dom = domElements;
     };
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const getUIGame = () => {
+        const UIGame = ModuleLoader?.getModule('UIGame');
+        if (UIGame) {
+            return UIGame;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const updateQuests = async () => {
         const result = await api.call('get_daily_quests', {}, 'POST', false);
         if (result.success) {
-            ui.renderQuests(result.data);
+            const uiGame = getUIGame();
+            if (uiGame && uiGame.renderQuests) {
+                uiGame.renderQuests(result.data);
+            }
         } else {
-            ui.renderQuests([]); // Hata durumunda boş liste render et
+            const uiGame = getUIGame();
+            if (uiGame && uiGame.renderQuests) {
+                uiGame.renderQuests([]); // Hata durumunda boş liste render et
+            }
         }
     };
 
@@ -20,7 +48,7 @@ const questHandler = (() => {
         setTimeout(() => {
             for (const quest of completedQuests) {
                 const message = `Görev Tamamlandı: "${quest.name}" (+${quest.reward_points} Puan & +${quest.reward_coins} Jeton!)`;
-                ui.showToast(message, 'success');
+                showToast(message, 'success');
                 // Puan animasyonu vs eklenebilir
                 document.dispatchEvent(new CustomEvent('playSound', { detail: { sound: 'achievement' } }));
             }

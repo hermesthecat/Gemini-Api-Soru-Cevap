@@ -7,13 +7,63 @@ const duelHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const showView = (viewId) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showView(viewId);
+        } else if (window.ui && window.ui.showView) {
+            window.ui.showView(viewId);
+        }
+    };
+
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showTab = (tabId) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showTab(tabId);
+        } else if (window.ui && window.ui.showTab) {
+            window.ui.showTab(tabId);
+        }
+    };
+
+    const getUIQuestions = () => {
+        const UIQuestions = ModuleLoader?.getModule('UIQuestions');
+        if (UIQuestions) {
+            return UIQuestions;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
+    const getUISocial = () => {
+        const UISocial = ModuleLoader?.getModule('UISocial');
+        if (UISocial) {
+            return UISocial;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const startDuel = async (duelId) => {
         const result = await api.call('duel_start_game', { duel_id: duelId });
         if (result.success) {
             setupDuel(result.data);
-            ui.showView('duel-game-view');
+            showView('duel-game-view');
         } else {
-            ui.showToast(result.message, 'error');
+            showToast(result.message, 'error');
         }
     };
 
@@ -31,7 +81,10 @@ const duelHandler = (() => {
             currentQuestionIndex: 0
         };
 
-        ui.renderDuelGame(duelState);
+        const uiSocial = getUISocial();
+        if (uiSocial && uiSocial.renderDuelGame) {
+            uiSocial.renderDuelGame(duelState);
+        }
         displayCurrentQuestion();
     };
 
@@ -41,11 +94,17 @@ const duelHandler = (() => {
             return;
         }
         const question = duelState.questions[duelState.currentQuestionIndex];
-        ui.renderDuelQuestion(question, duelState.currentQuestionIndex, duelState.questions.length);
+        const uiQuestions = getUIQuestions();
+        if (uiQuestions && uiQuestions.renderDuelQuestion) {
+            uiQuestions.renderDuelQuestion(question, duelState.currentQuestionIndex, duelState.questions.length);
+        }
     };
 
     const handleAnswerSubmission = async (answer) => {
-        ui.disableDuelOptions();
+        const uiQuestions = getUIQuestions();
+        if (uiQuestions && uiQuestions.disableDuelOptions) {
+            uiQuestions.disableDuelOptions();
+        }
 
         const result = await api.call('duel_submit_answer', {
             duel_id: duelState.id,
@@ -60,7 +119,10 @@ const duelHandler = (() => {
                 duelState.myScore += 10;
             }
 
-            ui.showDuelAnswerResult(answer, correct_answer, explanation, duelState.myScore);
+            const uiQuestions = getUIQuestions();
+            if (uiQuestions && uiQuestions.showDuelAnswerResult) {
+                uiQuestions.showDuelAnswerResult(answer, correct_answer, explanation, duelState.myScore);
+            }
 
             if (is_last_question) {
                 // Son soru ise, backend zaten durumu güncelledi.
@@ -70,10 +132,13 @@ const duelHandler = (() => {
                 }, 2000);
             } else {
                 // Son soru değilse, "Sıradaki Soru" butonunu göster
-                ui.toggleDuelNextButton(true);
+                const uiQuestions = getUIQuestions();
+                if (uiQuestions && uiQuestions.toggleDuelNextButton) {
+                    uiQuestions.toggleDuelNextButton(true);
+                }
             }
         } else {
-            ui.showToast(result.message, 'error');
+            showToast(result.message, 'error');
             // Hata durumunda arkadaş sayfasına dön
             setTimeout(() => {
                 document.dispatchEvent(new Event('showMainView'));
@@ -85,7 +150,10 @@ const duelHandler = (() => {
         duelState.currentQuestionIndex++;
         if (duelState.currentQuestionIndex < duelState.questions.length) {
             displayCurrentQuestion();
-            ui.toggleDuelNextButton(false);
+            const uiQuestions = getUIQuestions();
+            if (uiQuestions && uiQuestions.toggleDuelNextButton) {
+                uiQuestions.toggleDuelNextButton(false);
+            }
         }
     };
 
@@ -94,7 +162,10 @@ const duelHandler = (() => {
         // Ama şimdilik final_state'i kullanabiliriz.
         await friendsHandler.updateDuelsList(); // Arka planda listeyi güncelle
 
-        ui.renderDuelSummary(duelState, finalState);
+        const uiSocial = getUISocial();
+        if (uiSocial && uiSocial.renderDuelSummary) {
+            uiSocial.renderDuelSummary(duelState, finalState);
+        }
     };
 
     const addEventListeners = () => {
@@ -109,7 +180,7 @@ const duelHandler = (() => {
 
         dom.duelBackToFriendsBtn?.addEventListener('click', () => {
             document.dispatchEvent(new Event('showMainView'));
-            ui.showTab('arkadaslar');
+            showTab('arkadaslar');
         });
     };
 

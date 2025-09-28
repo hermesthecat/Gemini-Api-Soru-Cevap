@@ -6,6 +6,27 @@ const adminSettingsHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showLoading = (text, show = true) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showLoading(show, text);
+        } else if (window.ui && window.ui.showLoading) {
+            window.showLoading(show, text);
+        }
+    };
+
     const addEventListeners = () => {
         const settingsForm = document.getElementById('settings-form');
         if (settingsForm) {
@@ -34,10 +55,10 @@ const adminSettingsHandler = (() => {
             if (result && result.success) {
                 populateForm(result.data);
             } else {
-                ui.showToast(result?.message || 'Ayarlar yüklenirken hata oluştu', 'error');
+                showToast(result?.message || 'Ayarlar yüklenirken hata oluştu', 'error');
             }
         } catch (error) {
-            ui.showToast('Ayarlar yüklenirken hata oluştu', 'error');
+            showToast('Ayarlar yüklenirken hata oluştu', 'error');
         }
 
         // Load API keys
@@ -99,11 +120,11 @@ const adminSettingsHandler = (() => {
         }
 
         try {
-            ui.showLoading('Ayarlar kaydediliyor...');
+            showLoading('Ayarlar kaydediliyor...');
             const result = await api.call('update_settings', { settings });
 
-            ui.showLoading(false);
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showLoading(false);
+            showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
                 // Optionally reload settings to confirm they were saved
@@ -112,8 +133,8 @@ const adminSettingsHandler = (() => {
                 }, 1000);
             }
         } catch (error) {
-            ui.showLoading(false);
-            ui.showToast('Ayarlar kaydedilirken hata oluştu', 'error');
+            showLoading(false);
+            showToast('Ayarlar kaydedilirken hata oluştu', 'error');
         }
     };
 
@@ -181,33 +202,33 @@ const adminSettingsHandler = (() => {
         const api_key = document.getElementById('new-api-key-value').value.trim();
 
         if (!name || !api_key) {
-            ui.showToast('Lütfen tüm alanları doldurun', 'error');
+            showToast('Lütfen tüm alanları doldurun', 'error');
             return;
         }
 
         try {
             const result = await api.call('add_api_key', { name, api_key });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
                 hideAddApiKeyForm();
                 loadApiKeys();
             }
         } catch (error) {
-            ui.showToast('API anahtarı kaydedilirken hata oluştu', 'error');
+            showToast('API anahtarı kaydedilirken hata oluştu', 'error');
         }
     };
 
     const toggleApiKeyStatus = async (id, is_active) => {
         try {
             const result = await api.call('update_api_key_status', { id, is_active });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
                 loadApiKeys();
             }
         } catch (error) {
-            ui.showToast('API anahtarı durumu güncellenirken hata oluştu', 'error');
+            showToast('API anahtarı durumu güncellenirken hata oluştu', 'error');
         }
     };
 
@@ -218,13 +239,13 @@ const adminSettingsHandler = (() => {
 
         try {
             const result = await api.call('delete_api_key', { id });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
                 loadApiKeys();
             }
         } catch (error) {
-            ui.showToast('API anahtarı silinirken hata oluştu', 'error');
+            showToast('API anahtarı silinirken hata oluştu', 'error');
         }
     };
 
