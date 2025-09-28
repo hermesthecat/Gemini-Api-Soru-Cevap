@@ -115,7 +115,10 @@ const UISocial = (() => {
                     ${avatarHTML}
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300">${friend.username}</span>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Puan: ${friend.score || friend.total_score || 0}</p>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-blue-500">Puan: ${friend.score || friend.total_score || 0}</span>
+                            ${friend.global_rank ? `<span class="text-xs text-purple-500">Genel: #${friend.global_rank}</span>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="flex space-x-2">
