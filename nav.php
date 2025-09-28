@@ -42,6 +42,9 @@
                         <i id="sound-on-icon" class="fas fa-volume-up hidden"></i>
                         <i id="sound-off-icon" class="fas fa-volume-mute hidden"></i>
                     </button>
+                    <button id="user-search-btn" class="p-2 rounded-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors" data-action="search-users" title="Kullanıcı Ara">
+                        <i class="fas fa-search"></i>
+                    </button>
                     <button id="logout-btn" class="text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400" title="Çıkış Yap">
                         <i class="fas fa-sign-out-alt fa-lg"></i>
                     </button>
@@ -117,5 +120,38 @@
                         e.stopPropagation();
                     });
                 }
+
+                // User search button functionality
+                const searchBtn = document.getElementById('user-search-btn');
+                if (searchBtn) {
+                    searchBtn.addEventListener('click', () => {
+                        if (window.userSearchHandler) {
+                            window.userSearchHandler.showModal();
+                        }
+                    });
+                }
             });
         </script>
+
+        <!-- User Search Modal -->
+        <div id="user-search-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div id="user-search-modal-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-2xl transform scale-95 transition-transform duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white">Kullanıcı Ara</h2>
+                    <button id="user-search-modal-close" class="text-gray-500 hover:text-gray-800 dark:hover:text-white text-2xl">&times;</button>
+                </div>
+
+                <div class="mb-4">
+                    <input type="text" id="user-search-input"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        placeholder="Kullanıcı adı ara...">
+                </div>
+
+                <div id="user-search-results" class="space-y-2 max-h-96 overflow-y-auto">
+                    <div class="text-center py-8">
+                        <i class="fas fa-users text-gray-400 text-2xl mb-2"></i>
+                        <p class="text-gray-600 dark:text-gray-400">Kullanıcı aramak için yazmaya başlayın</p>
+                    </div>
+                </div>
+            </div>
+        </div>

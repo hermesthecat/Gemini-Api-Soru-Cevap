@@ -101,3 +101,14 @@ async function loadLeaderboardStats() {
 </script>
 
 <?php include 'footer.php'; ?>
+
+<!-- Include User Search Handler -->
+<script src="assets/js/user-search-handler.js?v=<?php echo time(); ?>"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize user search functionality
+    if (window.userSearchHandler) {
+        window.userSearchHandler.init();
+    }
+});
+</script>

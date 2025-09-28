@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Profile URL rewriting
+# Redirect /profile/username to public-profile.php?u=username
+RewriteRule ^profile/([a-zA-Z0-9_-]+)/?$ public-profile.php?u=$1 [L,QSA]
+
+# Handle AJAX requests - don't rewrite api.php
+RewriteCond %{REQUEST_URI} !^/api\.php
+RewriteCond %{REQUEST_URI} !^.*\.(css|js|png|jpg|jpeg|gif|ico|svg)$
+
+# Remove .php extension from URLs (optional)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
