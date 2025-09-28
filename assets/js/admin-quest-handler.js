@@ -1,6 +1,18 @@
 const adminQuestHandler = (() => {
     let dom = {};
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
     const init = () => {
         dom = {
             createQuestForm: document.getElementById('create-quest-form'),
@@ -101,16 +113,16 @@ const adminQuestHandler = (() => {
             const result = await api.call('admin_create_quest', data, 'POST', true);
 
             if (result.success) {
-                ui.showToast('Quest başarıyla oluşturuldu!', 'success');
+                showToast('Quest başarıyla oluşturuldu!', 'success');
                 dom.createQuestForm.reset();
                 updateTargetHelperText();
                 loadQuestsList();
                 loadStats();
             } else {
-                ui.showToast(result.message || 'Quest oluşturulurken hata oluştu!', 'error');
+                showToast(result.message || 'Quest oluşturulurken hata oluştu!', 'error');
             }
         } catch (error) {
-            ui.showToast('Bağlantı hatası!', 'error');
+            showToast('Bağlantı hatası!', 'error');
             // Create quest error handled
         }
     };
@@ -128,15 +140,15 @@ const adminQuestHandler = (() => {
             const result = await api.call('admin_update_quest', data, 'POST', true);
 
             if (result.success) {
-                ui.showToast('Quest başarıyla güncellendi!', 'success');
+                showToast('Quest başarıyla güncellendi!', 'success');
                 closeEditModal();
                 loadQuestsList();
                 loadStats();
             } else {
-                ui.showToast(result.message || 'Quest güncellenirken hata oluştu!', 'error');
+                showToast(result.message || 'Quest güncellenirken hata oluştu!', 'error');
             }
         } catch (error) {
-            ui.showToast('Bağlantı hatası!', 'error');
+            showToast('Bağlantı hatası!', 'error');
             // Update quest error handled
         }
     };
@@ -148,10 +160,10 @@ const adminQuestHandler = (() => {
             if (result.success) {
                 renderQuestsList(result.data);
             } else {
-                ui.showToast('Quest listesi yüklenemedi!', 'error');
+                showToast('Quest listesi yüklenemedi!', 'error');
             }
         } catch (error) {
-            ui.showToast('Bağlantı hatası!', 'error');
+            showToast('Bağlantı hatası!', 'error');
             // Load quests error handled
         }
     };
@@ -280,7 +292,7 @@ const adminQuestHandler = (() => {
                 }
             }
         } catch (error) {
-            ui.showToast('Quest bilgileri yüklenemedi!', 'error');
+            showToast('Quest bilgileri yüklenemedi!', 'error');
             // Load quest error handled
         }
     };
@@ -294,14 +306,14 @@ const adminQuestHandler = (() => {
             const result = await api.call('admin_delete_quest', { quest_key: questKey }, 'POST', true);
 
             if (result.success) {
-                ui.showToast('Quest başarıyla silindi!', 'success');
+                showToast('Quest başarıyla silindi!', 'success');
                 loadQuestsList();
                 loadStats();
             } else {
-                ui.showToast(result.message || 'Quest silinirken hata oluştu!', 'error');
+                showToast(result.message || 'Quest silinirken hata oluştu!', 'error');
             }
         } catch (error) {
-            ui.showToast('Bağlantı hatası!', 'error');
+            showToast('Bağlantı hatası!', 'error');
             // Delete quest error handled
         }
     };

@@ -1,6 +1,18 @@
 const categoryHandler = (() => {
     let categories = [];
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
     const loadCategories = async () => {
         try {
             const response = await api.call('admin_get_categories', {}, 'POST', false);
@@ -8,10 +20,10 @@ const categoryHandler = (() => {
                 categories = response.data;
                 renderCategories();
             } else {
-                ui.showToast('Kategoriler yüklenemedi: ' + response.message, 'error');
+                showToast('Kategoriler yüklenemedi: ' + response.message, 'error');
             }
         } catch (error) {
-            ui.showToast('Ağ hatası: ' + error.message, 'error');
+            showToast('Ağ hatası: ' + error.message, 'error');
         }
     };
 
@@ -82,15 +94,15 @@ const categoryHandler = (() => {
         try {
             const response = await api.call('admin_add_category', formData, 'POST', true);
             if (response.success) {
-                ui.showToast(response.message, 'success');
+                showToast(response.message, 'success');
                 loadCategories();
                 return true;
             } else {
-                ui.showToast(response.message, 'error');
+                showToast(response.message, 'error');
                 return false;
             }
         } catch (error) {
-            ui.showToast('Ağ hatası: ' + error.message, 'error');
+            showToast('Ağ hatası: ' + error.message, 'error');
             return false;
         }
     };
@@ -113,16 +125,16 @@ const categoryHandler = (() => {
         try {
             const response = await api.call('admin_update_category', formData, 'POST', true);
             if (response.success) {
-                ui.showToast(response.message, 'success');
+                showToast(response.message, 'success');
                 closeEditModal();
                 loadCategories();
                 return true;
             } else {
-                ui.showToast(response.message, 'error');
+                showToast(response.message, 'error');
                 return false;
             }
         } catch (error) {
-            ui.showToast('Ağ hatası: ' + error.message, 'error');
+            showToast('Ağ hatası: ' + error.message, 'error');
             return false;
         }
     };
@@ -135,13 +147,13 @@ const categoryHandler = (() => {
         try {
             const response = await api.call('admin_delete_category', { id: id }, 'POST', true);
             if (response.success) {
-                ui.showToast(response.message, 'success');
+                showToast(response.message, 'success');
                 loadCategories();
             } else {
-                ui.showToast(response.message, 'error');
+                showToast(response.message, 'error');
             }
         } catch (error) {
-            ui.showToast('Ağ hatası: ' + error.message, 'error');
+            showToast('Ağ hatası: ' + error.message, 'error');
         }
     };
 

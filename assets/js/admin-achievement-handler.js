@@ -1,6 +1,27 @@
 const adminAchievementHandler = (() => {
     let dom = {};
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showLoading = (show = true, text = '') => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showLoading(show, text);
+        } else if (window.ui && window.ui.showLoading) {
+            window.showLoading(show, text);
+        }
+    };
+
     const init = (domElements) => {
         if (domElements) {
             dom = domElements;
@@ -94,27 +115,27 @@ const adminAchievementHandler = (() => {
 
         // Validasyon
         if (!data.achievement_key.match(/^[a-z0-9_]+$/)) {
-            ui.showToast('Başarım anahtarı sadece küçük harf, sayı ve alt çizgi içerebilir!', 'error');
+            showToast('Başarım anahtarı sadece küçük harf, sayı ve alt çizgi içerebilir!', 'error');
             return;
         }
 
         try {
-            ui.showLoading(true);
+            showLoading(true);
             const response = await api.call('admin_create_achievement', data, 'POST');
 
             if (response.success) {
-                ui.showToast('Başarım başarıyla oluşturuldu!', 'success');
+                showToast('Başarım başarıyla oluşturuldu!', 'success');
                 e.target.reset();
                 loadAchievementsList();
                 loadStats();
             } else {
-                ui.showToast(response.message || 'Başarım oluşturulurken hata oluştu!', 'error');
+                showToast(response.message || 'Başarım oluşturulurken hata oluştu!', 'error');
             }
         } catch (error) {
             // Create achievement error handled
-            ui.showToast('Bir hata oluştu!', 'error');
+            showToast('Bir hata oluştu!', 'error');
         } finally {
-            ui.showLoading(false);
+            showLoading(false);
         }
     };
 
@@ -133,22 +154,22 @@ const adminAchievementHandler = (() => {
         };
 
         try {
-            ui.showLoading(true);
+            showLoading(true);
             const response = await api.call('admin_update_achievement', data, 'POST');
 
             if (response.success) {
-                ui.showToast('Başarım başarıyla güncellendi!', 'success');
+                showToast('Başarım başarıyla güncellendi!', 'success');
                 closeEditModal();
                 loadAchievementsList();
                 loadStats();
             } else {
-                ui.showToast(response.message || 'Başarım güncellenirken hata oluştu!', 'error');
+                showToast(response.message || 'Başarım güncellenirken hata oluştu!', 'error');
             }
         } catch (error) {
             // Update achievement error handled
-            ui.showToast('Bir hata oluştu!', 'error');
+            showToast('Bir hata oluştu!', 'error');
         } finally {
-            ui.showLoading(false);
+            showLoading(false);
         }
     };
 
@@ -160,11 +181,11 @@ const adminAchievementHandler = (() => {
                 renderAchievementsList(response.data);
             } else {
                 // Failed to load achievements
-                ui.showToast('Başarımlar yüklenirken hata oluştu!', 'error');
+                showToast('Başarımlar yüklenirken hata oluştu!', 'error');
             }
         } catch (error) {
             // Load achievements error handled
-            ui.showToast('Başarımlar yüklenirken hata oluştu!', 'error');
+            showToast('Başarımlar yüklenirken hata oluştu!', 'error');
         }
     };
 
@@ -303,11 +324,11 @@ const adminAchievementHandler = (() => {
                     dom.editModal.classList.remove('hidden');
                 }
             } else {
-                ui.showToast(response.message || 'Başarım detayları alınamadı!', 'error');
+                showToast(response.message || 'Başarım detayları alınamadı!', 'error');
             }
         } catch (error) {
             // Get achievement details error handled
-            ui.showToast('Bir hata oluştu!', 'error');
+            showToast('Bir hata oluştu!', 'error');
         }
     };
 
@@ -319,15 +340,15 @@ const adminAchievementHandler = (() => {
             }, 'POST');
 
             if (response.success) {
-                ui.showToast(`Tracking ${enable ? 'etkinleştirildi' : 'durduruldu'}!`, 'success');
+                showToast(`Tracking ${enable ? 'etkinleştirildi' : 'durduruldu'}!`, 'success');
                 loadAchievementsList();
                 loadStats();
             } else {
-                ui.showToast(response.message || 'Tracking durumu değiştirilemedi!', 'error');
+                showToast(response.message || 'Tracking durumu değiştirilemedi!', 'error');
             }
         } catch (error) {
             // Toggle tracking error handled
-            ui.showToast('Bir hata oluştu!', 'error');
+            showToast('Bir hata oluştu!', 'error');
         }
     };
 
@@ -340,15 +361,15 @@ const adminAchievementHandler = (() => {
             const response = await api.call('admin_delete_achievement', { achievement_key: achievementKey }, 'POST');
 
             if (response.success) {
-                ui.showToast('Başarım başarıyla silindi!', 'success');
+                showToast('Başarım başarıyla silindi!', 'success');
                 loadAchievementsList();
                 loadStats();
             } else {
-                ui.showToast(response.message || 'Başarım silinemedi!', 'error');
+                showToast(response.message || 'Başarım silinemedi!', 'error');
             }
         } catch (error) {
             // Delete achievement error handled
-            ui.showToast('Bir hata oluştu!', 'error');
+            showToast('Bir hata oluştu!', 'error');
         }
     };
 

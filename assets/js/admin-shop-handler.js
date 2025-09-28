@@ -1,6 +1,18 @@
 const adminShopHandler = (() => {
     let dom = {};
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
     const init = (domElements = {}) => {
         dom = domElements;
         addEventListeners();
@@ -171,7 +183,7 @@ const adminShopHandler = (() => {
         }
 
         if (Object.keys(prices).length === 0) {
-            ui.showToast('Lütfen geçerli fiyatlar girin (1-1000 arası)', 'error');
+            showToast('Lütfen geçerli fiyatlar girin (1-1000 arası)', 'error');
             return;
         }
 
