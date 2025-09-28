@@ -122,6 +122,9 @@ const UISocial = (() => {
                     </div>
                 </div>
                 <div class="flex space-x-2">
+                    <button onclick="window.location.href='public-profile.php?u=${friend.username}'" class="view-profile-btn bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                        <i class="fas fa-eye"></i> Profil
+                    </button>
                     <button data-user-id="${friend.user_id}" data-username="${friend.username}" class="challenge-friend-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
                         <i class="fas fa-sword"></i> Düello
                     </button>

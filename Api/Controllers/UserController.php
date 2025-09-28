@@ -299,6 +299,9 @@ class UserController
             // Get profile statistics
             $profileStats = $this->getProfileStatistics($user['id']);
 
+            // Get all achievements for this user
+            $achievements = $this->getUserAchievements($user['id']);
+
             return [
                 'success' => true,
                 'data' => [
@@ -313,7 +316,8 @@ class UserController
                         'coins' => (int)$user['coins'],
                         'is_own_profile' => $is_own_profile
                     ],
-                    'statistics' => $profileStats
+                    'statistics' => $profileStats,
+                    'achievements' => $achievements
                 ]
             ];
 
@@ -444,18 +448,29 @@ class UserController
         $stats = [];
 
         try {
-            // Get leaderboard position and total score
+            // Get total score from leaderboard
             $stmt = $this->pdo->prepare("
-                SELECT total_score, total_questions, correct_answers
+                SELECT score
                 FROM leaderboard
                 WHERE user_id = ?
             ");
             $stmt->execute([$user_id]);
             $leaderboard = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $stats['total_score'] = (int)($leaderboard['total_score'] ?? 0);
-            $stats['total_questions'] = (int)($leaderboard['total_questions'] ?? 0);
-            $stats['correct_answers'] = (int)($leaderboard['correct_answers'] ?? 0);
+            // Get aggregated stats from user_stats
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    SUM(total_questions) as total_questions,
+                    SUM(correct_answers) as correct_answers
+                FROM user_stats
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $userStats = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $stats['total_score'] = (int)($leaderboard['score'] ?? 0);
+            $stats['total_questions'] = (int)($userStats['total_questions'] ?? 0);
+            $stats['correct_answers'] = (int)($userStats['correct_answers'] ?? 0);
             $stats['accuracy_percentage'] = $stats['total_questions'] > 0
                 ? round(($stats['correct_answers'] / $stats['total_questions']) * 100, 1)
                 : 0;
@@ -464,8 +479,8 @@ class UserController
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) + 1 as rank
                 FROM leaderboard
-                WHERE total_score > (
-                    SELECT total_score FROM leaderboard WHERE user_id = ?
+                WHERE score > (
+                    SELECT score FROM leaderboard WHERE user_id = ?
                 )
             ");
             $stmt->execute([$user_id]);
@@ -478,11 +493,11 @@ class UserController
 
             // Get recent achievements
             $stmt = $this->pdo->prepare("
-                SELECT a.name, a.description, a.icon, ua.earned_at
+                SELECT a.name, a.description, a.icon, ua.achieved_at
                 FROM user_achievements ua
-                JOIN achievements a ON ua.achievement_id = a.id
+                JOIN achievements a ON ua.achievement_key = a.achievement_key
                 WHERE ua.user_id = ?
-                ORDER BY ua.earned_at DESC
+                ORDER BY ua.achieved_at DESC
                 LIMIT 5
             ");
             $stmt->execute([$user_id]);
@@ -507,7 +522,7 @@ class UserController
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) as completed_quests
                 FROM quest_history
-                WHERE user_id = ? AND status = 'completed'
+                WHERE user_id = ? AND completed_date IS NOT NULL
             ");
             $stmt->execute([$user_id]);
             $stats['completed_quests'] = (int)$stmt->fetchColumn();
@@ -531,11 +546,114 @@ class UserController
                     : 0
             ];
 
-            return $stats;
+            // Calculate longest streak from game history
+            $stats['longest_streak'] = $this->calculateLongestStreak($user_id);
+
+            // Ensure stats is returned as an object, not an array
+            return (object)$stats;
 
         } catch (PDOException $e) {
             error_log("Get profile statistics error: " . $e->getMessage());
+            // Return empty object on error
+            return (object)[
+                'total_score' => 0,
+                'total_questions' => 0,
+                'correct_answers' => 0,
+                'accuracy_percentage' => 0,
+                'rank' => 'N/A',
+                'longest_streak' => 0
+            ];
+        }
+    }
+
+    /**
+     * Get all achievements for a user
+     */
+    private function getUserAchievements($user_id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    a.achievement_key,
+                    a.name as achievement_name,
+                    a.description,
+                    a.icon,
+                    a.color,
+                    ua.achieved_at as earned_at,
+                    1 as is_earned
+                FROM user_achievements ua
+                JOIN achievements a ON ua.achievement_key = a.achievement_key
+                WHERE ua.user_id = ?
+                ORDER BY ua.achieved_at DESC
+            ");
+            $stmt->execute([$user_id]);
+            $earnedAchievements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Also get all achievements to show unearned ones
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    achievement_key,
+                    name as achievement_name,
+                    description,
+                    icon,
+                    color,
+                    NULL as earned_at,
+                    0 as is_earned
+                FROM achievements
+                WHERE achievement_key NOT IN (
+                    SELECT achievement_key FROM user_achievements WHERE user_id = ?
+                )
+                ORDER BY name ASC
+            ");
+            $stmt->execute([$user_id]);
+            $unearnedAchievements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Combine and return all achievements
+            return array_merge($earnedAchievements, $unearnedAchievements);
+
+        } catch (PDOException $e) {
+            error_log("Get user achievements error: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Calculate longest correct answer streak from game history
+     */
+    private function calculateLongestStreak($user_id)
+    {
+        try {
+            // Get all answers ordered by time
+            $stmt = $this->pdo->prepare("
+                SELECT is_correct
+                FROM question_analytics
+                WHERE user_id = ?
+                ORDER BY answered_at ASC
+            ");
+            $stmt->execute([$user_id]);
+            $answers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if (empty($answers)) {
+                return 0;
+            }
+
+            $maxStreak = 0;
+            $currentStreak = 0;
+
+            foreach ($answers as $isCorrect) {
+                if ($isCorrect == 1) {
+                    $currentStreak++;
+                    $maxStreak = max($maxStreak, $currentStreak);
+                } else {
+                    $currentStreak = 0;
+                }
+            }
+
+            return $maxStreak;
+
+        } catch (PDOException $e) {
+            error_log("Calculate longest streak error: " . $e->getMessage());
+            return 0;
         }
     }
 

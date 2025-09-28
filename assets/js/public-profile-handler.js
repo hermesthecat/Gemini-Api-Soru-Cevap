@@ -22,9 +22,9 @@ const publicProfileHandler = (function() {
     const showNotification = (message, type) => {
         const UICore = ModuleLoader?.getModule('UICore');
         if (UICore) {
-            UICore.showNotification(message, type);
-        } else if (window.ui && window.ui.showNotification) {
-            window.showNotification(message, type);
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
         } else {
             console.log(`[${type}] ${message}`);
         }
@@ -119,6 +119,16 @@ const publicProfileHandler = (function() {
             comparisonModalClose.addEventListener('click', hideAchievementComparisonModal);
         }
 
+        // All achievements modal background click
+        const allAchievementsModal = document.getElementById('all-achievements-modal');
+        if (allAchievementsModal) {
+            allAchievementsModal.addEventListener('click', (e) => {
+                if (e.target === allAchievementsModal) {
+                    hideAllAchievementsModal();
+                }
+            });
+        }
+
         // Visit history load more
         const loadMoreVisitsBtn = document.getElementById('load-more-visits-btn');
         if (loadMoreVisitsBtn) {
@@ -152,8 +162,8 @@ const publicProfileHandler = (function() {
     function populateProfileData() {
         if (!profileData) return;
 
-        const profile = profileData.profile;
-        const stats = profileData.stats;
+        const profile = profileData.user;
+        const stats = profileData.statistics;
 
         // Update profile header
         updateProfileHeader(profile);
@@ -301,17 +311,18 @@ const publicProfileHandler = (function() {
 
     // Update achievements section
     function updateAchievements(achievements) {
-        // Update achievement count badge
+        // Update achievement count badge - only count earned achievements
+        const earnedAchievements = achievements.filter(ach => ach.is_earned == 1 || ach.is_earned === true);
         const countBadge = document.getElementById('achievement-count-badge');
         if (countBadge) {
-            countBadge.textContent = achievements.length;
+            countBadge.textContent = earnedAchievements.length;
         }
 
         // Update recent achievements
         const container = document.getElementById('recent-achievements-container');
         if (!container) return;
 
-        const recentAchievements = achievements
+        const recentAchievements = earnedAchievements
             .filter(ach => ach.earned_at)
             .sort((a, b) => new Date(b.earned_at) - new Date(a.earned_at))
             .slice(0, 6); // Show 6 most recent
@@ -322,13 +333,14 @@ const publicProfileHandler = (function() {
         }
 
         container.innerHTML = recentAchievements.map(ach => `
-            <div class="achievement-card earned bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+            <div class="achievement-card earned bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
                 <div class="flex items-center space-x-3">
-                    <div class="text-3xl animate-bounce" style="animation-duration: 2s;">${ach.icon || '🏆'}</div>
+                    <div class="text-3xl animate-bounce" style="animation-duration: 2s;">
+                        ${ach.icon ? `<i class="fas ${ach.icon}"></i>` : '🏆'}
+                    </div>
                     <div class="flex-1">
                         <h4 class="font-semibold text-gray-800 dark:text-gray-200">${ach.achievement_name}</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">${ach.description}</p>
-                        ${ach.earned_at ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center">
+                        ${ach.earned_at ? `<p class="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center">
                             <i class="fas fa-calendar-check mr-1"></i>
                             ${formatDate(ach.earned_at)}
                         </p>` : ''}
@@ -343,10 +355,10 @@ const publicProfileHandler = (function() {
 
     // Update activity summary
     function updateActivitySummary(stats) {
-        // Total questions answered
+        // Total questions answered - API returns 'total_questions'
         const totalQuestionsEl = document.getElementById('total-questions-answered');
         if (totalQuestionsEl) {
-            totalQuestionsEl.textContent = formatNumber(stats.total_questions_answered || 0);
+            totalQuestionsEl.textContent = formatNumber(stats.total_questions || stats.total_questions_answered || 0);
         }
 
         // Correct answers
@@ -415,14 +427,44 @@ const publicProfileHandler = (function() {
 
     // Show all achievements modal
     function showAllAchievementsModal() {
-        if (!profileData || !profileData.achievements) return;
+        if (!profileData) return;
 
-        const achievements = profileData.achievements;
+        const achievements = profileData.achievements || [];
         const earned = achievements.filter(ach => ach.earned_at);
         const notEarned = achievements.filter(ach => !ach.earned_at);
 
-        const modalContent = `
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+        const modal = document.getElementById('all-achievements-modal');
+        const modalContent = document.getElementById('all-achievements-modal-content');
+        const modalBody = document.getElementById('all-achievements-modal-body');
+
+        if (!modal || !modalContent || !modalBody) return;
+
+        if (achievements.length === 0) {
+            // No achievements available
+            modalBody.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+                        Tüm Başarımlar (0/0)
+                    </h2>
+                    <button id="close-achievements-modal" class="text-gray-500 hover:text-gray-800 dark:hover:text-white text-2xl">
+                        &times;
+                    </button>
+                </div>
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h3 class="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">Henüz Başarım Yok</h3>
+                    <p class="text-gray-500 dark:text-gray-500 mb-4">
+                        Bu kullanıcı henüz hiç başarım kazanmamış. Oyuna katılarak başarımlar kazanmaya başlayabilirsin!
+                    </p>
+                    <div class="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Başarımlar oyun oynayarak kazanılır
+                    </div>
+                </div>
+            `;
+        } else {
+            // Has achievements
+            modalBody.innerHTML = `
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
                         Tüm Başarımlar (${earned.length}/${achievements.length})
@@ -436,13 +478,12 @@ const publicProfileHandler = (function() {
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-green-600">Kazanılanlar (${earned.length})</h3>
                         <div class="space-y-3">
-                            ${earned.map(ach => `
+                            ${earned.length > 0 ? earned.map(ach => `
                                 <div class="achievement-card earned bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
                                     <div class="flex items-center space-x-3">
-                                        <div class="text-3xl">${ach.icon || '🏆'}</div>
+                                        <div class="text-3xl">${ach.icon ? `<i class="fas ${ach.icon}"></i>` : '🏆'}</div>
                                         <div class="flex-1">
                                             <h4 class="font-semibold text-gray-800 dark:text-gray-200">${ach.achievement_name}</h4>
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">${ach.description}</p>
                                             <p class="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center">
                                                 <i class="fas fa-calendar-check mr-1"></i>
                                                 ${formatDate(ach.earned_at)}
@@ -453,17 +494,17 @@ const publicProfileHandler = (function() {
                                         </div>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `).join('') : '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Henüz başarım kazanılmamış</p>'}
                         </div>
                     </div>
 
                     <div>
                         <h3 class="text-lg font-semibold mb-4 text-gray-600">Henüz Kazanılmayanlar (${notEarned.length})</h3>
                         <div class="space-y-3">
-                            ${notEarned.map(ach => `
+                            ${notEarned.length > 0 ? notEarned.map(ach => `
                                 <div class="achievement-card not-earned bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                                     <div class="flex items-center space-x-3">
-                                        <div class="text-3xl">${ach.icon || '🏆'}</div>
+                                        <div class="text-3xl">${ach.icon ? `<i class="fas ${ach.icon}"></i>` : '🏆'}</div>
                                         <div class="flex-1">
                                             <h4 class="font-semibold text-gray-600 dark:text-gray-400">${ach.achievement_name}</h4>
                                             <p class="text-sm text-gray-500 dark:text-gray-500">${ach.description}</p>
@@ -479,17 +520,38 @@ const publicProfileHandler = (function() {
                                         </div>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `).join('') : '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Tüm başarımlar kazanılmış!</p>'}
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
-        showModal(modalContent);
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95');
+        }, 10);
 
         // Close modal handler
-        document.getElementById('close-achievements-modal').addEventListener('click', hideModal);
+        document.getElementById('close-achievements-modal').addEventListener('click', hideAllAchievementsModal);
+    }
+
+    // Hide all achievements modal
+    function hideAllAchievementsModal() {
+        const modal = document.getElementById('all-achievements-modal');
+        const modalContent = document.getElementById('all-achievements-modal-content');
+
+        if (!modal || !modalContent) return;
+
+        // Hide modal with animation
+        modal.classList.add('opacity-0');
+        modalContent.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
     }
 
     // UI state management functions
@@ -989,7 +1051,8 @@ const publicProfileHandler = (function() {
 
     // Public API
     return {
-        init
+        init,
+        showAllAchievementsModal
     };
 })();
 

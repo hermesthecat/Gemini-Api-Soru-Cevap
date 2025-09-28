@@ -1,6 +1,7 @@
 <?php
-// Public profile pages don't require authentication
-session_start();
+// Public profile pages don't require authentication but need session for CSRF token
+include 'auth_check.php';
+require_once 'config.php';
 include 'header.php';
 
 // Get username from URL parameter
@@ -314,6 +315,15 @@ if (empty($username)) {
 
                 <div id="achievement-comparison-content">
                     <!-- Comparison content will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- All Achievements Modal -->
+        <div id="all-achievements-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+            <div id="all-achievements-modal-content" class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+                <div id="all-achievements-modal-body">
+                    <!-- Modal content will be loaded here -->
                 </div>
             </div>
         </div>
