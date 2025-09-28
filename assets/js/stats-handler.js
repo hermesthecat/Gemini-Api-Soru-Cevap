@@ -31,6 +31,12 @@ const statsHandler = (() => {
 
     const addEventListeners = () => {
         // Avatar functionality removed - using initials instead
+
+        // Compare achievements button
+        const compareBtn = document.getElementById('compare-achievements-btn');
+        if (compareBtn) {
+            compareBtn.addEventListener('click', showAchievementComparison);
+        }
     };
 
     const updateCombinedAchievements = async () => {
@@ -99,6 +105,107 @@ const statsHandler = (() => {
         updateUserData();
         updateLeaderboard();
         updateCombinedAchievements();
+    };
+
+    // Show achievement comparison modal
+    const showAchievementComparison = async () => {
+        try {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">
+                            <i class="fas fa-trophy mr-2 text-yellow-500"></i>
+                            Arkadaşlarla Başarım Karşılaştırması
+                        </h2>
+                        <button id="close-comparison-modal" class="text-gray-500 hover:text-gray-700 dark:hover:text-white">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    <div id="comparison-content" class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+                        <p class="mt-4 text-gray-600 dark:text-gray-400">Yükleniyor...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Close modal handler
+            document.getElementById('close-comparison-modal').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            // Load comparison data
+            const response = await api.call('get_friends_achievement_comparison', {}, 'POST', false);
+            console.log('Achievement comparison response:', response);
+            const content = document.getElementById('comparison-content');
+
+            if (response.success && response.friends && response.friends.length > 0) {
+                const userCount = response.user_achievement_count || 0;
+                content.innerHTML = `
+                    <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <p class="text-sm text-blue-800 dark:text-blue-300">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Sen: <span class="font-bold">${userCount}</span> başarım kazandın
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        ${response.friends.map((friend, index) => `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg ${index === 0 && friend.achievement_count > 0 ? 'border-2 border-yellow-400' : ''}">
+                                <div class="flex items-center space-x-3">
+                                    ${index === 0 && friend.achievement_count > 0 ? '<i class="fas fa-crown text-yellow-500 text-xl"></i>' : ''}
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold">
+                                        ${friend.username.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div class="text-left">
+                                        <h3 class="font-semibold text-gray-800 dark:text-gray-200">${friend.username}</h3>
+                                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                                            ${friend.recent_achievements && friend.recent_achievements.length > 0
+                                                ? friend.recent_achievements.map(ach => `<i class="fas ${ach.icon} mr-1"></i>`).join('')
+                                                : 'Henüz başarım yok'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold ${friend.achievement_count > userCount ? 'text-green-500' : friend.achievement_count < userCount ? 'text-red-500' : 'text-yellow-500'}">${friend.achievement_count || 0}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">Başarım</div>
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        ${friend.achievement_count > userCount
+                                            ? `<i class="fas fa-arrow-up text-green-500"></i> +${friend.achievement_count - userCount}`
+                                            : friend.achievement_count < userCount
+                                                ? `<i class="fas fa-arrow-down text-red-500"></i> -${userCount - friend.achievement_count}`
+                                                : '<i class="fas fa-equals text-yellow-500"></i> Eşit'}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-users text-6xl text-gray-400 mb-4"></i>
+                        <p class="text-xl text-gray-600 dark:text-gray-400 mb-2">Henüz arkadaşın yok</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mb-4">
+                            Arkadaş ekleyerek başarımlarını karşılaştırabilirsin
+                        </p>
+                        <a href="friends.php" class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Arkadaş Ekle
+                        </a>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Achievement comparison error:', error);
+            if (window.UICore && UICore.showToast) {
+                UICore.showToast('Karşılaştırma yüklenirken hata oluştu', 'error');
+            }
+        }
     };
 
     const startLeaderboardUpdates = () => {

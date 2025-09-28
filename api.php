@@ -123,6 +123,7 @@ try {
         'get_user_quest_history' => [$dataController, 'getUserQuestHistory', false, true],
         'get_quest_history_stats' => [$dataController, 'getQuestHistoryStats', false, true],
         'get_active_announcements' => [$dataController, 'getActiveAnnouncements', false, true],
+        'get_friends_achievement_comparison' => [$userController, 'getFriendsAchievementComparison', true, true],
         'mark_announcements_as_read' => [$dataController, 'markAnnouncementsAsRead', true, true],
         'get_categories' => [$dataController, 'getCategories', false, false],
 

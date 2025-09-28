@@ -753,4 +753,102 @@ class UserController
         }
     }
 
+    /**
+     * Get friends achievement comparison data
+     */
+    public function getFriendsAchievementComparison($request)
+    {
+        try {
+            $user_id = $_SESSION['user_id'] ?? null;
+            if (!$user_id) {
+                return ['success' => false, 'message' => 'User not logged in'];
+            }
+
+            // Get user's friends
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    CASE
+                        WHEN f.user_one_id = ? THEN f.user_two_id
+                        ELSE f.user_one_id
+                    END as friend_id,
+                    u.username
+                FROM friends f
+                JOIN users u ON u.id = CASE
+                    WHEN f.user_one_id = ? THEN f.user_two_id
+                    ELSE f.user_one_id
+                END
+                WHERE (f.user_one_id = ? OR f.user_two_id = ?)
+                AND f.status = 'accepted'
+            ");
+            $stmt->execute([$user_id, $user_id, $user_id, $user_id]);
+            $friends = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($friends)) {
+                return [
+                    'success' => true,
+                    'friends' => []
+                ];
+            }
+
+            // Get achievement counts for each friend
+            $friendsWithAchievements = [];
+            foreach ($friends as $friend) {
+                // Get achievement count for this friend
+                $stmt = $this->pdo->prepare("
+                    SELECT COUNT(*) as achievement_count
+                    FROM user_achievements
+                    WHERE user_id = ?
+                ");
+                $stmt->execute([$friend['friend_id']]);
+                $achievementData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                $friend['achievement_count'] = $achievementData['achievement_count'] ?? 0;
+
+                // Get some sample achievements for this friend
+                $stmt = $this->pdo->prepare("
+                    SELECT
+                        a.name,
+                        a.icon,
+                        ua.achieved_at as earned_at
+                    FROM user_achievements ua
+                    JOIN achievements a ON ua.achievement_key = a.achievement_key
+                    WHERE ua.user_id = ?
+                    ORDER BY ua.achieved_at DESC
+                    LIMIT 3
+                ");
+                $stmt->execute([$friend['friend_id']]);
+                $friend['recent_achievements'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $friendsWithAchievements[] = $friend;
+            }
+
+            // Sort friends by achievement count
+            usort($friendsWithAchievements, function($a, $b) {
+                return $b['achievement_count'] - $a['achievement_count'];
+            });
+
+            // Get current user's achievement count for comparison
+            $stmt = $this->pdo->prepare("
+                SELECT COUNT(*) as achievement_count
+                FROM user_achievements
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $userAchievements = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'friends' => $friendsWithAchievements,
+                'user_achievement_count' => $userAchievements['achievement_count'] ?? 0
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Get friends achievement comparison error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to load achievement comparison'
+            ];
+        }
+    }
+
 }
