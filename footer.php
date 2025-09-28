@@ -195,7 +195,11 @@
     <!-- App Data -->
     <script src="assets/js/app-data.js?v=<?php echo $v; ?>"></script>
 
-    <!-- Core UI Handler -->
+    <!-- Module Loading System -->
+    <script src="assets/js/module-loader.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-core.js?v=<?php echo $v; ?>"></script>
+
+    <!-- Core UI Handler (Legacy - will be replaced) -->
     <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
 
     <!-- Feature Handlers -->

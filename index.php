@@ -294,5 +294,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.userSearchHandler) {
         window.userSearchHandler.init();
     }
+
+    // Phase 1 Modular System Validation
+    // This demonstrates that our new UICore module is working alongside the legacy system
+    setTimeout(() => {
+        if (typeof ModuleLoader !== 'undefined') {
+            const uiCore = ModuleLoader.getModule('UICore');
+            if (uiCore) {
+                console.log('✅ Phase 1 Success: UICore module is loaded and accessible');
+                console.log('✅ Available UICore methods:', Object.keys(uiCore));
+                console.log('✅ DOM elements managed:', Object.keys(ModuleLoader.dom));
+
+                // Show a brief success toast to demonstrate the new system
+                uiCore.showToast('Phase 1 modular system başarıyla yüklendi! 🚀', 'success');
+            } else {
+                console.error('❌ Phase 1 Error: UICore module not loaded');
+            }
+        }
+    }, 2000);
 });
 </script>
