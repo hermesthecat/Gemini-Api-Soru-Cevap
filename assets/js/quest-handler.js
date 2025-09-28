@@ -29,12 +29,19 @@ const questHandler = (() => {
 
     const updateQuests = async () => {
         const result = await api.call('get_daily_quests', {}, 'POST', false);
+        console.log('Quest API result:', result);
+
         if (result.success) {
             const uiGame = getUIGame();
+            console.log('UIGame module:', uiGame);
             if (uiGame && uiGame.renderQuests) {
+                console.log('Rendering quests:', result.data);
                 uiGame.renderQuests(result.data);
+            } else {
+                console.error('UIGame.renderQuests not found!');
             }
         } else {
+            console.error('Quest API failed:', result);
             const uiGame = getUIGame();
             if (uiGame && uiGame.renderQuests) {
                 uiGame.renderQuests([]); // Hata durumunda boş liste render et

@@ -66,22 +66,22 @@ const UIGame = (() => {
                             <i class="${questTypeInfo.icon} text-${questTypeInfo.color}-600 dark:text-${questTypeInfo.color}-400"></i>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-gray-800 dark:text-gray-200">${quest.title}</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">${quest.description}</p>
+                            <h4 class="font-semibold text-gray-800 dark:text-gray-200">${quest.name || 'Görev'}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${quest.description || 'Açıklama yok'}</p>
                         </div>
                     </div>
                     <div class="text-right">
                         ${isCompleted ?
                             '<span class="text-green-600 dark:text-green-400 font-semibold"><i class="fas fa-check"></i> Tamamlandı</span>' :
                             `<div class="text-sm">
-                                <div class="text-gray-600 dark:text-gray-400">${quest.progress}/${quest.goal}</div>
+                                <div class="text-gray-600 dark:text-gray-400">${quest.progress || 0}/${quest.goal || 1}</div>
                                 <div class="w-16 bg-gray-200 rounded-full h-2 mt-1">
                                     <div class="bg-${questTypeInfo.color}-500 h-2 rounded-full" style="width: ${Math.min(progressPercent, 100)}%"></div>
                                 </div>
                             </div>`
                         }
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-coins text-yellow-500"></i> ${quest.reward_amount} jeton
+                            <i class="fas fa-coins text-yellow-500"></i> ${quest.reward_coins || 0} jeton
                         </div>
                     </div>
                 </div>
