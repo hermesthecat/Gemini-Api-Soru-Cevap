@@ -9,6 +9,20 @@ const game = {
         this.addEventListeners();
     },
 
+    // Helper method to get UICore module with fallback
+    showToast(message, type) {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            // Fallback to legacy ui-handler
+            window.ui.showToast(message, type);
+        } else {
+            // Final fallback to console
+            console.log(`[${type}] ${message}`);
+        }
+    },
+
     populateCategories() {
         if (!this.dom.categoryButtons) return;
 
@@ -149,9 +163,7 @@ const game = {
             }, 3000);
         } else {
             if (result && result.message) {
-                if (window.ui && window.ui.showToast) {
-                    window.ui.showToast(result.message, 'error');
-                }
+                this.showToast(result.message, 'error');
             }
             this.dom.questionContainer.classList.add('hidden');
             this.dom.categorySelectionContainer.classList.remove('hidden');
@@ -506,29 +518,14 @@ const game = {
             }
 
             if (result && result.success) {
-                document.dispatchEvent(new CustomEvent('showNotification', {
-                    detail: {
-                        message: result.message || 'Değerlendirmeniz kaydedildi!',
-                        type: 'success'
-                    }
-                }));
+                this.showToast(result.message || 'Değerlendirmeniz kaydedildi!', 'success');
                 this.hideQuestionRatingModal();
             } else {
-                document.dispatchEvent(new CustomEvent('showNotification', {
-                    detail: {
-                        message: result?.message || 'Bir hata oluştu.',
-                        type: 'error'
-                    }
-                }));
+                this.showToast(result?.message || 'Bir hata oluştu.', 'error');
             }
         } catch (error) {
             console.error('Rating submission error:', error);
-            document.dispatchEvent(new CustomEvent('showNotification', {
-                detail: {
-                    message: 'Bağlantı hatası oluştu.',
-                    type: 'error'
-                }
-            }));
+            this.showToast('Bağlantı hatası oluştu.', 'error');
         } finally {
             // Re-enable button
             if (submitBtn) {
@@ -545,12 +542,7 @@ const game = {
         const feedback = document.getElementById('rating-feedback')?.value || '';
 
         if (!reportReason) {
-            document.dispatchEvent(new CustomEvent('showNotification', {
-                detail: {
-                    message: 'Lütfen şikayet sebebini seçin.',
-                    type: 'error'
-                }
-            }));
+            this.showToast('Lütfen şikayet sebebini seçin.', 'error');
             return { success: false };
         }
 

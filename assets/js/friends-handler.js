@@ -9,6 +9,37 @@ const friendsHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showLoading = (show) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showLoading(show);
+        } else if (window.ui && window.ui.showLoading) {
+            window.ui.showLoading(show);
+        }
+    };
+
+    const getUISocial = () => {
+        const UISocial = ModuleLoader?.getModule('UISocial');
+        if (UISocial) {
+            return UISocial;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const updateAll = () => {
         updatePendingRequests();
         updateFriendsList();
@@ -22,14 +53,17 @@ const friendsHandler = (() => {
         }
         const result = await api.call('friends_search_users', { username }, 'POST', false);
         if (result.success) {
-            ui.renderFriendSearchResults(result.data);
+            const uiSocial = getUISocial();
+            if (uiSocial && uiSocial.renderFriendSearchResults) {
+                uiSocial.renderFriendSearchResults(result.data);
+            }
             updateAll();
         }
     };
 
     const sendRequest = async (userId) => {
         const result = await api.call('friends_send_request', { user_id: userId });
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
             // Arama sonuçlarını temizle veya butonu deaktif et
             dom.friendSearchInput.value = '';
@@ -40,13 +74,16 @@ const friendsHandler = (() => {
     const updatePendingRequests = async () => {
         const result = await api.call('friends_get_pending_requests', {}, 'POST', false);
         if (result.success) {
-            ui.renderPendingRequests(result.data);
+            const uiSocial = getUISocial();
+            if (uiSocial && uiSocial.renderPendingRequests) {
+                uiSocial.renderPendingRequests(result.data);
+            }
         }
     };
 
     const respondToRequest = async (requestId, response) => {
         const result = await api.call('friends_respond_to_request', { request_id: requestId, response });
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
             updateAll();
         }
@@ -55,14 +92,17 @@ const friendsHandler = (() => {
     const updateFriendsList = async () => {
         const result = await api.call('friends_get_list', {}, 'POST', false);
         if (result.success) {
-            ui.renderFriendsList(result.data);
+            const uiSocial = getUISocial();
+            if (uiSocial && uiSocial.renderFriendsList) {
+                uiSocial.renderFriendsList(result.data);
+            }
         }
     };
 
     const removeFriend = async (friendshipId, username) => {
         if (confirm(`'${username}' adlı kullanıcıyı arkadaşlıktan çıkarmak istediğinizden emin misiniz?`)) {
             const result = await api.call('friends_remove', { friendship_id: friendshipId });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
             if (result.success) {
                 updateAll();
             }
@@ -72,7 +112,10 @@ const friendsHandler = (() => {
     const handleChallengeClick = (button) => {
         const opponentId = button.dataset.opponentId;
         const opponentName = button.dataset.opponentName;
-        ui.showDuelModal(true, { id: opponentId, name: opponentName });
+        const uiSocial = getUISocial();
+        if (uiSocial && uiSocial.showDuelModal) {
+            uiSocial.showDuelModal(true, { id: opponentId, name: opponentName });
+        }
     };
 
     const sendChallenge = async () => {
@@ -81,18 +124,21 @@ const friendsHandler = (() => {
         const difficulty = dom.duelDifficultySelect.value;
         const questionCount = dom.duelQuestionCountSelect.value;
 
-        ui.showLoading(true);
+        showLoading(true);
         const result = await api.call('duel_create', {
             opponent_id: opponentId,
             category: category,
             difficulty: difficulty,
             question_count: questionCount
         }, 'POST', false); // showLoading'i manuel yöneteceğiz
-        ui.showLoading(false);
+        showLoading(false);
 
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
-            ui.showDuelModal(false);
+            const uiSocial = getUISocial();
+            if (uiSocial && uiSocial.showDuelModal) {
+                uiSocial.showDuelModal(false);
+            }
             // İleride düello listesini güncelleme fonksiyonu buraya gelebilir.
         }
     };
@@ -102,14 +148,17 @@ const friendsHandler = (() => {
         if (result.success) {
             const currentUser = appState.get('currentUser');
             if (currentUser && currentUser.id) {
-                ui.renderDuelsList(result.data, currentUser.id);
+                const uiSocial = getUISocial();
+                if (uiSocial && uiSocial.renderDuelsList) {
+                    uiSocial.renderDuelsList(result.data, currentUser.id);
+                }
             }
         }
     };
 
     const respondToDuel = async (duelId, response) => {
         const result = await api.call('duel_respond', { duel_id: duelId, response: response });
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
             updateDuelsList();
         }
@@ -118,7 +167,7 @@ const friendsHandler = (() => {
     const cancelDuel = async (duelId) => {
         if (confirm('Bu düello davetini iptal etmek istediğinizden emin misiniz?')) {
             const result = await api.call('duel_cancel', { duel_id: duelId });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
             if (result.success) {
                 updateDuelsList();
             }
@@ -176,7 +225,10 @@ const friendsHandler = (() => {
 
         // Düello Modalı Kapatma
         dom.duelModalCloseBtn?.addEventListener('click', () => {
-            ui.showDuelModal(false);
+            const uiSocial = getUISocial();
+            if (uiSocial && uiSocial.showDuelModal) {
+                uiSocial.showDuelModal(false);
+            }
         });
 
         // Düello Gönderme

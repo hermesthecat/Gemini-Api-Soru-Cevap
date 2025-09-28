@@ -1,8 +1,22 @@
 const auth = {
     init(dom, ui) {
         this.dom = dom;
-        this.ui = ui;
+        this.ui = ui; // Keep for backward compatibility
         this.addEventListeners();
+    },
+
+    // Helper method to get UICore module with fallback
+    showToast(message, type) {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (this.ui && this.ui.showToast) {
+            // Fallback to legacy ui-handler
+            this.ui.showToast(message, type);
+        } else {
+            // Final fallback to console
+            console.log(`[${type}] ${message}`);
+        }
     },
 
     addEventListeners() {
@@ -21,7 +35,7 @@ const auth = {
                     window.appState.set('csrfToken', result.data.csrf_token);
                 }
 
-                this.ui.showToast('Giriş başarılı, hoş geldiniz!', 'success');
+                this.showToast('Giriş başarılı, hoş geldiniz!', 'success');
                 // Başarılı girişi ana uygulamaya bildir
                 document.dispatchEvent(new CustomEvent('loginSuccess', { detail: result }));
                 // MPA'da ana sayfaya redirect
@@ -30,7 +44,7 @@ const auth = {
                 }, 1000);
             } else if (result && result.message) {
                 // Sunucudan gelen özel hata mesajlarını göster (örn. "Şifre hatalı")
-                this.ui.showToast(result.message, 'error');
+                this.showToast(result.message, 'error');
             }
             });
         }
@@ -45,10 +59,10 @@ const auth = {
             });
 
             if (result && result.success) {
-                this.ui.showToast(result.message, 'success');
+                this.showToast(result.message, 'success');
                 this.dom.showLoginBtn.click(); // Kayıt sonrası giriş sekmesini göster
             } else if (result && result.message) {
-                this.ui.showToast(result.message, 'error');
+                this.showToast(result.message, 'error');
             }
             });
         }
@@ -60,7 +74,7 @@ const auth = {
             if (result && result.success) {
                 // Başarılı çıkışı ana uygulamaya bildir
                 document.dispatchEvent(new Event('logoutSuccess'));
-                this.ui.showToast('Başarıyla çıkış yapıldı.', 'success');
+                this.showToast('Başarıyla çıkış yapıldı.', 'success');
             }
             // Hata durumu zaten api.call tarafından yönetilir.
             });

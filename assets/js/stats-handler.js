@@ -6,6 +6,29 @@ const statsHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const getUILeaderboard = () => {
+        const UILeaderboard = ModuleLoader?.getModule('UILeaderboard');
+        if (UILeaderboard) {
+            return UILeaderboard;
+        } else if (window.ui) {
+            // Fallback to legacy ui-handler
+            return window.ui;
+        }
+        return null;
+    };
+
+    const getUIGame = () => {
+        const UIGame = ModuleLoader?.getModule('UIGame');
+        if (UIGame) {
+            return UIGame;
+        } else if (window.ui) {
+            // Fallback to legacy ui-handler
+            return window.ui;
+        }
+        return null;
+    };
+
     const addEventListeners = () => {
         // Avatar functionality removed - using initials instead
     };
@@ -31,10 +54,15 @@ const statsHandler = (() => {
 
     const updateAchievements = async () => {
         const result = await api.call('get_user_achievements', {}, 'POST', false);
+        const uiGame = getUIGame();
         if (result && result.success) {
-            ui.renderAchievements(result.data);
+            if (uiGame && uiGame.renderAchievements) {
+                uiGame.renderAchievements(result.data);
+            }
         } else if (!result.success) {
-            ui.renderAchievements([]);
+            if (uiGame && uiGame.renderAchievements) {
+                uiGame.renderAchievements([]);
+            }
         }
     };
 
@@ -47,14 +75,20 @@ const statsHandler = (() => {
 
         if (leaderboardResult && leaderboardResult.success) {
             const userRank = userRankResult && userRankResult.success ? userRankResult.data : null;
-            ui.renderLeaderboard(leaderboardResult.data, userRank);
+            const uiLeaderboard = getUILeaderboard();
+            if (uiLeaderboard && uiLeaderboard.renderLeaderboard) {
+                uiLeaderboard.renderLeaderboard(leaderboardResult.data, userRank);
+            }
         }
     };
 
     const updateUserData = async () => {
         const result = await api.call('get_user_data', {}, 'POST', false);
         if (result && result.success) {
-            ui.renderUserData(result.data);
+            const uiLeaderboard = getUILeaderboard();
+            if (uiLeaderboard && uiLeaderboard.renderUserData) {
+                uiLeaderboard.renderUserData(result.data);
+            }
             const currentUser = appState.get('currentUser');
             if (currentUser) {
             }
