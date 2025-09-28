@@ -58,14 +58,14 @@ const UIErrors = (() => {
             });
         });
 
-        // Console error override for additional logging
-        if (config.enableConsoleLogging) {
-            const originalConsoleError = console.error;
-            console.error = function(...args) {
-                logError('Console Error', { args: args.join(' ') });
-                originalConsoleError.apply(console, args);
-            };
-        }
+        // Console error override for additional logging - DISABLED to prevent infinite loop
+        // if (config.enableConsoleLogging) {
+        //     const originalConsoleError = console.error;
+        //     console.error = function(...args) {
+        //         logError('Console Error', { args: args.join(' ') });
+        //         originalConsoleError.apply(console, args);
+        //     };
+        // }
     };
 
     // Central logging function

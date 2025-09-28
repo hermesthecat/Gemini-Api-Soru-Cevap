@@ -43,10 +43,16 @@ const UIAdminStats = (() => {
 
         announcements.forEach(ann => {
             const tr = document.createElement('tr');
+            const content = ann.content || '';
+            const contentPreview = content.length > 50 ? content.substring(0, 50) + '...' : content;
+            const targetText = ann.target_group === 'all' ? 'Tüm Kullanıcılar' :
+                             ann.target_group === 'users' ? 'Normal Kullanıcılar' : 'Adminler';
+            const endDate = ann.end_date ? new Date(ann.end_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş';
+
             tr.innerHTML = `
                 <td class="py-2 px-4">${ann.title}</td>
-                <td class="py-2 px-4">${ann.content.substring(0, 50)}${ann.content.length > 50 ? '...' : ''}</td>
-                <td class="py-2 px-4">${ann.created_at}</td>
+                <td class="py-2 px-4">${targetText}</td>
+                <td class="py-2 px-4">${endDate}</td>
                 <td class="py-2 px-4">
                     <button data-id="${ann.id}" class="delete-announcement-btn text-red-500 hover:text-red-700" title="Duyuruyu Sil">
                         <i class="fas fa-trash"></i>

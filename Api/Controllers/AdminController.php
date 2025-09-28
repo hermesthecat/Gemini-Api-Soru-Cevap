@@ -124,7 +124,7 @@ class AdminController
         if (($check = $this->checkAdmin()) !== true) return $check;
 
         $stmt = $this->pdo->query("
-            SELECT a.id, a.title, a.target_group, a.start_date, a.end_date, a.is_active, u.username as author_name
+            SELECT a.id, a.title, a.content, a.target_group, a.start_date, a.end_date, a.is_active, a.created_at, u.username as author_name
             FROM announcements a
             JOIN users u ON a.author_id = u.id
             ORDER BY a.created_at DESC

@@ -89,12 +89,16 @@ const announcementHandler = (() => {
             const result = await api.call('admin_get_announcements', {}, 'POST', false);
 
             if (result.success) {
-                ui.renderAdminAnnouncementsList(result.data);
-            } else {
-                // API error occurred
+                const uiAdminStats = getUIAdminStats();
+                if (uiAdminStats && uiAdminStats.renderAdminAnnouncementsList) {
+                    uiAdminStats.renderAdminAnnouncementsList(result.data);
+                } else if (window.ui && window.ui.renderAdminAnnouncementsList) {
+                    // Legacy fallback
+                    window.ui.renderAdminAnnouncementsList(result.data);
+                }
             }
         } catch (error) {
-            // Error handled silently
+            console.error('Duyuru listesi yüklenirken hata:', error.message);
         }
     };
 
