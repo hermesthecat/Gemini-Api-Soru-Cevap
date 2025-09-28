@@ -202,6 +202,8 @@
     <script src="assets/js/ui-charts.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/ui-questions.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/ui-game.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-social.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-leaderboard.js?v=<?php echo $v; ?>"></script>
 
     <!-- Core UI Handler (Legacy - will be replaced) -->
     <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
