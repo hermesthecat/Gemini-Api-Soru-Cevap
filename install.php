@@ -6,7 +6,7 @@ header('Content-Type: text/plain; charset=utf-8');
 
 // Installation mode: fresh=1 for complete reinstall, default for safe update
 $fresh_install = isset($_GET['fresh']) && $_GET['fresh'] == '1';
-$current_version = '1.17.0'; // Current schema version
+$current_version = '1.18.0'; // Current schema version
 
 echo "=== AI Bilgi Yarismasi Veritabani Kurulum/Guncelleme ===\n";
 echo "Mod: " . ($fresh_install ? "Fresh Install (Tum veriler silinecek!)" : "Safe Update (Mevcut veriler korunacak)") . "\n";
@@ -571,6 +571,9 @@ try {
             break;
           case '1.17.0':
             migration_1_17_0($pdo);
+            break;
+          case '1.18.0':
+            migration_1_18_0($pdo);
             break;
           default:
             echo "Bilinmeyen migration version: $version\n";
@@ -1653,5 +1656,98 @@ function migration_1_17_0($pdo) {
   } catch (Exception $e) {
     $pdo->rollBack();
     throw new Exception("Migration 1.17.0 basarisiz: " . $e->getMessage());
+  }
+}
+
+/**
+ * Migration 1.18.0: Add social features for profile system
+ */
+function migration_1_18_0($pdo) {
+  echo "-> Migration 1.18.0: Sosyal ozellikler icin tablolar ekleniyor...\n";
+
+  try {
+    $pdo->beginTransaction();
+
+    // Profile visit history table
+    $pdo->exec("
+      CREATE TABLE IF NOT EXISTS profile_visits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        visitor_id INT NOT NULL,
+        visited_id INT NOT NULL,
+        visit_count INT NOT NULL DEFAULT 1,
+        last_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        first_visit TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (visitor_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (visited_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_visit (visitor_id, visited_id),
+        INDEX idx_visitor (visitor_id),
+        INDEX idx_visited (visited_id),
+        INDEX idx_last_visit (last_visit)
+      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    ");
+
+    echo "   profile_visits tablosu olusturuldu\n";
+
+    // Profile shares table for tracking share actions
+    $pdo->exec("
+      CREATE TABLE IF NOT EXISTS profile_shares (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sharer_id INT NOT NULL,
+        shared_profile_id INT NOT NULL,
+        share_method ENUM('link', 'social', 'copy') NOT NULL DEFAULT 'link',
+        shared_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        FOREIGN KEY (sharer_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (shared_profile_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_sharer (sharer_id),
+        INDEX idx_shared_profile (shared_profile_id),
+        INDEX idx_shared_at (shared_at)
+      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    ");
+
+    echo "   profile_shares tablosu olusturuldu\n";
+
+    // Achievement comparisons table for storing comparison history
+    $pdo->exec("
+      CREATE TABLE IF NOT EXISTS achievement_comparisons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user1_id INT NOT NULL,
+        user2_id INT NOT NULL,
+        comparison_data JSON,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user1 (user1_id),
+        INDEX idx_user2 (user2_id),
+        INDEX idx_created_at (created_at)
+      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    ");
+
+    echo "   achievement_comparisons tablosu olusturuldu\n";
+
+    // Add profile bookmark system for friend shortcuts
+    $pdo->exec("
+      CREATE TABLE IF NOT EXISTS profile_bookmarks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        bookmarked_user_id INT NOT NULL,
+        bookmark_name VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (bookmarked_user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_bookmark (user_id, bookmarked_user_id),
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+    ");
+
+    echo "   profile_bookmarks tablosu olusturuldu\n";
+
+    $pdo->commit();
+    markMigrationComplete($pdo, '1.18.0', 'Added social features tables: profile_visits, profile_shares, achievement_comparisons, profile_bookmarks');
+
+  } catch (Exception $e) {
+    $pdo->rollBack();
+    throw new Exception("Migration 1.18.0 basarisiz: " . $e->getMessage());
   }
 }

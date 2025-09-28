@@ -23,6 +23,7 @@ require_once 'Api/Controllers/QuestController.php';
 require_once 'Api/Controllers/QuestionsController.php';
 require_once 'Api/Controllers/ShopController.php';
 require_once 'Api/Controllers/SettingsController.php';
+require_once 'Api/Controllers/SocialController.php';
 
 session_start();
 header('Content-Type: application/json');
@@ -89,6 +90,7 @@ $questController = new QuestController($pdo);
 $questionsController = new QuestionsController($pdo);
 $shopController = new ShopController($pdo);
 $settingsController = new SettingsController($pdo);
+$socialController = new SocialController($pdo);
 
 // Genel Hata Yakalama
 try {
@@ -204,6 +206,15 @@ try {
         'add_api_key' => [$settingsController, 'addApiKey', true, true],
         'update_api_key_status' => [$settingsController, 'updateApiKeyStatus', true, true],
         'delete_api_key' => [$settingsController, 'deleteApiKey', true, true],
+
+        // Social Features Routes
+        'record_profile_visit' => [$socialController, 'recordProfileVisit', true, true],
+        'get_profile_visit_history' => [$socialController, 'getProfileVisitHistory', true, true],
+        'share_profile' => [$socialController, 'shareProfile', true, true],
+        'compare_achievements' => [$socialController, 'compareAchievements', true, true],
+        'get_friend_shortcuts' => [$socialController, 'getFriendShortcuts', false, true],
+        'add_profile_bookmark' => [$socialController, 'addProfileBookmark', true, true],
+        'remove_profile_bookmark' => [$socialController, 'removeProfileBookmark', true, true],
     ];
 
     // --- Yönlendirici (Router) Mantığı ---

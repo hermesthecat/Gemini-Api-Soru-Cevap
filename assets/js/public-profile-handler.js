@@ -12,6 +12,7 @@ const publicProfileHandler = (function() {
         currentUsername = username;
         loadProfileData();
         initializeEventListeners();
+        loadSocialFeatures();
     }
 
     // Set up event listeners
@@ -32,6 +33,55 @@ const publicProfileHandler = (function() {
         const viewAchievementsBtn = document.getElementById('view-all-achievements');
         if (viewAchievementsBtn) {
             viewAchievementsBtn.addEventListener('click', showAllAchievementsModal);
+        }
+
+        // Social action buttons
+        const shareBtn = document.getElementById('share-profile-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', showShareModal);
+        }
+
+        const compareBtn = document.getElementById('compare-achievements-btn');
+        if (compareBtn) {
+            compareBtn.addEventListener('click', showAchievementComparison);
+        }
+
+        const bookmarkBtn = document.getElementById('bookmark-profile-btn');
+        if (bookmarkBtn) {
+            bookmarkBtn.addEventListener('click', toggleProfileBookmark);
+        }
+
+        // Share modal event listeners
+        const shareModalClose = document.getElementById('share-profile-modal-close');
+        if (shareModalClose) {
+            shareModalClose.addEventListener('click', hideShareModal);
+        }
+
+        const copyUrlBtn = document.getElementById('copy-url-btn');
+        if (copyUrlBtn) {
+            copyUrlBtn.addEventListener('click', copyProfileUrl);
+        }
+
+        const shareWhatsAppBtn = document.getElementById('share-whatsapp-btn');
+        if (shareWhatsAppBtn) {
+            shareWhatsAppBtn.addEventListener('click', () => shareToSocial('whatsapp'));
+        }
+
+        const shareTwitterBtn = document.getElementById('share-twitter-btn');
+        if (shareTwitterBtn) {
+            shareTwitterBtn.addEventListener('click', () => shareToSocial('twitter'));
+        }
+
+        // Achievement comparison modal
+        const comparisonModalClose = document.getElementById('achievement-comparison-modal-close');
+        if (comparisonModalClose) {
+            comparisonModalClose.addEventListener('click', hideAchievementComparisonModal);
+        }
+
+        // Visit history load more
+        const loadMoreVisitsBtn = document.getElementById('load-more-visits-btn');
+        if (loadMoreVisitsBtn) {
+            loadMoreVisitsBtn.addEventListener('click', loadMoreVisitHistory);
         }
     }
 
@@ -82,6 +132,11 @@ const publicProfileHandler = (function() {
 
         // Show/hide privacy settings for own profile
         updatePrivacySettings(profile);
+
+        // Record profile visit if viewing another user's profile
+        if (!profile.is_own_profile) {
+            recordProfileVisit();
+        }
     }
 
     // Update profile header section
@@ -280,6 +335,16 @@ const publicProfileHandler = (function() {
         } else {
             privacySection.classList.add('hidden');
         }
+
+        // Show/hide social actions
+        const socialActions = document.getElementById('social-actions');
+        if (socialActions) {
+            if (profile.is_own_profile) {
+                socialActions.classList.add('hidden');
+            } else {
+                socialActions.classList.remove('hidden');
+            }
+        }
     }
 
     // Update profile visibility setting
@@ -407,6 +472,458 @@ const publicProfileHandler = (function() {
         const errorMessageEl = document.getElementById('profile-error-message');
         if (errorMessageEl) {
             errorMessageEl.textContent = message;
+        }
+    }
+
+    // === SOCIAL FEATURES ===
+
+    // Load social features (friend shortcuts, visit history for own profile)
+    async function loadSocialFeatures() {
+        try {
+            // Load friend shortcuts for all users
+            await loadFriendShortcuts();
+
+            // Load visit history only for own profile
+            if (profileData && profileData.profile && profileData.profile.is_own_profile) {
+                await loadVisitHistory();
+            }
+        } catch (error) {
+            console.error('Error loading social features:', error);
+        }
+    }
+
+    // Record profile visit
+    async function recordProfileVisit() {
+        try {
+            await api.call('record_profile_visit', {
+                username: currentUsername
+            }, 'POST', false);
+        } catch (error) {
+            console.error('Error recording profile visit:', error);
+        }
+    }
+
+    // Load friend shortcuts
+    async function loadFriendShortcuts() {
+        try {
+            const response = await api.call('get_friend_shortcuts', {}, 'POST', false);
+
+            if (response.success) {
+                displayBookmarkedFriends(response.data.bookmarks);
+                displayRecentFriends(response.data.recent_friends);
+            }
+        } catch (error) {
+            console.error('Error loading friend shortcuts:', error);
+        }
+    }
+
+    // Display bookmarked friends
+    function displayBookmarkedFriends(bookmarks) {
+        const container = document.getElementById('bookmarked-friends-container');
+        if (!container) return;
+
+        if (bookmarks.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz işaretlenmiş profil yok</p>';
+            return;
+        }
+
+        container.innerHTML = bookmarks.map(bookmark => `
+            <div class="stat-card bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 cursor-pointer"
+                 onclick="window.location.href='/profile/${bookmark.username}'">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        ${bookmark.username.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${bookmark.bookmark_name || bookmark.username}</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${formatNumber(bookmark.total_score || 0)} puan</p>
+                        <p class="text-xs text-blue-600 dark:text-blue-400">${bookmark.achievement_count || 0} başarım</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Display recent friends
+    function displayRecentFriends(friends) {
+        const container = document.getElementById('recent-friends-container');
+        if (!container) return;
+
+        if (friends.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz arkadaş yok</p>';
+            return;
+        }
+
+        container.innerHTML = friends.map(friend => `
+            <div class="stat-card bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 cursor-pointer"
+                 onclick="window.location.href='/profile/${friend.username}'">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        ${friend.username.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${friend.username}</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${formatNumber(friend.total_score || 0)} puan</p>
+                        <p class="text-xs text-green-600 dark:text-green-400">${friend.achievement_count || 0} başarım</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Load visit history (own profile only)
+    let visitHistoryOffset = 0;
+    async function loadVisitHistory() {
+        try {
+            const response = await api.call('get_profile_visit_history', {
+                username: currentUsername,
+                limit: 10,
+                offset: visitHistoryOffset
+            }, 'POST', false);
+
+            if (response.success) {
+                displayVisitHistory(response.data.visits, visitHistoryOffset === 0);
+
+                // Show/hide load more button
+                const loadMoreBtn = document.getElementById('load-more-visits-btn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.style.display = response.data.has_more ? 'block' : 'none';
+                }
+
+                // Show visit history section
+                const visitSection = document.getElementById('visit-history-section');
+                if (visitSection && response.data.visits.length > 0) {
+                    visitSection.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading visit history:', error);
+        }
+    }
+
+    // Display visit history
+    function displayVisitHistory(visits, replace = false) {
+        const container = document.getElementById('visit-history-container');
+        if (!container) return;
+
+        if (visits.length === 0 && replace) {
+            container.innerHTML = '<p class="text-gray-500 text-center">Henüz ziyaretçi yok</p>';
+            return;
+        }
+
+        const visitHtml = visits.map(visit => `
+            <div class="stat-card bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 cursor-pointer"
+                 onclick="window.location.href='/profile/${visit.visitor_username}'">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white font-bold">
+                            ${visit.visitor_username.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800 dark:text-gray-200">${visit.visitor_username}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">${visit.visit_count} ziyaret</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">${formatDate(visit.last_visit)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        if (replace) {
+            container.innerHTML = visitHtml;
+        } else {
+            container.innerHTML += visitHtml;
+        }
+    }
+
+    // Load more visit history
+    async function loadMoreVisitHistory() {
+        visitHistoryOffset += 10;
+        await loadVisitHistory();
+    }
+
+    // Show share modal
+    function showShareModal() {
+        const modal = document.getElementById('share-profile-modal');
+        const modalContent = document.getElementById('share-profile-modal-content');
+        const urlInput = document.getElementById('share-url-input');
+
+        if (!modal || !modalContent || !urlInput) return;
+
+        // Set share URL
+        const profileUrl = window.location.origin + '/profile/' + currentUsername;
+        urlInput.value = profileUrl;
+
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95');
+        }, 10);
+    }
+
+    // Hide share modal
+    function hideShareModal() {
+        const modal = document.getElementById('share-profile-modal');
+        const modalContent = document.getElementById('share-profile-modal-content');
+
+        if (!modal || !modalContent) return;
+
+        modal.classList.add('opacity-0');
+        modalContent.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    // Copy profile URL
+    async function copyProfileUrl() {
+        try {
+            const urlInput = document.getElementById('share-url-input');
+            if (!urlInput) return;
+
+            await navigator.clipboard.writeText(urlInput.value);
+
+            // Record share action
+            await api.call('share_profile', {
+                username: currentUsername,
+                method: 'copy'
+            }, 'POST', false);
+
+            ui.showNotification('Profil linki kopyalandı!', 'success');
+        } catch (error) {
+            console.error('Error copying URL:', error);
+            ui.showNotification('Link kopyalanamadı', 'error');
+        }
+    }
+
+    // Share to social platforms
+    async function shareToSocial(platform) {
+        try {
+            const profileUrl = window.location.origin + '/profile/' + currentUsername;
+            const text = `${currentUsername} kullanıcısının AI Quiz profilini inceleyin!`;
+
+            let shareUrl = '';
+
+            if (platform === 'whatsapp') {
+                shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + profileUrl)}`;
+            } else if (platform === 'twitter') {
+                shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`;
+            }
+
+            if (shareUrl) {
+                window.open(shareUrl, '_blank');
+
+                // Record share action
+                await api.call('share_profile', {
+                    username: currentUsername,
+                    method: 'social'
+                }, 'POST', false);
+            }
+        } catch (error) {
+            console.error('Error sharing to social:', error);
+        }
+    }
+
+    // Show achievement comparison
+    async function showAchievementComparison() {
+        try {
+            const modal = document.getElementById('achievement-comparison-modal');
+            const modalContent = document.getElementById('achievement-comparison-modal-content');
+            const contentDiv = document.getElementById('achievement-comparison-content');
+
+            if (!modal || !modalContent || !contentDiv) return;
+
+            // Show loading
+            contentDiv.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+                    <span class="ml-3 text-gray-600 dark:text-gray-400">Başarımlar karşılaştırılıyor...</span>
+                </div>
+            `;
+
+            // Show modal
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+            }, 10);
+
+            // Get comparison data
+            const response = await api.call('compare_achievements', {
+                username: currentUsername
+            }, 'POST', true);
+
+            if (response.success) {
+                displayAchievementComparison(response.data);
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                        <p class="text-red-600 dark:text-red-400">${response.message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error showing achievement comparison:', error);
+            ui.showNotification('Başarım karşılaştırması yapılamadı', 'error');
+        }
+    }
+
+    // Display achievement comparison
+    function displayAchievementComparison(data) {
+        const contentDiv = document.getElementById('achievement-comparison-content');
+        if (!contentDiv) return;
+
+        const html = `
+            <!-- Comparison Summary -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-6 mb-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold text-blue-600 mb-2">${data.user1.username}</h3>
+                        <div class="text-3xl font-bold text-blue-800 dark:text-blue-400">${data.user1.total_achievements}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Başarım</div>
+                        <div class="text-lg font-semibold text-green-600 mt-2">${data.user1.unique_achievements}</div>
+                        <div class="text-xs text-gray-500">Benzersiz Başarım</div>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold text-purple-600 mb-2">${data.user2.username}</h3>
+                        <div class="text-3xl font-bold text-purple-800 dark:text-purple-400">${data.user2.total_achievements}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Başarım</div>
+                        <div class="text-lg font-semibold text-green-600 mt-2">${data.user2.unique_achievements}</div>
+                        <div class="text-xs text-gray-500">Benzersiz Başarım</div>
+                    </div>
+                </div>
+                <div class="text-center mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
+                    <div class="text-2xl font-bold text-yellow-600">${data.comparison_stats.common_count}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Ortak Başarım</div>
+                </div>
+            </div>
+
+            <!-- Achievement Categories -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Common Achievements -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-yellow-600 flex items-center">
+                        <i class="fas fa-handshake mr-2"></i>
+                        Ortak Başarımlar (${data.common_achievements.length})
+                    </h3>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${data.common_achievements.map(ach => `
+                            <div class="achievement-card earned bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="text-2xl">${ach.icon || '🏆'}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${ach.achievement_name}</h4>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">${ach.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- User1 Only -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-blue-600 flex items-center">
+                        <i class="fas fa-user-check mr-2"></i>
+                        ${data.user1.username} Özel (${data.user1_only_achievements.length})
+                    </h3>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${data.user1_only_achievements.map(ach => `
+                            <div class="achievement-card earned bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="text-2xl">${ach.icon || '🏆'}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${ach.achievement_name}</h4>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">${ach.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- User2 Only -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-purple-600 flex items-center">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        ${data.user2.username} Özel (${data.user2_only_achievements.length})
+                    </h3>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${data.user2_only_achievements.map(ach => `
+                            <div class="achievement-card earned bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="text-2xl">${ach.icon || '🏆'}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-semibold text-gray-800 dark:text-gray-200 truncate">${ach.achievement_name}</h4>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">${ach.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        contentDiv.innerHTML = html;
+    }
+
+    // Hide achievement comparison modal
+    function hideAchievementComparisonModal() {
+        const modal = document.getElementById('achievement-comparison-modal');
+        const modalContent = document.getElementById('achievement-comparison-modal-content');
+
+        if (!modal || !modalContent) return;
+
+        modal.classList.add('opacity-0');
+        modalContent.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    // Toggle profile bookmark
+    let isBookmarked = false;
+    async function toggleProfileBookmark() {
+        try {
+            const btn = document.getElementById('bookmark-profile-btn');
+            if (!btn) return;
+
+            if (isBookmarked) {
+                const response = await api.call('remove_profile_bookmark', {
+                    username: currentUsername
+                }, 'POST', true);
+
+                if (response.success) {
+                    isBookmarked = false;
+                    btn.innerHTML = '<i class="fas fa-bookmark mr-2"></i>İşaretle';
+                    btn.className = btn.className.replace('bg-red-500 hover:bg-red-600', 'bg-yellow-500 hover:bg-yellow-600');
+                    ui.showNotification('İşaret kaldırıldı', 'success');
+                    loadFriendShortcuts(); // Refresh shortcuts
+                }
+            } else {
+                const response = await api.call('add_profile_bookmark', {
+                    username: currentUsername,
+                    name: currentUsername
+                }, 'POST', true);
+
+                if (response.success) {
+                    isBookmarked = true;
+                    btn.innerHTML = '<i class="fas fa-bookmark-remove mr-2"></i>İşaret Kaldır';
+                    btn.className = btn.className.replace('bg-yellow-500 hover:bg-yellow-600', 'bg-red-500 hover:bg-red-600');
+                    ui.showNotification('Profil işaretlendi', 'success');
+                    loadFriendShortcuts(); // Refresh shortcuts
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling bookmark:', error);
+            ui.showNotification('İşlem başarısız', 'error');
         }
     }
 
