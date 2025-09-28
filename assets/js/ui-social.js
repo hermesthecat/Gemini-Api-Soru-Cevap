@@ -115,7 +115,7 @@ const UISocial = (() => {
                     ${avatarHTML}
                     <div>
                         <span class="font-semibold text-gray-700 dark:text-gray-300">${friend.username}</span>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Puan: ${friend.total_score}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Puan: ${friend.score || friend.total_score || 0}</p>
                     </div>
                 </div>
                 <div class="flex space-x-2">
@@ -273,9 +273,9 @@ const UISocial = (() => {
                         <div>
                             <h4 class="font-semibold text-gray-800 dark:text-gray-200">${opponentName}</h4>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
-                                ${duel.category_name} • ${duel.difficulty_level} • ${duel.question_count} soru
+                                ${duel.category_name || 'Genel Kültür'} • ${duel.difficulty || duel.difficulty_level || 'Orta'} • ${duel.question_count || 5} soru
                             </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">${duel.created_at}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">${duel.created_at ? new Date(duel.created_at).toLocaleDateString('tr-TR') : 'Bilinmiyor'}</p>
                         </div>
                     </div>
                     <div class="text-right">
