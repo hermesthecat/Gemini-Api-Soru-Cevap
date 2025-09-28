@@ -207,6 +207,9 @@
     <script src="assets/js/ui-admin.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/ui-admin-users.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/ui-admin-stats.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-errors.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-performance.js?v=<?php echo $v; ?>"></script>
+    <script src="assets/js/ui-utils.js?v=<?php echo $v; ?>"></script>
 
     <!-- Core UI Handler (Legacy - will be replaced) -->
     <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
