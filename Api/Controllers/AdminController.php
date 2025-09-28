@@ -50,6 +50,70 @@ class AdminController
         return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
+    public function getUserStatistics($data)
+    {
+        if (($check = $this->checkAdmin()) !== true) return $check;
+
+        $user_id = $data['user_id'] ?? 0;
+        if ($user_id <= 0) {
+            return ['success' => false, 'message' => 'Geçersiz kullanıcı ID'];
+        }
+
+        try {
+            // Get aggregate statistics
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    SUM(total_questions) as total_games,
+                    SUM(correct_answers) as total_correct,
+                    AVG(CASE WHEN total_questions > 0 THEN (correct_answers * 100.0 / total_questions) ELSE 0 END) as success_rate,
+                    SUM(total_time_spent) as total_time
+                FROM user_stats
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            // Get last game date
+            $stmt = $this->pdo->prepare("
+                SELECT MAX(created_at) as last_game
+                FROM user_stats
+                WHERE user_id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $lastGame = $stmt->fetchColumn();
+
+            // Get category breakdown
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    category,
+                    SUM(total_questions) as questions,
+                    SUM(correct_answers) as correct,
+                    ROUND(AVG(CASE WHEN total_questions > 0 THEN (correct_answers * 100.0 / total_questions) ELSE 0 END), 1) as success_rate
+                FROM user_stats
+                WHERE user_id = ?
+                GROUP BY category
+                ORDER BY questions DESC
+            ");
+            $stmt->execute([$user_id]);
+            $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'data' => [
+                    'total_games' => $stats['total_games'] ?? 0,
+                    'total_correct' => $stats['total_correct'] ?? 0,
+                    'success_rate' => round($stats['success_rate'] ?? 0, 1),
+                    'total_time' => $stats['total_time'] ?? 0,
+                    'last_game' => $lastGame ?? null,
+                    'categories' => $categories
+                ]
+            ];
+        } catch (Exception $e) {
+            error_log("Error in getUserStatistics: " . $e->getMessage());
+            return ['success' => false, 'message' => 'İstatistikler yüklenirken hata oluştu'];
+        }
+    }
+
     public function deleteUser($data)
     {
         if (($check = $this->checkAdmin()) !== true) return $check;

@@ -31,7 +31,9 @@ const UIAdminUsers = (() => {
             tr.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
             tr.dataset.userId = user.id;
 
-            const isCurrentUser = user.id === currentUserId;
+            // Check if this is the current logged-in user (admin)
+            // Since we can't rely on currentUserId, check by username
+            const isCurrentUser = user.username === 'admin' && user.role === 'admin';
 
             const userCell = document.createElement('td');
             userCell.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white flex items-center space-x-3';
@@ -92,16 +94,20 @@ const UIAdminUsers = (() => {
             const actionsCell = document.createElement('td');
             actionsCell.className = 'px-6 py-4';
 
-            if (!isCurrentUser) {
-                const UIAdmin = ModuleLoader.getModule('UIAdmin');
-                const viewButton = UIAdmin ? UIAdmin.createAdminActionButton('Görüntüle', {
-                    variant: 'primary',
-                    size: 'small',
-                    icon: 'fas fa-eye',
-                    className: 'view-user-btn mr-2',
-                    onClick: () => showUserDetailsModal(user)
-                }) : null;
+            // Always show view button for all users
+            const UIAdmin = ModuleLoader.getModule('UIAdmin');
+            const viewButton = UIAdmin ? UIAdmin.createAdminActionButton('Görüntüle', {
+                variant: 'primary',
+                size: 'small',
+                icon: 'fas fa-eye',
+                className: 'view-user-btn mr-2',
+                onClick: () => showUserDetailsModal(user)
+            }) : null;
 
+            if (viewButton) actionsCell.appendChild(viewButton);
+
+            // Only show delete button for non-current users
+            if (!isCurrentUser) {
                 const deleteButton = UIAdmin ? UIAdmin.createAdminActionButton('Sil', {
                     variant: 'danger',
                     size: 'small',
@@ -110,10 +116,13 @@ const UIAdminUsers = (() => {
                     onClick: () => confirmDeleteUser(user)
                 }) : null;
 
-                if (viewButton) actionsCell.appendChild(viewButton);
                 if (deleteButton) actionsCell.appendChild(deleteButton);
             } else {
-                actionsCell.innerHTML = '<span class="text-gray-400 text-sm">-</span>';
+                // For current user, show a disabled label instead of delete button
+                const disabledLabel = document.createElement('span');
+                disabledLabel.className = 'text-gray-400 text-sm ml-2';
+                disabledLabel.textContent = '(Kendiniz)';
+                actionsCell.appendChild(disabledLabel);
             }
 
             tr.appendChild(userCell);
@@ -162,29 +171,97 @@ const UIAdminUsers = (() => {
         container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</div>';
 
         try {
-            // This would typically make an API call to get user stats
-            // For now, showing placeholder
-            container.innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Oyun</div>
-                        <div class="text-xl font-bold">-</div>
+            // Call API to get real statistics
+            const response = await api.call('admin_get_user_statistics', { user_id: userId }, 'POST', false);
+
+            if (response.success && response.data) {
+                const stats = response.data;
+
+                // Format last game date
+                let lastGameText = '-';
+                if (stats.last_game) {
+                    const lastGameDate = new Date(stats.last_game);
+                    const now = new Date();
+                    const diffDays = Math.floor((now - lastGameDate) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 0) {
+                        lastGameText = 'Bugün';
+                    } else if (diffDays === 1) {
+                        lastGameText = 'Dün';
+                    } else if (diffDays < 7) {
+                        lastGameText = `${diffDays} gün önce`;
+                    } else {
+                        lastGameText = lastGameDate.toLocaleDateString('tr-TR');
+                    }
+                }
+
+                // Main statistics
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Oyun</div>
+                            <div class="text-xl font-bold">${stats.total_games || 0}</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Doğru Cevap</div>
+                            <div class="text-xl font-bold">${stats.total_correct || 0}</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Başarı Oranı</div>
+                            <div class="text-xl font-bold">${stats.success_rate || 0}%</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Son Oyun</div>
+                            <div class="text-xl font-bold">${lastGameText}</div>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">Doğru Cevap</div>
-                        <div class="text-xl font-bold">-</div>
+                `;
+
+                // Category breakdown if available
+                if (stats.categories && stats.categories.length > 0) {
+                    let categoryHtml = '<div class="mt-4"><h5 class="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Kategori Performansı:</h5>';
+                    categoryHtml += '<div class="space-y-2">';
+
+                    stats.categories.forEach(cat => {
+                        const categoryName = cat.category.charAt(0).toUpperCase() + cat.category.slice(1);
+                        categoryHtml += `
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-600 dark:text-gray-400">${categoryName}</span>
+                                <div class="text-right">
+                                    <span class="font-semibold">${cat.correct}/${cat.questions}</span>
+                                    <span class="text-xs text-gray-500 ml-2">(${cat.success_rate}%)</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    categoryHtml += '</div></div>';
+                    container.innerHTML += categoryHtml;
+                }
+            } else {
+                // Fallback for no data
+                container.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Toplam Oyun</div>
+                            <div class="text-xl font-bold">0</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Doğru Cevap</div>
+                            <div class="text-xl font-bold">0</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Başarı Oranı</div>
+                            <div class="text-xl font-bold">0%</div>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Son Oyun</div>
+                            <div class="text-xl font-bold">-</div>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">Başarı Oranı</div>
-                        <div class="text-xl font-bold">-%</div>
-                    </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">Son Oyun</div>
-                        <div class="text-xl font-bold">-</div>
-                    </div>
-                </div>
-            `;
+                `;
+            }
         } catch (error) {
+            console.error('Error loading user statistics:', error);
             container.innerHTML = '<div class="text-red-500 text-center">İstatistikler yüklenemedi</div>';
         }
     };
