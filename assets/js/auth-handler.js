@@ -1,7 +1,6 @@
 const auth = {
-    init(dom, ui) {
+    init(dom) {
         this.dom = dom;
-        this.ui = ui; // Keep for backward compatibility
         this.addEventListeners();
     },
 

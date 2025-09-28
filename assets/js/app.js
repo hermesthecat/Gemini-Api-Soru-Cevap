@@ -140,9 +140,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const App = {
         async init() {
             // Tüm modülleri DOM elementleriyle başlat
-            // Modüller ihtiyaç duydukları diğer modüllere (örn: appState, ui) global olarak erişir.
-            ui.init(dom);
-            auth.init(dom, ui);
+            // ModuleLoader sistemi üzerinden modüllere erişim - küçük bir timing delay ekle
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const UICore = ModuleLoader.getModule('UICore');
+            if (UICore) {
+                UICore.init(dom);
+            }
+            auth.init(dom);
             game.init(dom);
             statsHandler.init(dom);
             if (typeof adminHandler !== 'undefined') {
