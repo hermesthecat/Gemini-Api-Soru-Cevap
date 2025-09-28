@@ -1,6 +1,23 @@
 <?php
 include 'auth_check.php';
 include 'header.php';
+
+// Get user's current privacy setting from database
+require_once 'config.php';
+$current_visibility = 'public'; // default value
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $stmt = $pdo->prepare("SELECT profile_visibility FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($result) {
+        $current_visibility = $result['profile_visibility'] ?? 'public';
+    }
+} catch (PDOException $e) {
+    // Silent fail, use default
+}
 ?>
 
     <!-- Ana Konteyner -->
@@ -62,9 +79,9 @@ include 'header.php';
                                 Profil Görünürlüğü
                             </label>
                             <select id="profile-visibility-setting" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                <option value="public">🌍 Herkese Açık - Herkes profilimi görebilir</option>
-                                <option value="friends">👥 Sadece Arkadaşlar - Sadece arkadaşlarım görebilir</option>
-                                <option value="private">🔒 Gizli - Sadece ben görebilirim</option>
+                                <option value="public" <?php echo $current_visibility === 'public' ? 'selected' : ''; ?>>🌍 Herkese Açık - Herkes profilimi görebilir</option>
+                                <option value="friends" <?php echo $current_visibility === 'friends' ? 'selected' : ''; ?>>👥 Sadece Arkadaşlar - Sadece arkadaşlarım görebilir</option>
+                                <option value="private" <?php echo $current_visibility === 'private' ? 'selected' : ''; ?>>🔒 Gizli - Sadece ben görebilirim</option>
                             </select>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Bu ayar profilinizin public-profile.php sayfasındaki görünürlüğünü belirler.
@@ -1159,6 +1176,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize user search functionality
     if (window.userSearchHandler) {
         window.userSearchHandler.init();
+    }
+
+    // Populate share URL immediately with PHP session username
+    const shareUrlInput = document.getElementById('profile-share-url');
+    if (shareUrlInput) {
+        const username = '<?php echo $_SESSION['username'] ?? ''; ?>';
+        if (username) {
+            const baseUrl = window.location.origin;
+            const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            const profileUrl = baseUrl + path + '/public-profile.php?u=' + username;
+            shareUrlInput.value = profileUrl;
+        }
     }
 
     // Handle profile visibility change
