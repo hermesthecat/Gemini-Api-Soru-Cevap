@@ -116,6 +116,56 @@ include 'header.php';
             </div>
         </div>
 
+        <!-- Kullanıcı Detayları Modalı -->
+        <div id="user-details-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Kullanıcı Detayları</h3>
+                        <button id="user-details-close" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="mb-4 space-y-3">
+                        <div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Kullanıcı Adı:</span>
+                            <span id="user-details-name" class="ml-2 font-semibold text-gray-900 dark:text-white"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Toplam Puan:</span>
+                            <span id="user-details-score" class="ml-2 font-semibold text-gray-900 dark:text-white"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Jeton:</span>
+                            <span id="user-details-coins" class="ml-2 font-semibold text-yellow-600"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Rol:</span>
+                            <span id="user-details-role" class="ml-2 font-semibold text-gray-900 dark:text-white"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Kayıt Tarihi:</span>
+                            <span id="user-details-join-date" class="ml-2 font-semibold text-gray-900 dark:text-white"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="text-md font-medium text-gray-900 dark:text-white mb-2">İstatistikler</h4>
+                        <div id="user-details-stats" class="border-t pt-3">
+                            <!-- User statistics will be loaded here -->
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button id="user-details-close-btn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 <script>
@@ -127,6 +177,25 @@ document.addEventListener('DOMContentLoaded', () => {
             adminHandler.updateAll();
         }
     }, 100);
+
+    // User details modal event listeners
+    const modal = document.getElementById('user-details-modal');
+    const closeBtn = document.getElementById('user-details-close');
+    const closeBtnFooter = document.getElementById('user-details-close-btn');
+
+    // Close modal
+    [closeBtn, closeBtnFooter].forEach(btn => {
+        btn?.addEventListener('click', () => {
+            modal?.classList.add('hidden');
+        });
+    });
+
+    // Close on backdrop click
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
 });
 </script>
 

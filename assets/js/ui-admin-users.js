@@ -64,7 +64,7 @@ const UIAdminUsers = (() => {
 
             const scoreCell = document.createElement('td');
             scoreCell.className = 'px-6 py-4';
-            scoreCell.textContent = user.total_score || '0';
+            scoreCell.textContent = user.score || '0';
 
             const coinsCell = document.createElement('td');
             coinsCell.className = 'px-6 py-4';
@@ -141,7 +141,7 @@ const UIAdminUsers = (() => {
         const userStatsContainer = modal.querySelector('#user-details-stats');
 
         if (userNameElement) userNameElement.textContent = user.username;
-        if (userScoreElement) userScoreElement.textContent = user.total_score || '0';
+        if (userScoreElement) userScoreElement.textContent = user.score || '0';
         if (userCoinsElement) userCoinsElement.textContent = user.coins || '0';
         if (userRoleElement) userRoleElement.textContent = user.role === 'admin' ? 'Admin' : 'Kullanıcı';
         if (userJoinDateElement) userJoinDateElement.textContent = user.created_at || '';
