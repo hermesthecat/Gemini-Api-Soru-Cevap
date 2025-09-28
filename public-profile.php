@@ -59,9 +59,9 @@ if (empty($username)) {
                             <div id="profile-accuracy" class="animated-number text-2xl font-bold text-green-600">0%</div>
                             <div class="text-xs text-gray-500">Doğruluk</div>
                         </div>
-                        <div class="text-center stat-card bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
-                            <div class="text-yellow-600 text-lg mb-1"><i class="fas fa-trophy"></i></div>
-                            <div id="profile-achievements" class="animated-number text-2xl font-bold text-yellow-600">0</div>
+                        <div class="text-center stat-card bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                            <div class="text-green-600 text-lg mb-1"><i class="fas fa-trophy"></i></div>
+                            <div id="profile-achievements" class="animated-number text-2xl font-bold text-green-600">0</div>
                             <div class="text-xs text-gray-500">Başarım</div>
                         </div>
                         <div class="text-center stat-card bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
@@ -97,7 +97,7 @@ if (empty($username)) {
                                 <button id="compare-achievements-btn" class="flex items-center px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-md transition-colors">
                                     <i class="fas fa-trophy mr-2"></i>Başarım Karşılaştır
                                 </button>
-                                <button id="bookmark-profile-btn" class="flex items-center px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-md transition-colors">
+                                <button id="bookmark-profile-btn" class="flex items-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-md transition-colors">
                                     <i class="fas fa-bookmark mr-2"></i>İşaretle
                                 </button>
                             </div>
@@ -166,25 +166,14 @@ if (empty($username)) {
             <!-- Achievement Gallery -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-6 dark:text-white flex items-center">
-                    <i class="fas fa-trophy mr-3 text-yellow-500"></i>
+                    <i class="fas fa-trophy mr-3 text-green-500"></i>
                     Başarımlar
-                    <span id="achievement-count-badge" class="ml-2 bg-yellow-100 text-yellow-800 text-sm px-2 py-1 rounded-full">0</span>
+                    <span id="achievement-count-badge" class="ml-2 bg-green-100 text-green-800 text-sm px-2 py-1 rounded-full">0/0</span>
                 </h2>
 
-                <!-- Recent Achievements -->
-                <div id="recent-achievements" class="mb-6">
-                    <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Son Kazanılanlar</h3>
-                    <div id="recent-achievements-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Recent achievements will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- View All Achievements Button -->
-                <div class="text-center">
-                    <button id="view-all-achievements" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg transition-colors">
-                        <i class="fas fa-eye mr-2"></i>
-                        Tüm Başarımları Görüntüle
-                    </button>
+                <!-- All Achievements -->
+                <div id="recent-achievements-container" class="mb-6">
+                    <!-- All achievements will be loaded here -->
                 </div>
             </div>
 

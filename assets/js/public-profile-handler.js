@@ -311,46 +311,74 @@ const publicProfileHandler = (function() {
 
     // Update achievements section
     function updateAchievements(achievements) {
+        console.log('All achievements:', achievements); // Debug log
+
         // Update achievement count badge - only count earned achievements
-        const earnedAchievements = achievements.filter(ach => ach.is_earned == 1 || ach.is_earned === true);
+        const earnedAchievements = achievements.filter(ach => ach.is_earned == 1 || ach.is_earned === true || ach.is_earned === "1");
+        const unearnedAchievements = achievements.filter(ach => ach.is_earned == 0 || ach.is_earned === false || ach.is_earned === "0");
+
+        console.log('Earned:', earnedAchievements.length, 'Unearned:', unearnedAchievements.length); // Debug log
+
         const countBadge = document.getElementById('achievement-count-badge');
         if (countBadge) {
-            countBadge.textContent = earnedAchievements.length;
+            countBadge.textContent = `${earnedAchievements.length}/${achievements.length}`;
         }
 
-        // Update recent achievements
+        // Update achievements container
         const container = document.getElementById('recent-achievements-container');
         if (!container) return;
 
-        const recentAchievements = earnedAchievements
+        // Sort earned achievements by date (newest first)
+        const sortedEarned = earnedAchievements
             .filter(ach => ach.earned_at)
-            .sort((a, b) => new Date(b.earned_at) - new Date(a.earned_at))
-            .slice(0, 6); // Show 6 most recent
+            .sort((a, b) => new Date(b.earned_at) - new Date(a.earned_at));
 
-        if (recentAchievements.length === 0) {
-            container.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz başarım kazanılmamış</p>';
+        // Combine earned (first) and unearned (last)
+        const allAchievements = [...sortedEarned, ...unearnedAchievements];
+
+        if (allAchievements.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz başarım yok</p>';
             return;
         }
 
-        container.innerHTML = recentAchievements.map(ach => `
-            <div class="achievement-card earned bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                <div class="flex items-center space-x-3">
-                    <div class="text-3xl animate-bounce" style="animation-duration: 2s;">
-                        ${ach.icon ? `<i class="fas ${ach.icon}"></i>` : '🏆'}
+        // Create grid layout for all achievements
+        container.innerHTML = `
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                ${allAchievements.map(ach => {
+                    const isEarned = ach.is_earned == 1 || ach.is_earned === true;
+                    return `
+                    <div class="achievement-card ${isEarned ? 'earned' : 'not-earned'} rounded-lg p-3 text-center ${
+                        isEarned
+                        ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 hover:scale-105'
+                        : 'bg-gray-100 dark:bg-gray-800/30 border border-gray-300 dark:border-gray-700 opacity-60'
+                    } transition-transform cursor-pointer">
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center text-white text-xl mb-2 shadow-lg ${
+                                isEarned
+                                ? 'bg-gradient-to-br from-green-500 to-green-600'
+                                : 'bg-gradient-to-br from-gray-400 to-gray-500'
+                            }">
+                                ${ach.icon ? `<i class="fas ${ach.icon}"></i>` : '🏆'}
+                            </div>
+                            <h4 class="font-semibold text-xs ${
+                                isEarned
+                                ? 'text-gray-800 dark:text-gray-200'
+                                : 'text-gray-600 dark:text-gray-400'
+                            } mb-1 line-clamp-2">${ach.achievement_name}</h4>
+                            ${isEarned ? `
+                                <p class="text-xs text-green-600 dark:text-green-400">
+                                    ${formatDate(ach.earned_at).split(' ')[0]}
+                                </p>
+                            ` : `
+                                <p class="text-xs text-gray-500 dark:text-gray-500">
+                                    <i class="fas fa-lock"></i>
+                                </p>
+                            `}
+                        </div>
                     </div>
-                    <div class="flex-1">
-                        <h4 class="font-semibold text-gray-800 dark:text-gray-200">${ach.achievement_name}</h4>
-                        ${ach.earned_at ? `<p class="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center">
-                            <i class="fas fa-calendar-check mr-1"></i>
-                            ${formatDate(ach.earned_at)}
-                        </p>` : ''}
-                        ${ach.rarity ? `<span class="inline-block px-2 py-1 text-xs rounded-full mt-2 bg-purple-100 text-purple-800">
-                            ${ach.rarity}
-                        </span>` : ''}
-                    </div>
-                </div>
+                `}).join('')}
             </div>
-        `).join('');
+        `;
     }
 
     // Update activity summary
