@@ -391,7 +391,7 @@ const publicProfileHandler = (function() {
                             } mb-1 line-clamp-2">${ach.achievement_name}</h4>
                             ${isEarned ? `
                                 <p class="text-xs text-green-600 dark:text-green-400">
-                                    ${formatDate(ach.earned_at).split(' ')[0]}
+                                    ${formatDate(ach.earned_at)}
                                 </p>
                             ` : `
                                 <p class="text-xs text-gray-500 dark:text-gray-500">
