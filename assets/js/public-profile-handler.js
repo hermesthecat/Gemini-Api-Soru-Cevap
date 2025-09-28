@@ -181,6 +181,9 @@ const publicProfileHandler = (function() {
         // Update activity summary
         updateActivitySummary(stats);
 
+        // Update friends shortcuts
+        updateFriendsShortcuts(profileData.friends || {});
+
         // Show/hide privacy settings for own profile
         updatePrivacySettings(profile);
 
@@ -229,6 +232,8 @@ const publicProfileHandler = (function() {
 
     // Update quick stats section
     function updateQuickStats(stats) {
+        console.log('Stats received:', stats); // Debug log
+
         // Total score
         const totalScoreEl = document.getElementById('profile-total-score');
         if (totalScoreEl) {
@@ -238,7 +243,9 @@ const publicProfileHandler = (function() {
         // Accuracy
         const accuracyEl = document.getElementById('profile-accuracy');
         if (accuracyEl) {
-            accuracyEl.textContent = (stats.accuracy || 0) + '%';
+            const accuracy = stats.accuracy_percentage || stats.accuracy || 0;
+            accuracyEl.textContent = accuracy + '%';
+            console.log('Setting accuracy to:', accuracy); // Debug log
         }
 
         // Achievement count
@@ -256,31 +263,48 @@ const publicProfileHandler = (function() {
 
     // Update category performance
     function updateCategoryPerformance(categoryData) {
+        console.log('Category performance data:', categoryData); // Debug log
         const container = document.getElementById('category-performance-container');
         if (!container) return;
 
-        if (categoryData.length === 0) {
+        if (!categoryData || categoryData.length === 0) {
             container.innerHTML = '<p class="text-gray-500 text-center">Henüz kategori verisi yok</p>';
             return;
         }
 
-        container.innerHTML = categoryData.map(cat => `
+        container.innerHTML = categoryData.map(cat => {
+            // Map Tailwind color names to hex colors
+            const colorMap = {
+                'blue': '#3B82F6',
+                'red': '#EF4444',
+                'green': '#10B981',
+                'yellow': '#F59E0B',
+                'purple': '#8B5CF6',
+                'pink': '#EC4899',
+                'indigo': '#6366F1',
+                'gray': '#6B7280',
+                'orange': '#F97316',
+                'teal': '#14B8A6'
+            };
+            const color = colorMap[cat.color] || colorMap['blue'];
+
+            return `
             <div class="stat-card p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center space-x-3">
-                        <i class="fas ${cat.icon || 'fa-question'} text-${cat.color || 'blue'}-500 text-lg"></i>
-                        <span class="font-medium text-gray-800 dark:text-gray-200">${cat.category_name}</span>
+                        <i class="fas ${cat.icon || 'fa-question'} text-lg" style="color: ${color}"></i>
+                        <span class="font-medium text-gray-800 dark:text-gray-200">${cat.category_name || cat.category}</span>
                     </div>
                     <div class="text-right">
-                        <div class="animated-number text-lg font-bold text-${cat.color || 'blue'}-600">${cat.accuracy}%</div>
-                        <div class="text-xs text-gray-500">${cat.questions_answered} soru</div>
+                        <div class="animated-number text-lg font-bold" style="color: ${color}">${cat.accuracy || 0}%</div>
+                        <div class="text-xs text-gray-500">${cat.questions_answered || 0} soru</div>
                     </div>
                 </div>
-                <div class="category-progress" style="--progress-color: var(--tw-color-${cat.color || 'blue'}-500); --progress-color-light: var(--tw-color-${cat.color || 'blue'}-400)">
-                    <div class="category-progress-bar" style="width: ${cat.accuracy}%"></div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all duration-500" style="width: ${cat.accuracy || 0}%; background-color: ${color}"></div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     // Update duel statistics
@@ -399,6 +423,51 @@ const publicProfileHandler = (function() {
         const longestStreakEl = document.getElementById('longest-streak');
         if (longestStreakEl) {
             longestStreakEl.textContent = stats.longest_streak || 0;
+        }
+    }
+
+    // Update friends shortcuts section
+    function updateFriendsShortcuts(friendsData) {
+        // Display bookmarked friends
+        const bookmarkedContainer = document.getElementById('bookmarked-friends-container');
+        if (bookmarkedContainer) {
+            const bookmarkedFriends = friendsData.bookmarked || [];
+            if (bookmarkedFriends.length === 0) {
+                bookmarkedContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz işaretlenmiş profil yok</p>';
+            } else {
+                bookmarkedContainer.innerHTML = bookmarkedFriends.map(friend => `
+                    <a href="public-profile.php?u=${friend.username}" class="friend-card bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold">
+                            ${friend.username ? friend.username.substring(0, 2).toUpperCase() : '?'}
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800 dark:text-gray-200">${friend.username}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Puan: ${formatNumber(friend.total_score || 0)}</p>
+                        </div>
+                    </a>
+                `).join('');
+            }
+        }
+
+        // Display recent friends
+        const recentContainer = document.getElementById('recent-friends-container');
+        if (recentContainer) {
+            const recentFriends = friendsData.recent || [];
+            if (recentFriends.length === 0) {
+                recentContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">Henüz arkadaş yok</p>';
+            } else {
+                recentContainer.innerHTML = recentFriends.map(friend => `
+                    <a href="public-profile.php?u=${friend.username}" class="friend-card bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 flex items-center space-x-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
+                            ${friend.username ? friend.username.substring(0, 2).toUpperCase() : '?'}
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-800 dark:text-gray-200">${friend.username}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Arkadaş: ${formatDate(friend.friend_since)}</p>
+                        </div>
+                    </a>
+                `).join('');
+            }
         }
     }
 

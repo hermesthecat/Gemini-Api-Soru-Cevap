@@ -302,6 +302,9 @@ class UserController
             // Get all achievements for this user
             $achievements = $this->getUserAchievements($user['id']);
 
+            // Get friends data for this user
+            $friendsData = $this->getUserFriendsData($user['id']);
+
             return [
                 'success' => true,
                 'data' => [
@@ -317,7 +320,8 @@ class UserController
                         'is_own_profile' => $is_own_profile
                     ],
                     'statistics' => $profileStats,
-                    'achievements' => $achievements
+                    'achievements' => $achievements,
+                    'friends' => $friendsData
                 ]
             ];
 
@@ -448,6 +452,7 @@ class UserController
         $stats = [];
 
         try {
+            error_log("Getting profile stats for user_id: " . $user_id);
             // Get total score from leaderboard
             $stmt = $this->pdo->prepare("
                 SELECT score
@@ -549,13 +554,37 @@ class UserController
             // Calculate longest streak from game history
             $stats['longest_streak'] = $this->calculateLongestStreak($user_id);
 
-            // Ensure stats is returned as an object, not an array
-            return (object)$stats;
+            // Get category performance
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    us.category,
+                    c.category_name,
+                    c.icon,
+                    c.color,
+                    SUM(us.total_questions) as questions_answered,
+                    SUM(us.correct_answers) as correct,
+                    CASE
+                        WHEN SUM(us.total_questions) > 0
+                        THEN ROUND((SUM(us.correct_answers) / SUM(us.total_questions)) * 100, 1)
+                        ELSE 0
+                    END as accuracy
+                FROM user_stats us
+                LEFT JOIN categories c ON us.category = c.category_key
+                WHERE us.user_id = ?
+                GROUP BY us.category, c.category_name, c.icon, c.color
+                ORDER BY questions_answered DESC
+            ");
+            $stmt->execute([$user_id]);
+            $stats['category_performance'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Return stats array directly (will be converted to object by JSON encoding)
+            return $stats;
 
         } catch (PDOException $e) {
             error_log("Get profile statistics error: " . $e->getMessage());
-            // Return empty object on error
-            return (object)[
+            error_log("Stack trace: " . $e->getTraceAsString());
+            // Return empty array on error
+            return [
                 'total_score' => 0,
                 'total_questions' => 0,
                 'correct_answers' => 0,
@@ -614,6 +643,73 @@ class UserController
         } catch (PDOException $e) {
             error_log("Get user achievements error: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Get user friends data for profile display
+     */
+    private function getUserFriendsData($user_id)
+    {
+        try {
+            $friendsData = [
+                'bookmarked' => [],
+                'recent' => []
+            ];
+
+            // Get recent friends (last 6)
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    u.id,
+                    u.username,
+                    u.avatar,
+                    l.score as total_score,
+                    f.created_at as friend_since
+                FROM friends f
+                JOIN users u ON (
+                    CASE
+                        WHEN f.user_one_id = ? THEN f.user_two_id = u.id
+                        ELSE f.user_one_id = u.id
+                    END
+                )
+                LEFT JOIN leaderboard l ON u.id = l.user_id
+                WHERE (f.user_one_id = ? OR f.user_two_id = ?)
+                AND f.status = 'accepted'
+                ORDER BY f.created_at DESC
+                LIMIT 6
+            ");
+            $stmt->execute([$user_id, $user_id, $user_id]);
+            $friendsData['recent'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // TODO: Add bookmarked friends when bookmark feature is implemented
+            // For now, showing top friends by score as featured
+            $stmt = $this->pdo->prepare("
+                SELECT
+                    u.id,
+                    u.username,
+                    u.avatar,
+                    l.score as total_score
+                FROM friends f
+                JOIN users u ON (
+                    CASE
+                        WHEN f.user_one_id = ? THEN f.user_two_id = u.id
+                        ELSE f.user_one_id = u.id
+                    END
+                )
+                LEFT JOIN leaderboard l ON u.id = l.user_id
+                WHERE (f.user_one_id = ? OR f.user_two_id = ?)
+                AND f.status = 'accepted'
+                ORDER BY l.score DESC
+                LIMIT 3
+            ");
+            $stmt->execute([$user_id, $user_id, $user_id]);
+            $friendsData['bookmarked'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return $friendsData;
+
+        } catch (PDOException $e) {
+            error_log("Get user friends data error: " . $e->getMessage());
+            return ['bookmarked' => [], 'recent' => []];
         }
     }
 
