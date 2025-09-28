@@ -28,6 +28,16 @@ const adminHandler = (() => {
         return null;
     };
 
+    const getUIQuestions = () => {
+        const UIQuestions = ModuleLoader?.getModule('UIQuestions');
+        if (UIQuestions) {
+            return UIQuestions;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const getUIAdminStats = () => {
         const UIAdminStats = ModuleLoader?.getModule('UIAdminStats');
         if (UIAdminStats) {
@@ -290,9 +300,13 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_reported_questions', {}, 'POST', false);
             if (result && result.success) {
-                const uiAdmin = getUIAdmin();
-                if (uiAdmin && uiAdmin.renderReportedQuestions) {
-                    uiAdmin.renderReportedQuestions(result.data);
+                const uiQuestions = getUIQuestions();
+                if (uiQuestions && uiQuestions.renderReportedQuestions) {
+                    // Pass the questions array, not the entire data object
+                    const questions = result.data.questions || result.data || [];
+                    uiQuestions.renderReportedQuestions(questions);
+                } else {
+                    console.error('UIQuestions module or renderReportedQuestions function not found');
                 }
             } else {
                 console.error('Failed to load reported questions:', result?.message);
@@ -306,9 +320,12 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_question_details', { question_id: questionId }, 'POST', false);
             if (result && result.success) {
-                const uiAdmin = getUIAdmin();
-                if (uiAdmin && uiAdmin.showQuestionReviewModal) {
-                    uiAdmin.showQuestionReviewModal(result.data);
+                const uiQuestions = getUIQuestions();
+                if (uiQuestions && uiQuestions.showQuestionReviewModal) {
+                    uiQuestions.showQuestionReviewModal(result.data);
+                } else {
+                    console.error('UIQuestions module or showQuestionReviewModal function not found');
+                    showToast('UI modülü bulunamadı.', 'error');
                 }
             } else {
                 showToast(result?.message || 'Soru detayları alınamadı.', 'error');
@@ -329,9 +346,9 @@ const adminHandler = (() => {
 
             if (result && result.success) {
                 showToast(result.message || 'Soru başarıyla incelendi.', 'success');
-                const uiAdmin = getUIAdmin();
-                if (uiAdmin && uiAdmin.hideQuestionReviewModal) {
-                    uiAdmin.hideQuestionReviewModal();
+                const uiQuestions = getUIQuestions();
+                if (uiQuestions && uiQuestions.hideQuestionReviewModal) {
+                    uiQuestions.hideQuestionReviewModal();
                 }
                 // Refresh the reported questions list
                 loadReportedQuestions();
@@ -348,9 +365,11 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_question_stats', {}, 'POST', false);
             if (result && result.success) {
-                const uiAdmin = getUIAdmin();
-                if (uiAdmin && uiAdmin.renderQuestionStats) {
-                    uiAdmin.renderQuestionStats(result.data);
+                const uiQuestions = getUIQuestions();
+                if (uiQuestions && uiQuestions.renderQuestionStats) {
+                    uiQuestions.renderQuestionStats(result.data);
+                } else {
+                    console.error('UIQuestions module or renderQuestionStats function not found');
                 }
             } else {
                 console.error('Failed to load question stats:', result?.message);

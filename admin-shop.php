@@ -243,29 +243,58 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         if (Object.keys(prices).length === 0) {
-                            ui.showToast('Lütfen geçerli fiyatlar girin (1-1000 arası)', 'error');
+                            // Use ModuleLoader to get UICore
+                            const UICore = ModuleLoader?.getModule('UICore');
+                            if (UICore && UICore.showToast) {
+                                UICore.showToast('Lütfen geçerli fiyatlar girin (1-1000 arası)', 'error');
+                            } else {
+                                alert('Lütfen geçerli fiyatlar girin (1-1000 arası)');
+                            }
                             return;
                         }
 
                         try {
-                            ui.showLoading('Fiyatlar güncelleniyor...');
+                            // Show loading
+                            const UICore = ModuleLoader?.getModule('UICore');
+                            if (UICore && UICore.showLoading) {
+                                UICore.showLoading(true);
+                            }
+
                             const result = await api.call('admin_update_shop_prices', { prices });
 
-                            ui.showLoading(false);
+                            // Hide loading
+                            if (UICore && UICore.showLoading) {
+                                UICore.showLoading(false);
+                            }
 
                             if (result.success) {
-                                ui.showToast(result.message || 'Fiyatlar başarıyla güncellendi!', 'success');
+                                if (UICore && UICore.showToast) {
+                                    UICore.showToast(result.message || 'Fiyatlar başarıyla güncellendi!', 'success');
+                                } else {
+                                    alert(result.message || 'Fiyatlar başarıyla güncellendi!');
+                                }
 
                                 // 1.5 saniye bekle, sonra sayfayı yenile
                                 setTimeout(() => {
                                     window.location.reload();
                                 }, 1500);
                             } else {
-                                ui.showToast(result.message || 'Güncelleme başarısız', 'error');
+                                if (UICore && UICore.showToast) {
+                                    UICore.showToast(result.message || 'Güncelleme başarısız', 'error');
+                                } else {
+                                    alert(result.message || 'Güncelleme başarısız');
+                                }
                             }
                         } catch (error) {
-                            ui.showLoading(false);
-                            ui.showToast('Güncelleme sırasında hata oluştu', 'error');
+                            const UICore = ModuleLoader?.getModule('UICore');
+                            if (UICore && UICore.showLoading) {
+                                UICore.showLoading(false);
+                            }
+                            if (UICore && UICore.showToast) {
+                                UICore.showToast('Güncelleme sırasında hata oluştu', 'error');
+                            } else {
+                                alert('Güncelleme sırasında hata oluştu');
+                            }
                         }
                     });
                 }

@@ -146,6 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (UICore) {
                 UICore.init(dom);
             }
+            const UIQuestions = ModuleLoader.getModule('UIQuestions');
+            if (UIQuestions) {
+                UIQuestions.init(dom);
+            }
             auth.init(dom);
             game.init(dom);
             statsHandler.init(dom);

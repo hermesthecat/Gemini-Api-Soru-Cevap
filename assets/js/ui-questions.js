@@ -99,6 +99,12 @@ const UIQuestions = (() => {
         const container = document.getElementById('question-stats-container');
         if (!container || !statsData) return;
 
+        // Handle both direct properties and nested totals object
+        const totals = statsData.totals || statsData;
+        const totalQuestions = totals.total_questions || 0;
+        const reportedQuestions = totals.reported_questions || 0;
+        const averageRating = statsData.average_rating || 0;
+
         container.innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
@@ -108,7 +114,7 @@ const UIQuestions = (() => {
                         </div>
                         <div class="ml-4">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Toplam Soru</h3>
-                            <p class="text-2xl font-bold text-blue-600">${statsData.total_questions || 0}</p>
+                            <p class="text-2xl font-bold text-blue-600">${totalQuestions}</p>
                         </div>
                     </div>
                 </div>
@@ -120,7 +126,7 @@ const UIQuestions = (() => {
                         </div>
                         <div class="ml-4">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Ortalama Puan</h3>
-                            <p class="text-2xl font-bold text-yellow-600">${statsData.average_rating || 0}/5</p>
+                            <p class="text-2xl font-bold text-yellow-600">${averageRating}/5</p>
                         </div>
                     </div>
                 </div>
@@ -132,13 +138,13 @@ const UIQuestions = (() => {
                         </div>
                         <div class="ml-4">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Şikayet Edilen</h3>
-                            <p class="text-2xl font-bold text-red-600">${statsData.reported_questions || 0}</p>
+                            <p class="text-2xl font-bold text-red-600">${reportedQuestions}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            ${statsData.category_stats ? `
+            ${statsData.by_category && statsData.by_category.length > 0 ? `
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
                     <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Kategori Bazında İstatistikler</h3>
                     <div class="overflow-x-auto">
@@ -151,11 +157,11 @@ const UIQuestions = (() => {
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                ${statsData.category_stats.map(cat => `
+                                ${statsData.by_category.map(cat => `
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">${cat.category_name}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${cat.question_count}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${cat.average_rating}/5</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">${cat.category || cat.category_name}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${cat.count || cat.question_count || 0}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${cat.average_rating || 0}/5</td>
                                     </tr>
                                 `).join('')}
                             </tbody>

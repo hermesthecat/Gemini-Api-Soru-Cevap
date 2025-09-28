@@ -18,12 +18,12 @@ const adminSettingsHandler = (() => {
         }
     };
 
-    const showLoading = (text, show = true) => {
+    const showLoading = (show, text = '') => {
         const UICore = ModuleLoader?.getModule('UICore');
         if (UICore) {
             UICore.showLoading(show, text);
         } else if (window.ui && window.ui.showLoading) {
-            window.showLoading(show, text);
+            window.ui.showLoading(show, text);
         }
     };
 
@@ -101,6 +101,49 @@ const adminSettingsHandler = (() => {
         if (timezoneInput && settings.timezone_setting) {
             timezoneInput.value = settings.timezone_setting.value || 'Europe/Istanbul';
         }
+
+        // Login Rewards
+        const loginBaseRewardInput = document.getElementById('login-base-reward');
+        if (loginBaseRewardInput && settings.login_base_reward) {
+            loginBaseRewardInput.value = settings.login_base_reward.value || '10';
+        }
+
+        const loginMaxRewardInput = document.getElementById('login-max-reward');
+        if (loginMaxRewardInput && settings.login_max_reward) {
+            loginMaxRewardInput.value = settings.login_max_reward.value || '50';
+        }
+
+        const loginStreakBonusInput = document.getElementById('login-streak-bonus');
+        if (loginStreakBonusInput && settings.login_streak_bonus) {
+            loginStreakBonusInput.value = settings.login_streak_bonus.value || '5';
+        }
+
+        // Quest Settings
+        const questRefreshTimeInput = document.getElementById('quest-refresh-time');
+        if (questRefreshTimeInput && settings.quest_refresh_time) {
+            questRefreshTimeInput.value = settings.quest_refresh_time.value || '24';
+        }
+
+        // Welcome Bonuses
+        const welcomeBonusInput = document.getElementById('welcome-bonus');
+        if (welcomeBonusInput && settings.welcome_bonus) {
+            welcomeBonusInput.value = settings.welcome_bonus.value || '100';
+        }
+
+        const welcomeFiftyFiftyInput = document.getElementById('welcome-lifeline-fifty-fifty');
+        if (welcomeFiftyFiftyInput && settings.welcome_lifeline_fifty_fifty) {
+            welcomeFiftyFiftyInput.value = settings.welcome_lifeline_fifty_fifty.value || '3';
+        }
+
+        const welcomeExtraTimeInput = document.getElementById('welcome-lifeline-extra-time');
+        if (welcomeExtraTimeInput && settings.welcome_lifeline_extra_time) {
+            welcomeExtraTimeInput.value = settings.welcome_lifeline_extra_time.value || '3';
+        }
+
+        const welcomePassInput = document.getElementById('welcome-lifeline-pass');
+        if (welcomePassInput && settings.welcome_lifeline_pass) {
+            welcomePassInput.value = settings.welcome_lifeline_pass.value || '3';
+        }
     };
 
     const handleSettingsSubmit = async (event) => {
@@ -120,7 +163,7 @@ const adminSettingsHandler = (() => {
         }
 
         try {
-            showLoading('Ayarlar kaydediliyor...');
+            showLoading(true, 'Ayarlar kaydediliyor...');
             const result = await api.call('update_settings', { settings });
 
             showLoading(false);
