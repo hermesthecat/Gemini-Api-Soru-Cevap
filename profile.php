@@ -501,7 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Set profile share URL
                 currentUsername = response.data.user.username;
-                const profileUrl = window.location.origin + '/public-profile.php?u=' + currentUsername;
+                const baseUrl = window.location.origin;
+                const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+                const profileUrl = baseUrl + path + '/public-profile.php?u=' + currentUsername;
                 shareUrlInput.value = profileUrl;
             }
         } catch (error) {
@@ -1157,6 +1159,80 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize user search functionality
     if (window.userSearchHandler) {
         window.userSearchHandler.init();
+    }
+
+    // Handle profile visibility change
+    const visibilitySelect = document.getElementById('profile-visibility-setting');
+    if (visibilitySelect) {
+        // Load current setting on page load
+        loadCurrentVisibilitySetting();
+
+        // Save setting on change
+        visibilitySelect.addEventListener('change', async function() {
+            const visibility = this.value;
+
+            try {
+                const response = await api.call('update_profile_visibility', {
+                    visibility: visibility
+                }, 'POST', false);
+
+                if (response.success) {
+                    // Show success notification with toast
+                    const UICore = window.ModuleLoader?.getModule('UICore');
+                    if (UICore && UICore.showToast) {
+                        UICore.showToast('Profil gizlilik ayarı güncellendi! 🔒', 'success');
+                    } else if (window.ui && window.ui.showToast) {
+                        window.ui.showToast('Profil gizlilik ayarı güncellendi! 🔒', 'success');
+                    } else {
+                        alert('Profil gizlilik ayarı güncellendi!');
+                    }
+                } else {
+                    // Show error and revert
+                    const UICore = window.ModuleLoader?.getModule('UICore');
+                    if (UICore && UICore.showToast) {
+                        UICore.showToast(response.message || 'Ayar güncellenemedi', 'error');
+                    } else if (window.ui && window.ui.showToast) {
+                        window.ui.showToast(response.message || 'Ayar güncellenemedi', 'error');
+                    } else {
+                        alert(response.message || 'Ayar güncellenemedi');
+                    }
+                    // Reload current setting
+                    loadCurrentVisibilitySetting();
+                }
+            } catch (error) {
+                console.error('Visibility update error:', error);
+                if (window.ui && window.ui.showToast) {
+                    window.ui.showToast('Bir hata oluştu', 'error');
+                }
+                // Reload current setting
+                loadCurrentVisibilitySetting();
+            }
+        });
+    }
+
+    // Function to load current visibility setting
+    async function loadCurrentVisibilitySetting() {
+        try {
+            const response = await api.call('get_profile_data', {}, 'POST', false);
+
+            if (response.success && response.user) {
+                const visibility = response.user.profile_visibility || 'public';
+                if (visibilitySelect) {
+                    visibilitySelect.value = visibility;
+                }
+
+                // Also populate the share URL
+                const shareUrlInput = document.getElementById('profile-share-url');
+                if (shareUrlInput && response.user.username) {
+                    const baseUrl = window.location.origin;
+                    const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+                    const profileUrl = baseUrl + path + '/public-profile.php?u=' + response.user.username;
+                    shareUrlInput.value = profileUrl;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading visibility setting:', error);
+        }
     }
 });
 </script>

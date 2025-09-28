@@ -754,6 +754,43 @@ class UserController
     }
 
     /**
+     * Get current user's profile data
+     */
+    public function getProfileData()
+    {
+        try {
+            $user_id = $_SESSION['user_id'] ?? null;
+            if (!$user_id) {
+                return ['success' => false, 'message' => 'User not logged in'];
+            }
+
+            $stmt = $this->pdo->prepare("
+                SELECT id, username, profile_visibility, coins, total_score, role
+                FROM users
+                WHERE id = ?
+            ");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                return ['success' => false, 'message' => 'User not found'];
+            }
+
+            return [
+                'success' => true,
+                'user' => $user
+            ];
+
+        } catch (PDOException $e) {
+            error_log("Get profile data error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to load profile data'
+            ];
+        }
+    }
+
+    /**
      * Get friends achievement comparison data
      */
     public function getFriendsAchievementComparison($request)
