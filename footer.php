@@ -211,8 +211,7 @@
     <script src="assets/js/ui-performance.js?v=<?php echo $v; ?>"></script>
     <script src="assets/js/ui-utils.js?v=<?php echo $v; ?>"></script>
 
-    <!-- Core UI Handler (Legacy - will be replaced) -->
-    <script src="assets/js/ui-handler.js?v=<?php echo $v; ?>"></script>
+    <!-- Legacy ui-handler.js removed - now using modular system -->
 
     <!-- Feature Handlers -->
     <script src="assets/js/auth-handler.js?v=<?php echo $v; ?>"></script>

@@ -260,8 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Kullanıcının ana arayüzü görmesi için kısa bir gecikme ekle
                 setTimeout(() => {
                     const message = `🎉 Günlük giriş ödülünü topladın: +${daily_reward.coins_earned} Jeton! Serin ${daily_reward.streak} güne ulaştı!`;
-                    if (window.ui && window.ui.showToast) {
-                        window.ui.showToast(message, 'success');
+                    const UICore = ModuleLoader?.getModule('UICore');
+                    if (UICore) {
+                        UICore.showToast(message, 'success');
                     }
                     // Ödül sesi çal
                     App.onPlaySound({ detail: { sound: 'achievement' } });
@@ -317,8 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(async () => {
                     for (const achievement of new_achievements) {
                         App.onPlaySound({ detail: { sound: 'achievement' } });
-                        if (window.ui && window.ui.showAchievementModal) {
-                            await window.ui.showAchievementModal(achievement);
+                        const UICore = ModuleLoader?.getModule('UICore');
+                        if (UICore && UICore.showAchievementModal) {
+                            await UICore.showAchievementModal(achievement);
                         }
                     }
                 }, 500); // 500ms gecikme
@@ -352,5 +354,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Global erişim için
     window.app = App;
-    window.ui = ui;
+    // window.ui removed - now using modular system via ModuleLoader
 }); 
