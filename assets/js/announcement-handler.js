@@ -7,25 +7,58 @@ const announcementHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const getUIAdminStats = () => {
+        const UIAdminStats = ModuleLoader?.getModule('UIAdminStats');
+        if (UIAdminStats) {
+            return UIAdminStats;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const checkForAnnouncements = async () => {
         const result = await api.call('get_active_announcements', {}, 'POST', false);
         if (result.success && result.data.length > 0) {
             unreadAnnouncements = result.data;
-            ui.updateAnnouncementsBadge(unreadAnnouncements.length);
+            const uiAdminStats = getUIAdminStats();
+            if (uiAdminStats && uiAdminStats.updateAnnouncementsBadge) {
+                uiAdminStats.updateAnnouncementsBadge(unreadAnnouncements.length);
+            }
             // İsteğe bağlı: Yeni duyuru varsa modalı otomatik aç
-            // showAnnouncementsModal(); 
+            // showAnnouncementsModal();
         } else {
-            ui.updateAnnouncementsBadge(0);
+            const uiAdminStats = getUIAdminStats();
+            if (uiAdminStats && uiAdminStats.updateAnnouncementsBadge) {
+                uiAdminStats.updateAnnouncementsBadge(0);
+            }
         }
     };
 
     const showAnnouncementsModal = () => {
         if (unreadAnnouncements.length === 0) {
-            ui.showToast('Okunmamış yeni bir duyuru yok.', 'info');
+            showToast('Okunmamış yeni bir duyuru yok.', 'info');
             return;
         }
-        ui.renderAnnouncementsModal(unreadAnnouncements);
-        ui.showAnnouncementsModal(true);
+        const uiAdminStats = getUIAdminStats();
+        if (uiAdminStats && uiAdminStats.renderAnnouncementsModal) {
+            uiAdminStats.renderAnnouncementsModal(unreadAnnouncements);
+        }
+        if (uiAdminStats && uiAdminStats.showAnnouncementsModal) {
+            uiAdminStats.showAnnouncementsModal(true);
+        }
     };
 
     const markAsRead = async () => {
@@ -35,8 +68,13 @@ const announcementHandler = (() => {
         await api.call('mark_announcements_as_read', { ids: idsToMark });
 
         unreadAnnouncements = [];
-        ui.updateAnnouncementsBadge(0);
-        ui.showAnnouncementsModal(false);
+        const uiAdminStats = getUIAdminStats();
+        if (uiAdminStats && uiAdminStats.updateAnnouncementsBadge) {
+            uiAdminStats.updateAnnouncementsBadge(0);
+        }
+        if (uiAdminStats && uiAdminStats.showAnnouncementsModal) {
+            uiAdminStats.showAnnouncementsModal(false);
+        }
     };
 
     // --- Admin Functions ---
@@ -66,7 +104,7 @@ const announcementHandler = (() => {
         const data = Object.fromEntries(formData.entries());
 
         const result = await api.call('admin_create_announcement', data);
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
             e.target.reset();
             updateAnnouncementsList();
@@ -76,7 +114,7 @@ const announcementHandler = (() => {
     const handleDeleteAnnouncement = async (announcementId) => {
         if (confirm('Bu duyuruyu silmek istediğinizden emin misiniz?')) {
             const result = await api.call('admin_delete_announcement', { announcement_id: announcementId });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
             if (result.success) {
                 updateAnnouncementsList();
             }
