@@ -6,10 +6,55 @@ const adminHandler = (() => {
         addEventListeners();
     };
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const getUIAdmin = () => {
+        const UIAdmin = ModuleLoader?.getModule('UIAdmin');
+        if (UIAdmin) {
+            return UIAdmin;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
+    const getUIAdminStats = () => {
+        const UIAdminStats = ModuleLoader?.getModule('UIAdminStats');
+        if (UIAdminStats) {
+            return UIAdminStats;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
+    const getUIAdminUsers = () => {
+        const UIAdminUsers = ModuleLoader?.getModule('UIAdminUsers');
+        if (UIAdminUsers) {
+            return UIAdminUsers;
+        } else if (window.ui) {
+            return window.ui;
+        }
+        return null;
+    };
+
     const updateDashboard = async () => {
         const result = await api.call('admin_get_dashboard_data', {}, 'POST', false);
         if (result && result.success) {
-            ui.renderAdminDashboard(result.data);
+            const uiAdmin = getUIAdmin();
+            if (uiAdmin && uiAdmin.renderAdminDashboard) {
+                uiAdmin.renderAdminDashboard(result.data);
+            }
         }
     };
 
@@ -18,13 +63,16 @@ const adminHandler = (() => {
         if (result && result.success) {
             const currentUser = appState.get('currentUser');
             const currentUserId = currentUser ? currentUser.id : null;
-            ui.renderAdminUserList(result.data, currentUserId);
+            const uiAdminUsers = getUIAdminUsers();
+            if (uiAdminUsers && uiAdminUsers.renderAdminUserList) {
+                uiAdminUsers.renderAdminUserList(result.data, currentUserId);
+            }
         }
     };
 
     const handleUserRoleChange = async (userId, newRole) => {
         const result = await api.call('admin_update_user_role', { user_id: userId, new_role: newRole });
-        ui.showToast(result.message, result.success ? 'success' : 'error');
+        showToast(result.message, result.success ? 'success' : 'error');
         if (result.success) {
             updateUserList();
         }
@@ -33,7 +81,7 @@ const adminHandler = (() => {
     const handleUserDelete = async (userId, username) => {
         if (confirm(`'${username}' adlı kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
             const result = await api.call('admin_delete_user', { user_id: userId });
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
             if (result.success) {
                 updateUserList();
             }
@@ -43,7 +91,10 @@ const adminHandler = (() => {
     const updateAdvancedStats = async () => {
         const result = await api.call('admin_get_advanced_stats', {}, 'POST', false);
         if (result.success) {
-            ui.renderAdvancedStats(result.data);
+            const uiAdminStats = getUIAdminStats();
+            if (uiAdminStats && uiAdminStats.renderAdvancedStats) {
+                uiAdminStats.renderAdvancedStats(result.data);
+            }
         }
     };
 
@@ -98,7 +149,10 @@ const adminHandler = (() => {
             if (!tabButton) return;
 
             const tab = tabButton.dataset.tab;
-            ui.showAdminTab(tab);
+            const uiAdmin = getUIAdmin();
+            if (uiAdmin && uiAdmin.showAdminTab) {
+                uiAdmin.showAdminTab(tab);
+            }
             if (tab === 'announcements') {
                 // Bu anons handler'a taşınmalı veya oradan çağırılmalı
                 // Şimdilik burada bırakıyorum ama en iyi pratik değil
@@ -182,13 +236,13 @@ const adminHandler = (() => {
                 new_coins: newCoins
             });
 
-            ui.showToast(result.message, result.success ? 'success' : 'error');
+            showToast(result.message, result.success ? 'success' : 'error');
 
             if (result.success) {
                 updateUserList();
             }
         } catch (error) {
-            ui.showToast('Bir hata oluştu', 'error');
+            showToast('Bir hata oluştu', 'error');
         }
     };
 
@@ -208,15 +262,15 @@ const adminHandler = (() => {
 
                 if (result.success) {
                     const message = `Başarılı! ${result.assigned_count || 0} yeni quest atandı`;
-                    ui.showToast(message, 'success');
+                    showToast(message, 'success');
                     statusDiv.textContent = message;
                 } else {
                     const message = result.message || 'Quest yenileme başarısız';
-                    ui.showToast(message, 'warning');
+                    showToast(message, 'warning');
                     statusDiv.textContent = message;
                 }
             } catch (error) {
-                ui.showToast('Quest yenilenirken hata oluştu', 'error');
+                showToast('Quest yenilenirken hata oluştu', 'error');
                 statusDiv.textContent = 'Hata oluştu';
             } finally {
                 // Butonu tekrar aktif et
@@ -236,7 +290,10 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_reported_questions', {}, 'POST', false);
             if (result && result.success) {
-                ui.renderReportedQuestions(result.data);
+                const uiAdmin = getUIAdmin();
+                if (uiAdmin && uiAdmin.renderReportedQuestions) {
+                    uiAdmin.renderReportedQuestions(result.data);
+                }
             } else {
                 console.error('Failed to load reported questions:', result?.message);
             }
@@ -249,13 +306,16 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_question_details', { question_id: questionId }, 'POST', false);
             if (result && result.success) {
-                ui.showQuestionReviewModal(result.data);
+                const uiAdmin = getUIAdmin();
+                if (uiAdmin && uiAdmin.showQuestionReviewModal) {
+                    uiAdmin.showQuestionReviewModal(result.data);
+                }
             } else {
-                ui.showToast(result?.message || 'Soru detayları alınamadı.', 'error');
+                showToast(result?.message || 'Soru detayları alınamadı.', 'error');
             }
         } catch (error) {
             console.error('Error loading question details:', error);
-            ui.showToast('Bağlantı hatası oluştu.', 'error');
+            showToast('Bağlantı hatası oluştu.', 'error');
         }
     };
 
@@ -268,16 +328,19 @@ const adminHandler = (() => {
             }, 'POST', true);
 
             if (result && result.success) {
-                ui.showToast(result.message || 'Soru başarıyla incelendi.', 'success');
-                ui.hideQuestionReviewModal();
+                showToast(result.message || 'Soru başarıyla incelendi.', 'success');
+                const uiAdmin = getUIAdmin();
+                if (uiAdmin && uiAdmin.hideQuestionReviewModal) {
+                    uiAdmin.hideQuestionReviewModal();
+                }
                 // Refresh the reported questions list
                 loadReportedQuestions();
             } else {
-                ui.showToast(result?.message || 'İnceleme işlemi başarısız.', 'error');
+                showToast(result?.message || 'İnceleme işlemi başarısız.', 'error');
             }
         } catch (error) {
             console.error('Error reviewing question:', error);
-            ui.showToast('Bağlantı hatası oluştu.', 'error');
+            showToast('Bağlantı hatası oluştu.', 'error');
         }
     };
 
@@ -285,7 +348,10 @@ const adminHandler = (() => {
         try {
             const result = await api.call('admin_get_question_stats', {}, 'POST', false);
             if (result && result.success) {
-                ui.renderQuestionStats(result.data);
+                const uiAdmin = getUIAdmin();
+                if (uiAdmin && uiAdmin.renderQuestionStats) {
+                    uiAdmin.renderQuestionStats(result.data);
+                }
             } else {
                 console.error('Failed to load question stats:', result?.message);
             }

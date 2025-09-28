@@ -7,6 +7,47 @@ const publicProfileHandler = (function() {
     let currentUsername = null;
     let profileData = null;
 
+    // Helper methods to get modules with fallback
+    const showToast = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showToast(message, type);
+        } else if (window.ui && window.ui.showToast) {
+            window.ui.showToast(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showNotification = (message, type) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showNotification(message, type);
+        } else if (window.ui && window.ui.showNotification) {
+            window.showNotification(message, type);
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    };
+
+    const showModal = (content) => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.showModal(content);
+        } else if (window.ui && window.ui.showModal) {
+            window.showModal(content);
+        }
+    };
+
+    const hideModal = () => {
+        const UICore = ModuleLoader?.getModule('UICore');
+        if (UICore) {
+            UICore.hideModal();
+        } else if (window.ui && window.hideModal) {
+            window.hideModal();
+        }
+    };
+
     // Initialize the public profile handler
     function init(username) {
         currentUsername = username;
@@ -358,9 +399,9 @@ const publicProfileHandler = (function() {
             }, 'POST', true);
 
             if (response.success) {
-                ui.showNotification('Profil gizlilik ayarı güncellendi', 'success');
+                showNotification('Profil gizlilik ayarı güncellendi', 'success');
             } else {
-                ui.showNotification(response.message || 'Güncelleme başarısız', 'error');
+                showNotification(response.message || 'Güncelleme başarısız', 'error');
                 // Revert selection on error
                 if (profileData && profileData.profile) {
                     select.value = profileData.profile.profile_visibility;
@@ -368,7 +409,7 @@ const publicProfileHandler = (function() {
             }
         } catch (error) {
             console.error('Privacy update error:', error);
-            ui.showNotification('Bağlantı hatası', 'error');
+            showNotification('Bağlantı hatası', 'error');
         }
     }
 
@@ -445,10 +486,10 @@ const publicProfileHandler = (function() {
             </div>
         `;
 
-        ui.showModal(modalContent);
+        showModal(modalContent);
 
         // Close modal handler
-        document.getElementById('close-achievements-modal').addEventListener('click', ui.hideModal);
+        document.getElementById('close-achievements-modal').addEventListener('click', hideModal);
     }
 
     // UI state management functions
@@ -693,10 +734,10 @@ const publicProfileHandler = (function() {
                 method: 'copy'
             }, 'POST', false);
 
-            ui.showNotification('Profil linki kopyalandı!', 'success');
+            showNotification('Profil linki kopyalandı!', 'success');
         } catch (error) {
             console.error('Error copying URL:', error);
-            ui.showNotification('Link kopyalanamadı', 'error');
+            showNotification('Link kopyalanamadı', 'error');
         }
     }
 
@@ -769,7 +810,7 @@ const publicProfileHandler = (function() {
             }
         } catch (error) {
             console.error('Error showing achievement comparison:', error);
-            ui.showNotification('Başarım karşılaştırması yapılamadı', 'error');
+            showNotification('Başarım karşılaştırması yapılamadı', 'error');
         }
     }
 
@@ -904,7 +945,7 @@ const publicProfileHandler = (function() {
                     isBookmarked = false;
                     btn.innerHTML = '<i class="fas fa-bookmark mr-2"></i>İşaretle';
                     btn.className = btn.className.replace('bg-red-500 hover:bg-red-600', 'bg-yellow-500 hover:bg-yellow-600');
-                    ui.showNotification('İşaret kaldırıldı', 'success');
+                    showNotification('İşaret kaldırıldı', 'success');
                     loadFriendShortcuts(); // Refresh shortcuts
                 }
             } else {
@@ -917,13 +958,13 @@ const publicProfileHandler = (function() {
                     isBookmarked = true;
                     btn.innerHTML = '<i class="fas fa-bookmark-remove mr-2"></i>İşaret Kaldır';
                     btn.className = btn.className.replace('bg-yellow-500 hover:bg-yellow-600', 'bg-red-500 hover:bg-red-600');
-                    ui.showNotification('Profil işaretlendi', 'success');
+                    showNotification('Profil işaretlendi', 'success');
                     loadFriendShortcuts(); // Refresh shortcuts
                 }
             }
         } catch (error) {
             console.error('Error toggling bookmark:', error);
-            ui.showNotification('İşlem başarısız', 'error');
+            showNotification('İşlem başarısız', 'error');
         }
     }
 
